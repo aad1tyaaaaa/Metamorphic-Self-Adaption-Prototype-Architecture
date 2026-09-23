@@ -1,226 +1,224 @@
-CALIBRATION_DATASET = [
+"""Calibration prompt set (Phase 4).
 
-    # --------------------------------------------------
-    # EASY FACTUAL
-    # --------------------------------------------------
+The prompts live in `data/calibration_prompts.json` so that calibration is
+reproducible and needs no network access. Rebuild the file with:
 
-    "What is 2 + 2?",
-    "What is the capital of France?",
-    "What is the capital of India?",
-    "How many days are in a week?",
-    "How many months are in a year?",
-    "What is the boiling point of water?",
-    "What is the largest planet in the solar system?",
-    "What is the chemical symbol for oxygen?",
-    "How many continents are there?",
-    "What is the opposite of hot?",
+    python -m data.calibration_dataset --build
+"""
 
-    "What color is the sky on a clear day?",
-    "How many legs does a spider have?",
-    "What is the freezing point of water?",
-    "Which planet is known as the Red Planet?",
-    "What is the primary language of Brazil?",
+import json
+import os
+import random
 
-    # --------------------------------------------------
-    # BASIC MATH
-    # --------------------------------------------------
+HERE = os.path.dirname(os.path.abspath(__file__))
+PROMPTS_PATH = os.path.join(HERE, "calibration_prompts.json")
+SEED_PATH = os.path.join(HERE, "_seed_prompts.json")
 
-    "Calculate 10 + 25.",
-    "Calculate 100 - 37.",
-    "Calculate 12 multiplied by 8.",
-    "Calculate 144 divided by 12.",
-    "What is 15 percent of 200?",
-    "What is 25 percent of 800?",
-    "Calculate the average of 10, 20, and 30.",
-    "What is 7 squared?",
-    "What is the square root of 81?",
-    "Calculate 45 + 67 - 12.",
+TARGET_SIZE = 500
+SEED = 42
 
-    "A box contains 20 apples. If 5 are removed, how many remain?",
-    "John has 5 apples and buys 3 more. How many apples does he have?",
-    "A train travels 120 kilometers in 2 hours. What is its average speed?",
-    "A shirt costs 800 rupees and has a 25 percent discount. What is the final price?",
-    "A store has 240 items and sells 35 percent of them. How many remain?",
 
-    # --------------------------------------------------
-    # EXPLANATION
-    # --------------------------------------------------
+def load():
+    with open(PROMPTS_PATH, encoding="utf-8") as handle:
+        payload = json.load(handle)
+    return [entry["text"] for entry in payload], payload
 
-    "Explain why the sky appears blue.",
-    "Explain why water freezes when cooled.",
-    "Explain how photosynthesis works.",
-    "Explain how plants use sunlight.",
-    "Explain why the Earth has seasons.",
-    "Explain why objects fall toward the ground.",
-    "Explain why the Moon appears to change shape.",
-    "Explain the difference between RAM and ROM.",
-    "Explain the difference between hardware and software.",
-    "Explain what an operating system does.",
 
-    "Explain how the internet works.",
-    "Explain what a computer processor does.",
-    "Explain what a database is.",
-    "Explain what an API is.",
-    "Explain what cloud computing means.",
+# ----------------------------------------------------------------------
+# Dataset construction
+# ----------------------------------------------------------------------
 
-    # --------------------------------------------------
-    # SCIENCE
-    # --------------------------------------------------
-
-    "Why does ice float on water?",
-    "Why does metal expand when heated?",
-    "Why does increasing temperature affect chemical reactions?",
-    "What causes gravity?",
-    "How does the human heart pump blood?",
-    "How does the respiratory system work?",
-    "What is DNA?",
-    "What is a cell?",
-    "What is an atom?",
-    "What is photosynthesis?",
-
-    # --------------------------------------------------
-    # TECHNOLOGY
-    # --------------------------------------------------
-
-    "What is artificial intelligence?",
-    "What is machine learning?",
-    "What is deep learning?",
-    "What is a neural network?",
-    "What is a transformer model?",
-    "What is an LLM?",
-    "What is Python used for?",
-    "What is Git?",
-    "What is Docker?",
-    "What is an API endpoint?",
-
-    "What is the difference between frontend and backend development?",
-    "What is the difference between SQL and NoSQL databases?",
-    "What is the purpose of HTTP?",
-    "What is REST?",
-    "What is JSON?",
-
-    # --------------------------------------------------
-    # REASONING
-    # --------------------------------------------------
-
-    "Why is it important to save electricity?",
-    "Why is clean water important for human health?",
-    "Why do plants need sunlight?",
-    "Why does exercise improve physical fitness?",
-    "Why is data encryption important?",
-    "Why are backups important?",
-    "Why should passwords be protected?",
-    "Why is testing important in software development?",
-    "Why can a database become slow when it contains many records?",
-    "Why does increasing model depth generally increase computation?",
-
-    # --------------------------------------------------
-    # MULTI-STEP REASONING
-    # --------------------------------------------------
-
-    """
-    Sarah has 10 apples. She gives 3 apples to John and then buys
-    5 more apples. How many apples does Sarah have?
-    """,
-
-    """
-    A student scores 70, 80, and 90 on three tests.
-    What is the student's average score?
-    """,
-
-    """
-    A shop has 500 products. It sells 20 percent of them.
-    How many products are left?
-    """,
-
-    """
-    A car travels 60 kilometers per hour for 3 hours.
-    How far does it travel?
-    """,
-
-    """
-    A laptop costs 60,000 rupees. It receives a 10 percent discount.
-    What is the discounted price?
-    """,
-
-    """
-    A class has 40 students. 60 percent of them passed the exam.
-    How many students passed?
-    """,
-
-    """
-    A water tank contains 100 liters. 35 liters are used,
-    and then 20 liters are added. How much water is in the tank?
-    """,
-
-    """
-    A worker earns 800 rupees per day and works for 6 days.
-    How much does the worker earn?
-    """,
-
-    """
-    A rectangle has a length of 20 centimeters and a width of
-    10 centimeters. What is its area?
-    """,
-
-    """
-    A number is multiplied by 4 and then increased by 10.
-    If the original number is 5, what is the result?
-    """,
-
-    # --------------------------------------------------
-    # LONGER STRUCTURED QUESTIONS
-    # --------------------------------------------------
-
-    """
-    Compare supervised learning and unsupervised learning.
-    Explain how their training objectives differ and provide
-    one practical example of each.
-    """,
-
-    """
-    Explain how a transformer processes an input sequence.
-    Describe the role of self-attention and feed-forward layers.
-    """,
-
-    """
-    Explain why deeper neural networks can represent more complex
-    functions, and discuss one disadvantage of increasing depth.
-    """,
-
-    """
-    Describe the main differences between a traditional database
-    and a distributed database. Explain why distributed systems
-    may be useful for large-scale applications.
-    """,
-
-    """
-    Explain how an HTTP request travels from a web browser to
-    a backend server and how the server sends a response back.
-    """,
-
-    """
-    Explain the difference between CPU and GPU computation and
-    describe why GPUs are commonly used for neural network training.
-    """,
-
-    """
-    Describe the steps involved in training a machine learning model,
-    including data preparation, training, validation, and evaluation.
-    """,
-
-    """
-    Explain what overfitting is, why it happens, and describe
-    two methods that can be used to reduce it.
-    """,
-
-    """
-    Explain how caching can improve application performance and
-    discuss one potential problem caused by stale cached data.
-    """,
-
-    """
-    Compare a monolithic application with a microservices architecture.
-    Explain one advantage and one disadvantage of each approach.
-    """
+SCIENCE_TOPICS = [
+    "photosynthesis converts sunlight into chemical energy",
+    "the greenhouse effect warms the atmosphere",
+    "vaccines train the immune system",
+    "tectonic plates cause earthquakes",
+    "the water cycle moves water between ocean and air",
+    "antibiotic resistance develops in bacteria",
+    "the moon causes ocean tides",
+    "sound travels faster in water than in air",
+    "metals conduct electricity better than plastics",
+    "the human eye perceives colour",
+    "enzymes speed up chemical reactions",
+    "erosion reshapes river valleys",
+    "a rainbow forms after rainfall",
+    "birds migrate across continents each year",
+    "the seasons change through the year",
 ]
+
+TECH_TOPICS = [
+    "TCP and UDP", "RAM and ROM", "a process and a thread",
+    "a compiler and an interpreter", "HTTP and HTTPS", "SQL and NoSQL databases",
+    "a stack and a queue", "authentication and authorization",
+    "a virtual machine and a container", "latency and throughput",
+    "a hash table and a binary search tree", "a TCP handshake and a TLS handshake",
+    "horizontal and vertical scaling", "synchronous and asynchronous I/O",
+    "a cache hit and a cache miss",
+]
+
+CODE_TASKS = [
+    "reverses a string", "checks whether a number is prime",
+    "computes the factorial of an integer", "merges two sorted lists",
+    "counts word frequencies in a paragraph", "removes duplicates from a list",
+    "finds the largest element in an array", "validates an email address",
+    "converts Celsius to Fahrenheit", "implements binary search",
+    "flattens a nested list", "computes a moving average",
+    "parses a CSV row into fields", "detects a palindrome",
+    "sums the digits of a number",
+]
+
+SUMMARY_SUBJECTS = [
+    "the industrial revolution", "the theory of evolution",
+    "the origins of the internet", "the printing press",
+    "the discovery of penicillin", "the space race",
+    "the invention of the transistor", "global supply chains",
+    "renewable energy adoption", "the history of written language",
+]
+
+LOGIC_TEMPLATES = [
+    "All {a} are {b}. Some {b} are {c}. Does it follow that some {a} are {c}? Explain why or why not.",
+    "If every {a} needs a {b}, and no {c} has a {b}, can a {c} be one of the {a}? Explain your reasoning.",
+    "Either the {a} are in the {b} or in the {c}. They are not in the {b}. Where are they, and why?",
+]
+
+LOGIC_NOUNS = [
+    ("engineers", "problem solvers", "artists"),
+    ("mammals", "warm-blooded animals", "reptiles"),
+    ("squares", "rectangles", "rhombuses"),
+    ("students", "readers", "athletes"),
+    ("bridges", "structures", "tunnels"),
+]
+
+
+def _arithmetic(rng, count):
+    prompts = []
+    for _ in range(count):
+        kind = rng.choice(["add", "percent", "rate", "chain"])
+        if kind == "add":
+            a, b = rng.randint(12, 999), rng.randint(12, 999)
+            prompts.append((f"Calculate {a} + {b}.", "basic_arithmetic"))
+        elif kind == "percent":
+            pct = rng.choice([5, 10, 15, 20, 25, 40, 60])
+            total = rng.randint(40, 2000)
+            prompts.append((f"What is {pct} percent of {total}?", "basic_arithmetic"))
+        elif kind == "rate":
+            dist, hours = rng.randint(60, 600), rng.randint(2, 9)
+            prompts.append((
+                f"A train travels {dist} kilometers in {hours} hours. "
+                "What is its average speed?", "multi_step_arithmetic"))
+        else:
+            start = rng.randint(5, 60)
+            bought = rng.randint(2, 30)
+            sold = rng.randint(1, 10)
+            prompts.append((
+                f"A shop starts with {start} boxes, receives {bought} more, "
+                f"then sells {sold}. How many boxes remain, and what is "
+                "20 percent of that number?", "multi_step_arithmetic"))
+    return prompts
+
+
+def _gsm8k(count):
+    """Real multi-step word problems. Cached locally after the first build."""
+    import warnings
+    warnings.filterwarnings("ignore")
+    from datasets import load_dataset
+
+    data = load_dataset("openai/gsm8k", "main", split=f"train[:{count}]")
+    return [(row["question"].strip(), "hard_reasoning") for row in data]
+
+
+def build():
+    rng = random.Random(SEED)
+    entries = []
+
+    with open(SEED_PATH, encoding="utf-8") as handle:
+        for text in json.load(handle):
+            entries.append({"text": " ".join(text.split()), "category": "seed_handwritten"})
+
+    def add(pairs):
+        for text, category in pairs:
+            entries.append({"text": " ".join(text.split()), "category": category})
+
+    add(_arithmetic(rng, 60))
+
+    add([(f"Explain why {topic}.", "scientific_explanation") for topic in SCIENCE_TOPICS])
+    add([
+        (f"Explain in detail why {topic}, describe the main stages involved, "
+         f"and give one everyday example.", "scientific_explanation")
+        for topic in SCIENCE_TOPICS
+    ])
+
+    add([(f"What is the difference between {topic}?", "technical") for topic in TECH_TOPICS])
+    add([
+        (f"Compare {topic}. Explain one advantage of each, and describe a "
+         f"situation where you would choose one over the other.", "technical")
+        for topic in TECH_TOPICS
+    ])
+
+    add([(f"Write a Python function that {task}.", "code") for task in CODE_TASKS])
+    add([
+        (f"Write a Python function that {task}. Explain how it works, "
+         f"describe its time complexity, and list one edge case it must handle.", "code")
+        for task in CODE_TASKS
+    ])
+
+    add([(f"Summarize {subject} in two sentences.", "summarization")
+         for subject in SUMMARY_SUBJECTS])
+    add([
+        (f"Summarize {subject}. Cover the main causes, the most important "
+         f"consequences, and explain why it still matters today.", "summarization")
+        for subject in SUMMARY_SUBJECTS
+    ])
+
+    add([
+        (template.format(a=a, b=b, c=c), "logical_reasoning")
+        for template in LOGIC_TEMPLATES
+        for a, b, c in LOGIC_NOUNS
+    ])
+
+    add([
+        (f"You are given a report about {subject}. First, identify the three "
+         f"most important claims. Second, explain which claim is best supported "
+         f"by evidence. Third, describe what additional information would be "
+         f"needed to evaluate the weakest claim.", "long_structured")
+        for subject in SUMMARY_SUBJECTS
+    ])
+    add([
+        (f"Consider a system that handles {topic}. Describe the components "
+         f"involved, explain how they interact, and evaluate one failure mode.",
+         "long_structured")
+        for topic in TECH_TOPICS
+    ])
+
+    remaining = TARGET_SIZE - len(entries)
+    if remaining > 0:
+        add(_gsm8k(remaining))
+
+    # De-duplicate while preserving order, then trim to the target size.
+    seen, unique = set(), []
+    for entry in entries:
+        if entry["text"] not in seen:
+            seen.add(entry["text"])
+            unique.append(entry)
+
+    unique = unique[:TARGET_SIZE]
+
+    with open(PROMPTS_PATH, "w", encoding="utf-8") as handle:
+        json.dump(unique, handle, indent=1, ensure_ascii=False)
+
+    return unique
+
+
+if __name__ == "__main__":
+    import sys
+    from collections import Counter
+
+    if "--build" in sys.argv:
+        entries = build()
+        print(f"Built {len(entries)} prompts -> {PROMPTS_PATH}")
+    else:
+        _, entries = load()
+        print(f"Loaded {len(entries)} prompts")
+
+    for category, count in Counter(e["category"] for e in entries).most_common():
+        print(f"  {category:24s} {count}")

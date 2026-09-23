@@ -1,0 +1,72 @@
+# MSA-GPT-2 experiment configuration (Phase 18).
+# The values the scripts default to. Change here and pass the matching flag, or
+# read this file when reproducing a run.
+
+seed: 42
+
+model:
+  backbone: gpt2                 # HuggingFace model id
+  layers: 12
+  heads: 12
+  hidden_size: 768
+  ffn_inner: 3072
+  attention_implementation: sdpa
+
+configurations:
+  shallow: {depth: 4, attention_mode: reduced, ffn_mode: partial}
+  medium: {depth: 8, attention_mode: reduced, ffn_mode: partial}
+  deep: {depth: 12, attention_mode: full, ffn_mode: full}
+  attention_head_fraction: {full: 1.0, reduced: 0.5}
+  ffn_chunk_fraction: {full: 1.0, partial: 0.5}
+  ffn_chunks: 4
+
+calibration:
+  prompts: data/calibration_prompts.json
+  size: 499
+  mechanisms: [depth, full]
+  output: results/calibration_results.csv
+  # 499 prompts x 3 configurations x 2 mechanisms = 2994 experiments
+
+predictor:
+  path: results/performance_predictor.pkl
+  feature_set: v2                # v1 = original 4 features, v2 = 8 features
+  architecture: StandardScaler + MLPClassifier(32, 16)
+  tolerance: 1.00                # max relative loss increase vs depth 12
+  test_size: 0.20
+  cross_validation_folds: 5
+
+policy:
+  confidence_threshold: 0.50
+  fallback: deep
+
+stability_monitor:
+  window: 6
+  warning_threshold: 0.4
+  unstable_threshold: 0.7
+
+routing_baseline:
+  chunks: 4
+  top_k: 2
+  gate: fixed seeded random projection (untrained)
+
+benchmark:
+  warmup: 10
+  runs: 50
+  sequence_lengths: [16, 64, 256]
+  device: cpu
+
+datasets:
+  short_qa:
+    source: data/load_data.py (local, 60 items)
+    metric: answer-conditional perplexity + exact match
+  gsm8k:
+    source: openai/gsm8k (main, test split)
+    limit: 40
+    metric: answer-conditional perplexity + exact match
+    note: GPT-2 small is not expected to solve GSM8K; accuracy is near zero for
+          every variant including the static baseline.
+
+outputs:
+  results_dir: results
+  figures_dir: results/figures
+  environment: results/environment.json

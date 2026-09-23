@@ -1,39 +1,44 @@
-# Metamorphic Self-Adaptation (MSA) Prototype
+# Metamorphic Self-Adaptation (MSA) — GPT-2 Prototype
 
-A prototype that runs GPT-2 with a **variable number of transformer layers per input**, chosen by a lightweight complexity scorer, instead of always running the full 12-layer stack. The idea: cheap/simple prompts get a shallow (fast) pass, harder prompts get a deep (accurate) pass.
+A research prototype that runs GPT-2 with a **per-input architecture**, chosen by a
+learned configuration predictor, instead of always executing the full 12-layer stack
+at full width. Simple prompts get a cheap configuration, harder prompts get an
+expensive one.
+
+Three adaptation mechanisms, none of which modify the pretrained weights:
+
+| Mechanism | What changes | Real compute saving |
+|-----------|--------------|---------------------|
+| **Depth** | run only the first *d* of 12 transformer blocks | yes |
+| **Attention** | slice QKV/output projections to a subset of heads | yes |
+| **FFN** | slice the MLP to a subset of its 3072 intermediate channels | yes |
+
+Attention and FFN adaptation **slice the weight tensors** rather than masking outputs,
+so the skipped work is genuinely not performed. `test_msa.py` asserts that each
+mechanism changes the computed output.
 
 ## Pipeline
 
 ```
-text ─▶ TaskAnalyzer ─▶ ComplexityScorer ─▶ ConfigurationSelector ─▶ depth ─▶ AdaptiveGPT2
-       (4 features)      (weighted sum)      (shallow/medium/deep)   (4/8/12 layers)
+Input
+  ├─► Task Analyzer            8 heuristic features
+  ├─► f_theta                  2-layer MLP → P(shallow), P(medium), P(deep)
+  ├─► Configuration Policy     argmax + confidence threshold + fallback
+  ├─► Stability Monitor        volatility tracking + rollback
+  ├─► Dynamic Arch. Controller depth / attention / FFN knobs + telemetry
+  └─► Adaptive GPT-2           ─► logits
 ```
 
-1. **`analyzer/task_analyzer.py`** — extracts 4 features from the input text: input length, reasoning-word density, math/domain-word density, structural complexity (punctuation/sentence count).
-2. **`controller/complexity.py`** — combines the 4 features into a single complexity score via fixed weights.
-3. **`controller/selector.py`** — thresholds the score into `shallow` / `medium` / `deep`.
-4. **`models/adaptive_model.py`** — `AdaptiveGPT2` wraps a HuggingFace `GPT2LMHeadModel` and runs only the first `depth` transformer blocks (4, 8, or 12 of GPT-2's 12) instead of the full stack.
-5. **`models/backbone.py`** — loads the base `gpt2` model/tokenizer from HuggingFace.
-
-`run_msa.py` wires all of this together end to end for a few example prompts.
-
-## Project structure
+Configurations (`configs/configurations.py`):
 
 ```
-analyzer/       task feature extraction
-calibration/    depth-vs-quality/latency sweep, writes results/calibration_results.csv
-configs/        static config values
-controller/     complexity scoring + shallow/medium/deep selection
-data/           dataset loading
-evaluation/     eval scripts + metrics
-models/         GPT-2 backbone + adaptive (variable-depth) wrapper
-monitor/        stability monitoring
-results/        run logs and calibration output (.md/.csv)
-main.py         quick manual smoke test of the backbone
-run_static.py   fixed-depth baseline (WIP)
-run_msa.py      full adaptive pipeline demo
-train_predictor.py   depth predictor training (WIP)
+shallow  depth  4   attention reduced (6/12 heads)   ffn partial (2/4 chunks)
+medium   depth  8   attention reduced (6/12 heads)   ffn partial (2/4 chunks)
+deep     depth 12   attention full                   ffn full
 ```
+
+The `depth` mechanism holds attention and FFN at full width, which is Baseline B and
+the Phase 6 depth-only controller. The `full` mechanism enables all three.
 
 ## Setup
 
@@ -43,25 +48,159 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+Modules are run with `-m` so the package imports resolve from the repository root.
+
 ## Usage
 
+One command per stage, or the whole pipeline at once:
+
 ```powershell
-python run_msa.py                      # full adaptive pipeline on sample prompts
-python calibration/run_calibration.py  # sweep depths 4/8/12, log loss/perplexity/latency
+python main.py --mode simulate          # end-to-end MSA on sample prompts
+python main.py --mode calibrate         # 499 prompts x 3 configs x 2 mechanisms
+python main.py --mode frontier          # quality-compute tolerance sweep
+python main.py --mode train-predictor   # train f_theta
+python main.py --mode ablate-features   # Task Analyzer v1 vs v2
+python main.py --mode benchmark         # warmup + repeated latency runs
+python main.py --mode evaluate          # baselines, ablations, datasets, stability
+python main.py --mode plot              # all figures into results/figures/
+python main.py --mode tables            # research tables into results/tables.md
+python main.py --mode validate          # Phase 24 checklist
+python main.py --mode all               # everything, in order
 ```
 
-## Findings so far
+Individual entry points:
 
-`calibration/run_calibration.py` (13 prompts x depths 4/8/12) shows the expected depth/quality/latency tradeoff:
+```powershell
+python test_predictor.py                        # Phase 1 predictor validation
+python test_msa.py                              # Phase 24 final validation
+python run_msa.py --text "Explain why the sky appears blue."
+python run_static.py --all-depths               # Baseline A at depths 4/8/12
+python -m evaluation.evaluate --suite stability
+```
 
-| Depth | Avg. Loss | Avg. Perplexity | Avg. Latency |
-|-------|-----------|------------------|--------------|
-| 4     | 9.40      | 21,106           | 0.014s       |
-| 8     | 6.77      | 2,467            | 0.022s       |
-| 12    | 3.32      | 43               | 0.030s       |
+Every module has a runnable self-check:
 
-Deeper = slower but far more accurate. The current `ComplexityScorer` weights are hand-picked, not learned — the selector currently routes most test prompts to `shallow` even where a deeper pass would clearly help (see `results/`), which is the main open problem: complexity scoring needs to be calibrated against these results, or replaced with a learned predictor (`train_predictor.py`).
+```powershell
+python -m analyzer.task_analyzer
+python -m controller.controller
+python -m controller.policy
+python -m monitor.stability_monitor
+python -m evaluation.metrics
+python -m evaluation.baselines
+python -m data.load_data
+```
+
+## Project structure
+
+```
+analyzer/task_analyzer.py        8 heuristic features (v1 = original 4, v2 = +4)
+calibration/run_calibration.py   depth/attention/FFN sweep → calibration_results.csv
+configs/configurations.py        configuration library + analytical FLOP model
+configs/experiment.yaml          every default in one place (Phase 18)
+controller/controller.py         Dynamic Architecture Controller + telemetry
+controller/predictor.py          f_theta inference wrapper
+controller/train_predictor.py    predictor training + feature ablation
+controller/policy.py             calibration targets + inference-time policy
+controller/policy_sweep.py       quality-compute frontier
+data/calibration_dataset.py      499 prompts, 10 categories (rebuild with --build)
+data/load_data.py                short_qa + GSM8K downstream sets
+evaluation/harness.py            every baseline and ablation as one flag-set
+evaluation/evaluate.py           single evaluation entry point
+evaluation/baselines.py          Baseline D dense reference (RMSNorm/RoPE/SwiGLU)
+evaluation/benchmark.py          reproducible latency measurement
+evaluation/metrics.py            standardised metric set
+evaluation/generate_plots.py     12 figures, regenerated from CSVs
+evaluation/tables.py             research tables + claims checklist
+models/adaptive_model.py         AdaptiveGPT2: depth + attention + FFN + routing
+monitor/stability_monitor.py     volatility, status, rollback
+```
+
+## Correctness fix that invalidated earlier results
+
+The original `AdaptiveGPT2` passed `attention_mask=torch.ones(batch, seq)` into the
+transformer blocks. Under Transformers v5 with the SDPA attention path, supplying any
+explicit mask **disables the causal mask** (`is_causal = q_len > 1 and attention_mask
+is None`), so the model attended bidirectionally and every token could see its own
+future.
+
+The consequences were large: at depth 12 the logits differed from stock GPT-2 by up to
+67.4 and the model predicted `"capital"` instead of `"Paris"` for
+`"...the capital of France is"`. All calibration losses, the quality-compute frontier
+and the trained predictor were derived from that broken forward pass.
+
+The fix is to pass `attention_mask=None`. `test_msa.py` now asserts both that depth 12
+is numerically identical to the reference model and that prefix logits do not change
+when later tokens are removed. All results in `results/` were regenerated afterwards.
+
+## Findings
+
+Calibration: 499 prompts × 3 configurations × 2 mechanisms = **2,994 experiments**
+(`results/calibration_results.csv`).
+
+Depth-only mechanism, mean over 499 prompts:
+
+| Depth | Prompt LM loss | Relative FLOPs | Latency |
+|-------|----------------|----------------|---------|
+| 4     | 9.03           | 0.333          | 60 ms   |
+| 8     | 7.21           | 0.667          | 94 ms   |
+| 12    | 3.86           | 1.000          | 126 ms  |
+
+Quality-compute frontier (`results/quality_compute_frontier.csv`) — the tolerance is
+the maximum relative loss increase the calibration policy accepts:
+
+| Tolerance | Avg depth | Compute reduction | Relative loss increase | shallow/medium/deep |
+|-----------|-----------|-------------------|------------------------|---------------------|
+| 0.10 | 12.00 |  0.0% |  0.0% | 0 / 0 / 499 |
+| 0.50 | 11.48 |  4.3% |  5.5% | 15 / 35 / 449 |
+| 0.75 | 10.39 | 13.4% | 22.1% | 38 / 125 / 336 |
+| 1.00 |  8.87 | 26.1% | 51.5% | 79 / 233 / 187 |
+| 1.50 |  5.82 | 51.5% | 105.8% | 291 / 189 / 19 |
+| 2.00 |  4.46 | 62.8% | 126.3% | 441 / 58 / 0 |
+
+Tolerance **1.00** is the operating point used to train the shipped predictor: it is
+the setting that produces a non-degenerate three-class target distribution.
+
+Predictor (`f_theta`, 8 features, tolerance 1.00): **0.72 held-out accuracy**,
+0.67 ± 0.19 under 5-fold cross-validation. Task Analyzer ablation
+(`results/feature_ablation.csv`): v2's eight features score 0.673 CV against v1's four
+at 0.629 — an improvement, but well inside one standard deviation, so it is not a
+statistically established gain.
+
+Remaining measured results are in `results/tables.md`, regenerated by
+`python main.py --mode tables`.
+
+## Limitations
+
+These are the honest boundaries of what the experiments establish:
+
+- **Calibration signal is not task quality.** Targets come from next-token loss over
+  the prompt. Downstream metrics are reported separately in
+  `results/dataset_evaluation.csv`.
+- **GPT-2 small cannot solve GSM8K.** Accuracy is near zero for every variant
+  including the static baseline, so that dataset separates compute behaviour, not
+  task quality.
+- **Attention and FFN adaptation degrade quality substantially.** They are applied to
+  pretrained weights with no retraining or distillation. The measured loss increase is
+  reported rather than explained away.
+- **FLOP reduction is not always latency reduction.** On CPU at short sequence
+  lengths, slicing overhead can exceed the work saved. Both are reported.
+- **The routing baseline uses a fixed seeded gate**, not a learned router.
+- **Baseline D is randomly initialised.** Only its parameter count and latency are
+  meaningful; its quality is reported as N/A.
+
+No claim is made that MSA always improves performance, guarantees lower latency, or
+preserves quality. See the claims checklist at the end of `results/tables.md`.
+
+## Reproducibility
+
+Seeds are fixed at 42 throughout. `configs/experiment.yaml` records every default;
+`results/environment.json` records the Python, PyTorch, Transformers, scikit-learn and
+device versions used for the benchmark run. Calibration prompts are frozen in
+`data/calibration_prompts.json` so no network access is needed to reproduce a run
+(rebuilding the prompt set with `--build` does fetch GSM8K).
 
 ## Status
 
-Prototype / research code. `run_static.py` and `train_predictor.py` are stubs.
+Working research prototype. Phases 1–19 and 21–22 of `plan.md` are implemented.
+Phase 20 (optional UI simulation) and Phase 23 (paper integration) are not — see
+`plan.md` for their scope.

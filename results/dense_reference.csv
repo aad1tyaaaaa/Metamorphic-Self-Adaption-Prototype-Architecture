@@ -1,0 +1,2 @@
+model,parameters,trained,quality_metric,sequence_length,runs,latency_mean,latency_std,vocab_size,dim,depth,heads,ffn_hidden,norm,position,activation
+DenseReference (RMSNorm + RoPE + SwiGLU),162148608,False,N/A (randomly initialised),64,20,0.4402316399908159,0.0712879202908807,50257,768,12,12,2048,RMSNorm,RoPE,SwiGLU

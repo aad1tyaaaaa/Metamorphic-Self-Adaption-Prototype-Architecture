@@ -1,188 +1,71 @@
+"""Quality-compute frontier: sweep the calibration quality tolerance.
+
+    python -m controller.policy_sweep
+
+The tolerance is the maximum relative loss increase, against the 12-layer
+model, that the calibration policy will accept in exchange for a shallower
+configuration. It is an operating point to be chosen, not a constant.
+"""
+
 import pandas as pd
 
+from controller.policy import CalibrationPolicy
 
-def create_targets(df, quality_tolerance):
+CALIBRATION_PATH = "results/calibration_results.csv"
+OUTPUT_PATH = "results/quality_compute_frontier.csv"
 
-    targets = []
+TOLERANCES = [0.05, 0.10, 0.25, 0.50, 0.75, 1.00, 1.50, 2.00]
 
-    for sample_id, group in df.groupby("sample_id"):
 
-        group = group.sort_values("depth")
+def sweep(frame, tolerances=None, mechanism="depth"):
+    rows = []
 
-        deep_row = group[group["depth"] == 12].iloc[0]
+    for tolerance in tolerances or TOLERANCES:
+        targets = CalibrationPolicy(tolerance).create_targets(frame, mechanism=mechanism)
+        distribution = targets["target_configuration"].value_counts().to_dict()
 
-        baseline_loss = deep_row["loss"]
-
-        maximum_allowed_loss = (
-            baseline_loss * (1 + quality_tolerance)
-        )
-
-        acceptable = group[
-            group["loss"] <= maximum_allowed_loss
-        ]
-
-        if len(acceptable) > 0:
-            selected = acceptable.sort_values(
-                "depth"
-            ).iloc[0]
-        else:
-            selected = deep_row
-
-        targets.append({
-            "sample_id": sample_id,
-            "depth": selected["depth"],
-            "configuration": selected["configuration"],
-            "selected_loss": selected["loss"],
-            "deep_loss": baseline_loss,
-            "latency": selected["latency_seconds"]
+        rows.append({
+            "tolerance": tolerance,
+            "average_depth": targets["target_depth"].mean(),
+            "layer_reduction_percent": (1 - targets["target_depth"].mean() / 12) * 100,
+            "relative_flops": targets["relative_flops"].mean(),
+            "compute_reduction_percent": (1 - targets["relative_flops"].mean()) * 100,
+            "average_latency": targets["selected_latency"].mean(),
+            "average_loss": targets["selected_loss"].mean(),
+            "deep_loss": targets["deep_loss"].mean(),
+            "relative_loss_increase": (
+                targets["selected_loss"].mean() / targets["deep_loss"].mean() - 1
+            ),
+            "shallow": distribution.get("shallow", 0),
+            "medium": distribution.get("medium", 0),
+            "deep": distribution.get("deep", 0),
         })
 
-    return pd.DataFrame(targets)
+    return pd.DataFrame(rows)
 
 
-# --------------------------------------------------
-# Load calibration data
-# --------------------------------------------------
+def main():
+    frame = pd.read_csv(CALIBRATION_PATH)
+    summary = sweep(frame)
 
-df = pd.read_csv(
-    "results/calibration_results.csv"
-)
+    print("=" * 78)
+    print("QUALITY-COMPUTE FRONTIER (depth-only mechanism)")
+    print("=" * 78)
+    print(summary.round(4).to_string(index=False))
 
+    summary.to_csv(OUTPUT_PATH, index=False)
+    print(f"\nSaved: {OUTPUT_PATH}")
 
-# --------------------------------------------------
-# Test multiple quality tolerances
-# --------------------------------------------------
+    # Tolerances must trade quality for compute monotonically.
+    assert summary["average_depth"].is_monotonic_decreasing, "frontier is not monotonic"
 
-tolerances = [
-    0.10,
-    0.25,
-    0.50,
-    0.75,
-    1.00,
-    1.50,
-    2.00
-]
+    usable = summary[summary["shallow"] + summary["medium"] > 0]
+    if len(usable):
+        print(f"\nShallowest tolerance that ever selects below depth 12: "
+              f"{usable.iloc[0]['tolerance']}")
 
-
-print("\n")
-print("=" * 70)
-print("MSA QUALITY-COMPUTE FRONTIER")
-print("=" * 70)
+    return summary
 
 
-summary = []
-
-
-for tolerance in tolerances:
-
-    targets = create_targets(
-        df,
-        tolerance
-    )
-
-    distribution = (
-        targets["configuration"]
-        .value_counts()
-        .to_dict()
-    )
-
-    average_depth = targets["depth"].mean()
-
-    layer_reduction = (
-        1 - average_depth / 12
-    ) * 100
-
-    average_latency = targets["latency"].mean()
-
-    average_loss = targets["selected_loss"].mean()
-
-    deep_average_loss = (
-        targets["deep_loss"].mean()
-    )
-
-    relative_loss = (
-        average_loss / deep_average_loss
-    ) - 1
-
-    summary.append({
-        "tolerance": tolerance,
-        "average_depth": average_depth,
-        "layer_reduction_percent": layer_reduction,
-        "average_latency": average_latency,
-        "average_loss": average_loss,
-        "relative_loss_increase": relative_loss,
-        "shallow": distribution.get(
-            "shallow", 0
-        ),
-        "medium": distribution.get(
-            "medium", 0
-        ),
-        "deep": distribution.get(
-            "deep", 0
-        )
-    })
-
-
-# --------------------------------------------------
-# Display results
-# --------------------------------------------------
-
-summary_df = pd.DataFrame(summary)
-
-print(
-    "\n"
-    + summary_df.to_string(
-        index=False
-    )
-)
-
-
-print("\n")
-print("=" * 70)
-print("INTERPRETATION")
-print("=" * 70)
-
-for _, row in summary_df.iterrows():
-
-    print(
-        f"\nTolerance: "
-        f"{row['tolerance'] * 100:.0f}%"
-    )
-
-    print(
-        f"  Depth: "
-        f"{row['average_depth']:.2f}"
-    )
-
-    print(
-        f"  Layer reduction: "
-        f"{row['layer_reduction_percent']:.2f}%"
-    )
-
-    print(
-        f"  Shallow: "
-        f"{int(row['shallow'])}"
-    )
-
-    print(
-        f"  Medium: "
-        f"{int(row['medium'])}"
-    )
-
-    print(
-        f"  Deep: "
-        f"{int(row['deep'])}"
-    )
-
-
-# --------------------------------------------------
-# Save frontier
-# --------------------------------------------------
-
-summary_df.to_csv(
-    "results/quality_compute_frontier.csv",
-    index=False
-)
-
-print("\nSaved:")
-print("results/quality_compute_frontier.csv")
+if __name__ == "__main__":
+    main()

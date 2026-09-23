@@ -1,255 +1,100 @@
-import sys
+"""Calibration sweep (Phase 4).
+
+Runs every prompt through every configuration under both adaptation mechanisms
+and records the features, quality and cost of each run.
+
+    python -m calibration.run_calibration [--limit N]
+
+The `mechanism` column separates depth-only runs (Phase 6) from full
+depth+attention+FFN runs (Phase 9); downstream code filters on it.
+"""
+
+import argparse
 import os
 
-sys.path.append(
-    os.path.dirname(
-        os.path.dirname(
-            os.path.abspath(__file__)
-        )
-    )
-)
-
-import time
-import math
-import torch
 import pandas as pd
+import torch
 
-from models.backbone import load_model
-from models.adaptive_model import AdaptiveGPT2
 from analyzer.task_analyzer import TaskAnalyzer
+from configs.configurations import CONFIG_NAMES, FEATURES_V2
 from controller.complexity import ComplexityScorer
+from controller.controller import DynamicArchitectureController
+from data.calibration_dataset import load
+from models.adaptive_model import AdaptiveGPT2
+from models.backbone import load_model
+
+OUTPUT_PATH = "results/calibration_results.csv"
 
 
-# --------------------------------------------------
-# 1. Load model
-# --------------------------------------------------
+def main(limit=None, seed=42, output_path=OUTPUT_PATH):
+    torch.manual_seed(seed)
 
-print("Loading calibration system...")
+    _, entries = load()
+    if limit:
+        entries = entries[:limit]
 
-model, tokenizer = load_model()
+    model, tokenizer = load_model()
+    adaptive_model = AdaptiveGPT2(model).eval()
 
-adaptive_model = AdaptiveGPT2(model)
-adaptive_model.eval()
+    analyzer = TaskAnalyzer("v2")
+    scorer = ComplexityScorer()
 
-analyzer = TaskAnalyzer()
-scorer = ComplexityScorer()
+    controllers = {
+        mechanism: DynamicArchitectureController(adaptive_model, tokenizer, mechanism)
+        for mechanism in ("depth", "full")
+    }
 
+    rows = []
+    total = len(entries) * len(controllers) * len(CONFIG_NAMES)
 
-# --------------------------------------------------
-# 2. Calibration dataset
-# --------------------------------------------------
+    for sample_id, entry in enumerate(entries):
+        text = entry["text"]
 
-# texts = [
-#     "What is 2 + 2?",
+        features = analyzer.analyze_all(text)
+        complexity = scorer.calculate(features)
+        input_ids = controllers["depth"].encode(text)
 
-#     "What is the capital of France?",
+        for mechanism, controller in controllers.items():
+            for configuration in CONFIG_NAMES:
+                result = controller.run(text, configuration, input_ids=input_ids)
 
-#     "Explain why the sky appears blue.",
+                rows.append({
+                    "sample_id": sample_id,
+                    "text": text,
+                    "category": entry["category"],
+                    "mechanism": mechanism,
+                    "complexity": complexity,
+                    **{name: features[name] for name in FEATURES_V2},
+                    **{
+                        key: value for key, value in result.items()
+                        if key not in ("logits",)
+                    },
+                })
 
-#     "Calculate the percentage increase from 50 to 75.",
+        if (sample_id + 1) % 25 == 0 or sample_id + 1 == len(entries):
+            print(f"[{len(rows):5d}/{total}] sample {sample_id + 1}/{len(entries)}", flush=True)
 
-#     "What is the boiling point of water?",
+    frame = pd.DataFrame(rows)
 
-#     "Explain the difference between RAM and ROM.",
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    frame.to_csv(output_path, index=False)
 
-#     "Why does the Earth have seasons?",
-
-#     """
-#     John has 5 apples. He buys 3 more apples.
-#     He then gives 2 apples to Sarah.
-#     How many apples does John have remaining?
-#     """,
-
-#     """
-#     A train travels 120 kilometers in 2 hours.
-#     What is its average speed?
-#     """,
-
-#     """
-#     Explain how photosynthesis converts sunlight into chemical energy.
-#     """,
-
-#     """
-#     If a shirt costs 800 rupees and is discounted by 25 percent,
-#     what is the final price?
-#     """,
-
-#     """
-#     Explain why increasing the temperature generally increases
-#     the rate of a chemical reaction.
-#     """,
-
-#     """
-#     A store has 240 items. It sells 35 percent of them.
-#     How many items remain?
-#     """
-# ]
-
-from data.calibration_dataset import CALIBRATION_DATASET
-
-texts = CALIBRATION_DATASET
-
-# --------------------------------------------------
-# 3. Depth configurations
-# --------------------------------------------------
-
-DEPTH_MAP = {
-    4: "shallow",
-    8: "medium",
-    12: "deep"
-}
-
-
-# --------------------------------------------------
-# 4. Evaluate one input at one depth
-# --------------------------------------------------
-
-def evaluate(text, depth):
-
-    inputs = tokenizer(
-        text,
-        return_tensors="pt"
+    print(f"\nCALIBRATION COMPLETE: {len(frame)} experiments -> {output_path}")
+    print("\nMean by mechanism and configuration:")
+    print(
+        frame.groupby(["mechanism", "configuration"])[
+            ["loss", "perplexity", "latency_seconds", "relative_flops"]
+        ].mean().round(4)
     )
 
-    input_ids = inputs["input_ids"]
-
-    start_time = time.perf_counter()
-
-    with torch.no_grad():
-
-        logits = adaptive_model(
-            input_ids=input_ids,
-            depth=depth
-        )
-
-    end_time = time.perf_counter()
-
-    latency = end_time - start_time
-
-    # ----------------------------------------------
-    # Next-token language modeling loss
-    # ----------------------------------------------
-
-    shift_logits = logits[:, :-1, :].contiguous()
-    shift_labels = input_ids[:, 1:].contiguous()
-
-    loss_fn = torch.nn.CrossEntropyLoss()
-
-    loss = loss_fn(
-        shift_logits.view(-1, shift_logits.size(-1)),
-        shift_labels.view(-1)
-    )
-
-    loss_value = loss.item()
-
-    perplexity = math.exp(
-        min(loss_value, 20)
-    )
-
-    return loss_value, perplexity, latency
+    return frame
 
 
-# --------------------------------------------------
-# 5. Run calibration
-# --------------------------------------------------
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--output", default=OUTPUT_PATH)
+    args = parser.parse_args()
 
-results = []
-
-total_runs = len(texts) * len(DEPTH_MAP)
-
-run_number = 0
-
-
-for sample_id, text in enumerate(texts):
-
-    text = text.strip()
-
-    # Analyze task once
-    features = analyzer.analyze(text)
-
-    complexity = scorer.calculate(features)
-
-    print("\n")
-    print("=" * 70)
-    print(f"SAMPLE {sample_id + 1}")
-    print("=" * 70)
-
-    print(f"Text: {text}")
-    print(f"Complexity: {complexity:.3f}")
-
-    for depth in [4, 8, 12]:
-
-        run_number += 1
-
-        print(
-            f"\n[{run_number}/{total_runs}] "
-            f"Testing depth {depth}..."
-        )
-
-        loss, perplexity, latency = evaluate(
-            text,
-            depth
-        )
-
-        configuration = DEPTH_MAP[depth]
-
-        result = {
-            "sample_id": sample_id,
-            "text": text,
-
-            "input_length": features["input_length"],
-            "reasoning": features["reasoning"],
-            "domain": features["domain"],
-            "structure": features["structure"],
-
-            "complexity": complexity,
-
-            "depth": depth,
-            "configuration": configuration,
-
-            "loss": loss,
-            "perplexity": perplexity,
-            "latency_seconds": latency
-        }
-
-        results.append(result)
-
-        print(
-            f"Depth: {depth} | "
-            f"Config: {configuration} | "
-            f"Loss: {loss:.4f} | "
-            f"PPL: {perplexity:.2f} | "
-            f"Latency: {latency:.4f}s"
-        )
-
-
-# --------------------------------------------------
-# 6. Save results
-# --------------------------------------------------
-
-df = pd.DataFrame(results)
-
-output_path = "results/calibration_results.csv"
-
-df.to_csv(
-    output_path,
-    index=False
-)
-
-print("\n")
-print("=" * 70)
-print("CALIBRATION COMPLETE")
-print("=" * 70)
-
-print(f"Total experiments: {len(df)}")
-print(f"Saved to: {output_path}")
-
-print("\nAverage results by depth:")
-
-summary = (
-    df.groupby("depth")
-    [["loss", "perplexity", "latency_seconds"]]
-    .mean()
-)
-
-print(summary)
+    main(limit=args.limit, seed=args.seed, output_path=args.output)

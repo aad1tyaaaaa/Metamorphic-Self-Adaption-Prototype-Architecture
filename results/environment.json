@@ -1,0 +1,13 @@
+{
+  "python": "3.14.6",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel",
+  "torch": "2.14.0+cpu",
+  "transformers": "5.17.0",
+  "sklearn": "1.9.1",
+  "numpy": "2.5.3",
+  "device": "cpu",
+  "cuda": null,
+  "gpu": null,
+  "torch_threads": 14
+}
