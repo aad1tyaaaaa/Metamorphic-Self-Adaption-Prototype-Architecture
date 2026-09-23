@@ -145,8 +145,7 @@ def main(warmup=WARMUP, runs=RUNS, sequence_lengths=None, seed=42,
 
     flagged = frame[frame["outlier_suspected"]]
     if len(flagged):
-        print(f"
-{len(flagged)} cell(s) flagged for an outlying run; use "
+        print(f"\n{len(flagged)} cell(s) flagged for an outlying run; use "
               "latency_trimmed_mean or latency_p50 for those:")
         for _, row in flagged.iterrows():
             print(f"  {row['mechanism']} / {row['configuration']} / "
