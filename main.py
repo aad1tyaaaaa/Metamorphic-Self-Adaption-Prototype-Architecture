@@ -7,6 +7,7 @@
     python main.py --mode benchmark
     python main.py --mode plot
     python main.py --mode tables
+    python main.py --mode ui
     python main.py --mode validate
     python main.py --mode all
 
@@ -30,10 +31,11 @@ MODES = {
     "plot": ("evaluation.generate_plots", []),
     "tables": ("evaluation.tables", []),
     "validate": ("test_msa", []),
+    "ui": ("ui.export_ui_data", []),
 }
 
 PIPELINE = ["calibrate", "frontier", "train-predictor", "ablate-features",
-            "benchmark", "evaluate", "plot", "tables", "validate"]
+            "benchmark", "evaluate", "plot", "tables", "ui", "validate"]
 
 
 def run(mode, extra):

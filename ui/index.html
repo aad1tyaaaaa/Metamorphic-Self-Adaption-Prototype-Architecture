@@ -1,0 +1,642 @@
+<title>MSA Control Room</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --ground:#e9edf1; --surface:#ffffff; --surface2:#f3f6f8;
+    --ink:#131820; --muted:#5d6673; --line:#d2d9e1;
+    --exec:#0b6e5f; --exec-soft:#0b6e5f22; --skip:#aeb7c2;
+    --stable:#0b6e5f; --warning:#a16207; --unstable:#9f1239;
+    --live:#0b6e5f; --replay:#5d6673;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0d1218; --surface:#151c25; --surface2:#1b232e;
+    --ink:#e7ebf0; --muted:#95a1b1; --line:#2a3542;
+    --exec:#2dd4bf; --exec-soft:#2dd4bf22; --skip:#3f4b5b;
+    --stable:#2dd4bf; --warning:#d4a017; --unstable:#f43f5e;
+    --live:#2dd4bf; --replay:#95a1b1;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0d1218; --surface:#151c25; --surface2:#1b232e;
+    --ink:#e7ebf0; --muted:#95a1b1; --line:#2a3542;
+    --exec:#2dd4bf; --exec-soft:#2dd4bf22; --skip:#3f4b5b;
+    --stable:#2dd4bf; --warning:#d4a017; --unstable:#f43f5e;
+    --live:#2dd4bf; --replay:#95a1b1;
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+       line-height:1.5;margin:0}
+  .wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 56px}
+  h1,h2,h3{text-wrap:balance;margin:0}
+  h1{font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:700;letter-spacing:-.02em}
+  h2{font-size:1.02rem;font-weight:600;letter-spacing:-.01em}
+  .eyebrow{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;
+           letter-spacing:.14em;color:var(--muted)}
+  .lede{color:var(--muted);max-width:66ch;margin-top:8px}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:24px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .tag{font-family:var(--mono);font-size:.7rem;border:1px solid var(--line);
+       border-radius:2px;padding:4px 8px;display:inline-flex;align-items:center;gap:6px;
+       background:var(--surface)}
+  .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dot.live{background:var(--live)} .dot.replay{background:var(--replay)}
+
+  section{margin-top:34px}
+  .sechead{display:flex;align-items:baseline;justify-content:space-between;
+           gap:12px;flex-wrap:wrap;margin-bottom:12px}
+
+  .chain{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(178px,1fr))}
+  .stage{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+         padding:12px 13px;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .stage-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .stage-n{font-family:var(--mono);font-size:.64rem;color:var(--muted);
+           letter-spacing:.1em}
+  .stage-t{font-size:.86rem;font-weight:600}
+
+  .kv{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);
+      font-size:.72rem;font-variant-numeric:tabular-nums}
+  .kv span:first-child{color:var(--muted);overflow:hidden;text-overflow:ellipsis;
+                       white-space:nowrap}
+  .kv b{font-weight:500}
+
+  .bar{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--exec)}
+
+  textarea{width:100%;font-family:var(--mono);font-size:.82rem;padding:11px 12px;
+    border:1px solid var(--line);border-radius:3px;background:var(--surface);
+    color:var(--ink);resize:vertical;min-height:74px}
+  textarea:focus-visible,button:focus-visible,select:focus-visible{
+    outline:2px solid var(--exec);outline-offset:2px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+  button{font-family:var(--sans);font-size:.79rem;font-weight:500;cursor:pointer;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    border-radius:3px;padding:7px 12px}
+  button.primary{background:var(--exec);border-color:var(--exec);color:#fff}
+  button:hover{border-color:var(--exec)}
+  .presets{display:flex;gap:6px;flex-wrap:wrap}
+  .presets button{font-size:.72rem;padding:5px 9px;font-family:var(--mono)}
+
+  /* 12-layer stack: the page's recurring motif */
+  .stack{display:flex;gap:3px;align-items:flex-end;height:58px}
+  .layer{flex:1;border-radius:1px;border:1px solid var(--exec);background:var(--exec-soft);
+         position:relative;min-width:0}
+  .layer.on{background:var(--exec)}
+  .layer.off{border-color:var(--skip);background:transparent}
+  .stacklabels{display:flex;justify-content:space-between;font-family:var(--mono);
+               font-size:.63rem;color:var(--muted);margin-top:5px}
+
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:14px 15px}
+  .panel h3{font-size:.82rem;font-weight:600;margin-bottom:10px}
+
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:3px;
+             background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:.73rem;
+        font-variant-numeric:tabular-nums}
+  th,td{padding:7px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-weight:500;font-size:.66rem;text-transform:uppercase;
+           letter-spacing:.07em;background:var(--surface2);position:sticky;top:0}
+  tbody tr:last-child td{border-bottom:none}
+  td.best{color:var(--exec);font-weight:600}
+
+  .pill{font-family:var(--mono);font-size:.66rem;padding:2px 7px;border-radius:2px;
+        border:1px solid currentColor;display:inline-block}
+  .pill.STABLE{color:var(--stable)} .pill.WARNING{color:var(--warning)}
+  .pill.UNSTABLE{color:var(--unstable)}
+
+  .trace{display:flex;gap:2px;flex-wrap:wrap;margin-top:10px}
+  .trace i{width:11px;height:17px;border-radius:1px;display:block}
+  .trace i[data-c="shallow"]{background:var(--skip)}
+  .trace i[data-c="medium"]{background:var(--exec-soft);border:1px solid var(--exec)}
+  .trace i[data-c="deep"]{background:var(--exec)}
+  .trace i[data-r="1"]{outline:2px solid var(--unstable);outline-offset:1px}
+
+  .note{font-size:.76rem;color:var(--muted);max-width:74ch}
+  .warn{border-left:2px solid var(--warning);padding-left:11px}
+  footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);
+         font-size:.75rem;color:var(--muted)}
+  ul{margin:8px 0 0;padding-left:18px} li{margin-bottom:5px}
+  @media (prefers-reduced-motion:no-preference){
+    .layer,.bar>i{transition:background .18s ease,border-color .18s ease}
+  }
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Metamorphic Self-Adaptation &middot; GPT-2 small</p>
+  <h1>MSA Control Room</h1>
+  <p class="lede">Per-input architecture selection. The analyzer, the learned predictor
+    <span class="mono">f_theta</span>, the decision policy and the stability monitor all execute
+    in this page. The GPT-2 figures are replayed from recorded runs &mdash; nothing here runs a
+    transformer.</p>
+  <div class="legend">
+    <span class="tag"><span class="dot live"></span>LIVE in browser &mdash; analyzer, f_theta, policy, monitor</span>
+    <span class="tag"><span class="dot replay"></span>REPLAYED from results/ &mdash; all GPT-2 loss, latency, accuracy</span>
+    <span class="tag" id="env-tag">&mdash;</span>
+  </div>
+</header>
+
+<section>
+  <div class="sechead">
+    <h2>Live pipeline</h2>
+    <span class="eyebrow" id="fset">&mdash;</span>
+  </div>
+  <label for="prompt" class="eyebrow">Input prompt</label>
+  <textarea id="prompt" spellcheck="false"></textarea>
+  <div class="controls">
+    <button class="primary" id="run" type="button">Analyze</button>
+    <span class="presets" id="presets"></span>
+  </div>
+
+  <div class="chain" style="margin-top:14px">
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">Task Analyzer</span><span class="stage-n">01</span></div>
+      <div id="features"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">f_theta</span><span class="stage-n">02</span></div>
+      <div id="probs"></div>
+      <div class="kv" style="border-top:1px solid var(--line);padding-top:7px">
+        <span>confidence</span><b id="conf">&mdash;</b></div>
+    </div>
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">Policy</span><span class="stage-n">03</span></div>
+      <div id="policy"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">Stability Monitor</span><span class="stage-n">04</span></div>
+      <div id="monitor"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">Controller</span><span class="stage-n">05</span></div>
+      <div id="knobs"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Executed architecture</h2>
+    <span class="eyebrow"><span class="dot live" style="display:inline-block"></span> live selection &middot;
+      <span class="dot replay" style="display:inline-block"></span> replayed telemetry</span>
+  </div>
+  <div class="grid g2">
+    <div class="panel">
+      <h3>Transformer blocks</h3>
+      <div class="stack" id="stack"></div>
+      <div class="stacklabels"><span>block 0</span><span id="stack-cap">&mdash;</span><span>block 11</span></div>
+      <div class="grid g3" style="margin-top:14px">
+        <div><div class="eyebrow">Depth</div><div class="mono" id="m-depth" style="font-size:1.3rem">&mdash;</div></div>
+        <div><div class="eyebrow">Heads</div><div class="mono" id="m-heads" style="font-size:1.3rem">&mdash;</div></div>
+        <div><div class="eyebrow">FFN chunks</div><div class="mono" id="m-ffn" style="font-size:1.3rem">&mdash;</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Inference telemetry <span class="tag" style="float:right"><span class="dot replay"></span>replayed</span></h3>
+      <div id="telemetry"></div>
+      <p class="note" style="margin-top:11px">Mean over the 499-prompt calibration corpus for the
+        selected configuration, not a live forward pass for your text.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Stability experiment</h2>
+    <span class="eyebrow">monitor on vs off</span>
+  </div>
+  <div class="panel">
+    <p class="note">Feeds a sequence built to force configuration switching through the live monitor.
+      Each cell is one decision; a crimson outline marks a rollback.</p>
+    <div class="controls">
+      <button class="primary" id="sim" type="button">Run 60-decision sequence</button>
+      <button id="simreset" type="button">Reset</button>
+    </div>
+    <div class="trace" id="trace"></div>
+    <div class="grid g3" style="margin-top:14px" id="simstats"></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Quality&ndash;compute frontier</h2><span class="eyebrow">499 prompts &middot; depth-only</span></div>
+  <div class="grid g2">
+    <div class="panel"><h3>Compute reduction vs loss increase</h3><div id="chart-frontier"></div></div>
+    <div class="panel"><h3>Depth vs prompt loss</h3><div id="chart-depth"></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Ablation ladder</h2><span class="eyebrow">60 short-QA prompts</span></div>
+  <div class="panel"><div id="chart-ablation"></div></div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Baselines</h2><span class="eyebrow">Phase 12</span></div>
+  <div class="tablewrap"><table id="t-base"></table></div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Downstream datasets</h2><span class="eyebrow">answer-conditional</span></div>
+  <div class="tablewrap"><table id="t-data"></table></div>
+  <p class="note warn" style="margin-top:10px"><b>Every variant, including static 12-layer GPT-2,
+    scores 0.000 exact match on GSM8K.</b> GPT-2 small cannot solve that task, so GSM8K separates
+    compute behaviour, not quality. On GSM8K the predictor also routes almost everything to
+    <span class="mono">deep</span>, so the compute saving seen on short QA largely disappears.</p>
+</section>
+
+<section>
+  <div class="sechead"><h2>Predictor</h2><span class="eyebrow">held-out confusion</span></div>
+  <div class="grid g2">
+    <div class="panel"><h3>Confusion matrix</h3><div id="confusion"></div></div>
+    <div class="panel"><h3>Reported accuracy</h3><div id="predstats"></div>
+      <p class="note" style="margin-top:10px">Cross-validated accuracy carries a large standard
+        deviation. The v2 feature set scores higher than v1 but the gap sits inside one standard
+        deviation and is not statistically established.</p></div>
+  </div>
+</section>
+
+<footer>
+  <p><b>What this page does and does not do.</b> The Task Analyzer heuristics, the
+    <span class="mono">f_theta</span> forward pass (exported weights, 8&rarr;32&rarr;16&rarr;3), the
+    confidence policy and the stability monitor are reimplemented here and genuinely execute on your
+    input. Every loss, perplexity, latency and accuracy figure is a recorded measurement replayed
+    from <span class="mono">results/</span>. This page does not run GPT-2.</p>
+  <p style="margin-top:10px"><b>Measured limitations.</b></p>
+  <ul>
+    <li>Full MSA is the worst-quality variant tested; attention and FFN slicing are applied to pretrained weights with no retraining.</li>
+    <li>Calibration targets come from prompt loss, which is not downstream task quality.</li>
+    <li>Latency was measured on CPU; the routing baseline uses less arithmetic yet runs slower.</li>
+    <li>Evaluation sets are small (60 short-QA, 40 GSM8K); small differences are not meaningful.</li>
+  </ul>
+  <p class="mono" id="env-line" style="margin-top:12px">&mdash;</p>
+</footer>
+</div>
+
+<script id="msa-data" type="application/json">{"generated_note":"GPT-2 execution figures are recorded measurements replayed from results/. The Task Analyzer, predictor and policy run live in the browser from exported weights.","configurations":{"shallow":{"depth":4,"attention_mode":"reduced","ffn_mode":"partial"},"medium":{"depth":8,"attention_mode":"reduced","ffn_mode":"partial"},"deep":{"depth":12,"attention_mode":"full","ffn_mode":"full"}},"depth_map":{"shallow":4,"medium":8,"deep":12},"feature_sets":{"v1":["input_length","reasoning","domain","structure"],"v2":["input_length","reasoning","domain","structure","numeric_density","math_expression","question_type","reasoning_steps"]},"predictor":{"features":["input_length","reasoning","domain","structure","numeric_density","math_expression","question_type","reasoning_steps"],"feature_set":"v2","classes":["deep","medium","shallow"],"scaler_mean":[0.25709273182957365,0.11779448621553876,0.03308270676691726,0.3305764411027564,0.24697435144621566,0.10944026733500417,0.5538847117794486,0.4193817878028403],"scaler_scale":[0.1985285947404802,0.1695021395379539,0.09660020536148707,0.2221278246248026,0.3128314663160609,0.20708017417050556,0.33803011350461726,0.2698076439549894],"weights":[[[-0.14885035500066432,0.4126511328554701,0.23463273223711373,0.07419166880357748,-0.25045809052085505,-0.3112804607272318,-0.41714526923291273,0.33665552420111866,0.1384018171893442,0.21618594032721292,-0.33422139139709833,0.4357933746655387,0.32479659812963113,-0.24649502878823537,-0.26873625886496916,-0.2484271687384601,-0.08268859607366713,-0.009197333335816842,0.00031076914593061635,-0.13362805309495804,0.04234164994023055,-0.2727407639168211,-0.23811565539136637,-0.0427400338859685,-0.040159609210559596,0.2875395954938985,-0.22933226422906625,0.04582609612161715,0.06871719064173985,-0.37578782745376066,0.1197578084454046,-0.1983886449262757],[-0.27982196424461303,0.3693612111927067,0.3307378009464056,0.2510480284221053,-0.1994800506449092,-0.2572465883928312,0.19408325724380684,-0.10638121343707697,-0.3620692729792913,-0.019655695000777077,-0.345626955891056,0.23950362620618088,-0.2705717159663156,0.08966203560414222,-0.20133542509559696,-0.0075499470817243335,-0.0639893237578303,-0.21968358126833187,0.4280689589986236,0.21673186022374047,0.3890418362428714,0.28781555453666224,0.12354836394407043,0.2673185940947522,-0.3519102524456392,-0.3240644300107843,-0.2933724447440466,-0.1659369214629704,-0.049306863753128316,-0.15098903676379316,0.19252715765425885,-0.04488402943725709],[-0.19907356256129716,0.028848109912674277,-0.32569026977494664,0.2136657301297511,-0.3272548564335866,0.35871615166701876,0.15766640568739554,-0.22361568231720003,-0.33329272244326075,0.2113668097533063,0.1105962551132312,0.12429284833131622,0.18239454565079682,-0.29865540013846514,-0.13244489517557317,-0.288100190432526,0.21269502422855274,0.04605769374052778,-0.1626996876044937,-0.3900391532988412,-0.10286773308320793,-0.11041082667704688,0.25296657197531386,0.08436023411181957,0.3752633589477887,0.03889966297236108,-0.21494452264652708,0.19162501516442906,0.18477601425262244,0.0754477247854225,0.24039434733368228,-0.05518132029865429],[-0.012948346314001245,0.016124240472695343,-0.3307020355375293,-0.3100058295677908,-0.3579192902976873,0.07431978400391509,-0.2139069674637426,0.0018363912927879058,0.34085140852480295,-0.14850064871835658,-0.045007364089717734,0.1983192617553879,-0.14134088150292495,-0.35304438892410944,-0.1948568679797342,-0.2671736924520424,0.38792052960367135,0.20414467116344992,0.16713734316513743,0.3174749766458854,0.22308083913881424,-0.22190213437023626,0.23851989091347564,0.0843013754852447,0.2313460007120028,0.35621323893063644,-0.13327516268103487,-0.274598474167488,-0.160753238453801,-0.07989343907459653,0.2137632961198118,0.33642519964415696],[-0.40089508446101346,-0.03347436904224238,-0.04049074513966068,-0.25203696614220955,-0.2671497120498907,-0.10819614435184598,0.4042010282758523,-0.07880458305078615,0.080348835709771,0.11241577131405635,-0.18779781962781567,0.3387047739640438,0.2957193200856194,-0.11852527785315155,0.06816104337777122,-0.16986592123607733,-0.21728555300922905,-0.39460222310570353,0.05405092148986112,-0.00863117133089757,-0.3664193822472269,-0.12380055393436847,0.36800579768129005,-0.26160051674647755,-0.23074393183269712,0.02124258147082222,0.39485759479001387,-0.17992192149168793,0.11763499048670195,0.2398644108077455,-0.21267495248593016,0.11902338580676669],[-0.1295947201079982,0.06598515362169652,0.169027189291716,-0.019975139795567896,-0.3214303787075391,0.3051192466122591,-0.053222576138516275,-0.2135285765225628,-0.33145187886049404,0.11834499205676079,0.14569794298159977,-0.39742172389045505,-0.04505019239804569,-0.27417617395669475,0.13009627859311304,-0.31036494810593745,0.13891650825420437,-0.027670598808318583,0.40084523932069377,-0.32839820264310493,-0.18134139207537553,-0.33435006972272685,0.3984901377784876,0.3386451257971737,-0.16308888545541128,0.08055260537444417,0.3213575815015842,0.09530449287494416,-0.05691114222347847,-0.13905449385783689,-0.36549624721224777,0.3166627963882624],[0.35516218706652397,0.14491963749753142,-0.1414338808176064,-0.10545320163470613,0.1310316259762624,0.3452640532249466,0.25580648141346995,0.16197225467261306,0.0331756289343038,-0.29946730182930476,-0.2018474288411965,0.24546881344417001,0.14814110657614135,-0.4460191816966291,-0.37549766247019223,0.07253248194895605,-0.39607118236662125,-0.23130379082323999,0.09836468541773291,0.18977365777910746,0.17320013658460592,-0.25589941451569886,0.19122899116865857,-0.209917465143749,-0.11607232780744219,0.10387202780185908,0.12381422181215282,0.243668279872095,0.0955310766132688,0.08688355014120198,-0.3673288650756696,-0.04143871999773405],[-0.1887832868220418,-0.1667892914317807,0.4071492939734275,-0.08334018082628938,0.29568786944592007,0.08178060233838085,0.1578590595681026,0.014851469577681232,0.08702483062509048,0.0361627696909179,-0.22660985669304554,0.2060397364460305,-0.1019658780089987,-0.37275273595499653,0.11611880820167965,-0.23449881389939536,0.4117616057743592,0.3327265520077723,0.38789298503614655,-0.06627978359176089,-0.39138583004431066,0.36073886970681174,-0.13445574667970753,0.41434299093003607,0.31424234285022373,0.3147493002696372,-0.17666944972476797,-0.06678028536191213,0.3174843230045932,-0.17766222133603468,-0.30986665691534704,0.09553867734904958]],[[-0.08063612130036196,0.1037361818336593,-0.2704986003840943,-0.3166988810502511,0.20353150064794284,-0.060742670168758874,-0.2590133317505417,-0.019731944846205246,0.16336559702784514,-0.20967160987451489,0.086132793090535,-0.32386178787020825,-0.3236916284658922,0.017803415136549632,0.0256600470087624,0.11192252519937576],[0.20311732853904152,0.3767817592396791,0.004340857597963371,-0.1794380806844493,0.1727411382242413,-0.1245338970570074,-0.028765090888673326,-0.247254525475851,-0.39987492731062496,0.37356791283847207,0.25667856961456303,0.09321441880645669,-0.07521563595630701,-0.2939445359946937,-0.2647256098242571,-0.133429280904486],[0.10988381729989133,0.2066144282778692,0.07239498644945103,-0.20874583671913952,0.29858097623127916,0.23440922829456778,-0.011800046312056516,0.07704350308983166,-0.07456817107001384,-0.1769515439703634,-0.09606581438945136,0.13594566203247077,-0.30671223154735294,-0.3482119144283528,-0.365960371586422,-0.2630462488760622],[0.1936541934195108,0.1816624141019039,-0.007370120776479473,-0.3305297040379612,-0.036502735183348074,-0.0674943088408878,-0.22479081591462086,0.004368198575262881,-0.06744232841736357,0.048681608367984956,0.1314969866333114,-0.3505720655338293,-0.046343483784317185,0.09000439615055793,-0.02218804901478549,0.28033535464754455],[0.18529621511611413,-0.19175225825262054,-0.24360839705405024,0.09296926730924737,-0.3549139393029163,0.04442369600867612,0.293435585319529,0.05261181299116699,-0.08925652238988288,0.03934660907755477,-0.014377874266020685,-0.005121937339675347,0.3320813757721552,-0.09584909598337728,0.3078541095121098,0.3183176579380324],[-0.14064581641915935,-0.2576411056441789,-0.22347230811801413,-0.2868668459151475,-0.2976017788699318,0.16739085039288074,-0.25434889035294966,-0.14689168287175544,0.2794993076370382,-0.33296199672531523,0.18430188453060128,-0.19791026072217124,-0.33080387386395194,0.15899099890716306,0.08417620040482993,0.28082904225894073],[0.09029245197139399,0.2334392619089099,-0.10681134906226766,-0.28234605247399686,0.16738812836956163,0.1394443185785011,0.43416863710163744,0.019437459674859138,-0.047770009175675976,0.14981621120753116,-0.07144174836041925,0.3236944550047244,0.1903262858709671,0.036296241849561525,0.24325048343393396,0.1424398006426089],[-0.20415460152088322,0.34751227411349217,0.0012733983929071515,0.27736133933445895,-0.15541129618452112,0.33917092759756995,-0.07622592426797944,-0.39783921949534784,0.2244157196042659,-0.2829603017822217,-0.1476684831433013,0.27461927407548475,0.2652402726706115,0.05693186249155904,0.07127260122808049,0.02554530340085927],[-0.061458714457476034,-0.03352375124102465,0.07954720027050514,0.24388098546367973,0.16461488947373254,0.27561056471877937,-0.35174300672840336,-0.06468610169959287,-0.35413838458700553,0.03341720815474911,-0.04461755031810109,0.22226133414079233,-0.049913326269726575,-0.33017836615399987,-0.2972029191399642,0.2613454735250829],[0.14082508902500612,-0.3230895770604535,-0.23456856059839867,0.1502802604448516,-0.3173113295478021,0.18341989143400095,0.21008727436134086,-0.2644353986946252,-0.2415529345086973,0.30691282929312985,-0.033234094737523034,-0.13284551193455937,0.26243413395435394,0.35362765836131865,0.3118653912060414,0.20624604182595568],[-0.06355196200547814,-0.334516214541853,0.1438432092360195,0.005679707157076657,-0.0764331547788333,0.2333162578350142,-0.23387330173544488,0.05313848797947925,-0.32603530164771066,-0.060782587619376355,-0.27893102544486265,-0.3044405929201662,-0.24615334649842827,0.12542305453133717,0.1559353129457261,0.06997526975007191],[0.3995247630386554,-0.014041423343582281,-0.1045609076558296,0.27507359776856355,-0.23413826763383985,0.33992324651621847,-0.3562949846882517,0.32616891403059606,-0.2627166102290895,0.2853197645983182,0.009581951451016273,0.29552922216535693,-0.28216832971553735,-0.014928945601467875,0.2898965113369213,0.08442875366363917],[0.1185094354440319,0.09915123110707073,-0.014575620988023948,0.0753690876126918,0.03178438335579745,0.22807525335818282,-0.25528934297119543,-0.0910246262281771,0.3825093884243108,0.23876730961546527,-0.010897412039612898,0.055972474939220036,-0.17314899660776858,-0.1521349266587214,-0.0300024661891105,-0.10655807516010159],[0.10754048307734777,-0.28439397744376743,0.27379625402641317,0.3008587901379693,0.11107106381697872,-0.030757097703527567,-0.1448817095442995,0.2765035905887091,0.1369281292737139,-0.2846645504953077,0.3329385729262203,0.1900667922827982,0.3576186688245481,0.1451375360319531,0.05026502000402009,-0.028652492982048628],[0.37230234285227903,0.21736139481488048,-0.26059901916022377,-0.37455894248355415,-0.12556838548345498,0.1605209089098321,0.37292569888881966,-0.17720906733566555,0.08556036430568252,-0.13186176471652197,0.3878211972710058,0.1997348867960365,0.27903075516763887,-0.008040463061700795,-0.09277668340146729,-0.13171845655513037],[-0.2569491033945357,0.2823620271238036,0.16680458664889927,0.3248025289498384,0.32387580581777686,0.0034869569126741227,0.18482001997651382,0.34347065681343425,0.2331025986531934,-0.2509990515080747,-0.011891646742015172,-0.29899671683901263,0.3468228638084559,0.05832172955549362,-0.21242097005721045,0.14296102107832617],[0.16910822723744753,-0.015904560629960394,-0.2149950765652384,0.18175723066252603,-0.010033713270273886,0.25900669400382953,-0.03340815959421415,0.20366608321761984,0.07338861344783515,0.035552128891640576,0.22551237041242975,-0.12520690538553642,-0.20632267795399742,-0.37515169239683266,0.13746094706090167,0.15984534461675176],[0.2231823860469933,-0.10753125425325294,-0.19993006647027123,-0.28252202916693775,-0.14902355253844346,0.13002626429181716,-0.12390622991445806,-0.09882830272434133,0.26307390498673344,-0.07408981551588233,-0.03322129690753837,0.15710326553183906,-0.03787535054507387,0.04378621917804474,0.2237891777987858,0.38537765513619754],[-0.17083828066761222,0.36335149527337074,-0.001957530732231634,-0.24551753253098477,-0.05471866556415282,0.3968123297124787,-0.03568548933126071,-0.1089847901983168,0.07761995983317418,-0.2184732602417554,-0.3198926092241839,-0.31975988832851904,-0.32707636751929103,-0.31436202808044167,-0.2740693276722564,0.16642841163693972],[-0.19734993950973168,-0.053293549488157586,0.2218560151997434,-0.07361303936054174,0.08018711080992148,-0.2928223257234855,-0.1858780491144522,-0.2635590408296494,-0.28592749998056616,-0.16219066156348722,-0.2169160968598403,-0.33708047631626303,-0.30885929222761027,-0.0344548004194834,-0.21210795231572113,-0.046248399722931904],[-0.009532571386523333,0.1733973801075542,-0.2645688320812705,0.1606168926134076,0.05605797075306367,-0.34660968934165837,0.29092199241612404,0.3516364438452411,-0.34652364673103886,-0.08251310716485154,0.23347501138426938,0.1376022359914839,-0.24421308065658304,-0.20621652108331404,-0.09548056193728281,0.01664951591388596],[0.14311435542643228,-0.042676105420732975,-0.011498129509577957,0.12513514141295662,-0.36255932169447225,-0.2295238320668238,0.11615377890917569,0.33755460589014097,0.028702348334264275,-0.03477967400875632,-0.2405289410217337,-0.08340450726054814,0.07575164048816907,-0.2292685493850122,-0.21123845101055297,-0.03481986721915576],[-0.37128015178509743,-0.17387873240858098,-0.1511270272884284,-0.15411985641773998,-0.2904700118072425,0.20625020858506132,0.14722871432988352,0.20083890011646216,0.2772177128820965,-0.03083039585185354,-0.29092631997910484,0.01907734613186808,-0.018440666373112247,0.2547798055320167,-0.007935156488366138,-0.30892366593116954],[-0.06880333574115759,-0.03508458254162458,0.06426283854779509,0.016988053689610948,-0.11741621710600945,0.4143672992692271,0.05464258561995187,-0.21642733921621893,-0.2948180401605431,-0.2527704019174578,-0.21596495682083544,-0.2951307921358263,-0.270461449665907,-0.17623127241534545,-0.24959157324817388,0.3450105395456096],[-0.21724607596533502,0.11070901224364064,-0.034362893977535336,0.40503109160058287,-0.3140640794763564,-0.009589514619249801,0.28480821277973484,0.20718940019966126,0.26241618382148546,-0.14836939605297794,-0.28151980218194134,0.06861641140358617,0.34473636084876697,-0.006178843413895618,0.008569241236388647,-0.08557954629021251],[0.27442022368853414,-0.1406724692758728,-0.08177751937029941,0.0068732142486376754,0.0018850711824402065,-0.11488013684920838,-0.3259592167460552,0.02631081364830959,-0.16443262684400595,0.09396104405379908,-0.306407718348086,-0.06757230985492682,-0.0033413148555054115,-0.36575753983459314,-0.1448218111840674,-0.18195740333891838],[-0.29264130291614493,0.3076649323131927,-0.0825573882051371,0.17569146812318703,-0.20889048873929206,0.06440852323209603,0.2610240380626773,0.13514380029413747,-0.029754525297493686,-0.09334121791553122,-0.05678980811918982,0.31881480061964595,0.21321917039660562,0.40801074104539553,-0.2175656992875786,0.11327674784251185],[0.288818770598915,-0.20267601218662032,-0.24633252064876215,0.16542356879283543,0.052509320618758175,0.1816207580480036,-0.19971733604441905,0.2094708932345517,-0.26238410575129734,-0.17481820082045438,-0.25957958155713723,0.18882040876417516,0.06474741506107429,0.07692658908070532,-0.0483921984864536,0.22612392562387074],[0.001829977794157164,0.23639088885042703,-0.020992267825289894,-0.025418099508615434,-0.001959341639940072,-0.10540503568182855,0.18373606181765376,-0.02803206855825133,-0.11793487649574382,0.2357590660467979,-0.09652828331399303,-0.028934369215261865,0.30872555601938373,0.07681042578237042,-0.32408396555431646,0.38468958701707],[0.02651307381153074,-0.15986109558148065,-0.19802142501804526,0.15659897867390468,0.07444913404961681,-0.047463663364933885,0.36119059015448884,0.2761720705635196,-0.28470001874949935,-0.17725412803533067,-0.125820264232423,0.1688090265182024,-0.3099001391246654,0.13128092465979532,0.22642273485089642,0.21811555209334077],[-0.03952421672400796,0.24566891337308414,-0.21693360442303977,0.26186564069690743,-0.3131001841885405,-0.03743015697486612,0.1798919950909828,-0.2728591848160049,-0.16128928869202225,0.17263883263301955,0.18340958531270393,0.0581793775528745,0.19312430303894776,-0.02028566974659171,-0.22235582156469794,-0.0592292584225869],[-0.1530974335848973,0.2558584629610361,0.03133961575450996,-0.08007896529672978,-0.02124611738771489,0.3233152565455427,-0.17849927794797105,0.07224512645994058,0.05667486568466176,0.04952543315298946,-0.3096208573506403,0.24674355594323555,0.23473565152597053,0.11442707905913801,0.16280497577180666,0.27829194043892447]],[[0.12481883991306254,-0.02203531648152644,-0.600985706461585],[-0.24158577608092943,0.3794972042473532,-0.4959585221880989],[-0.13590619995453848,-0.07335003759727253,0.020373266602029247],[0.47605594015901226,-0.1292504728711895,-0.2355129753085208],[0.23599450964597163,-0.021247312671915996,-0.34095167448549024],[-0.03880225296466734,-0.3664181719109024,-0.4231488539068202],[-0.0738365500016426,-0.050780472746368904,0.5134807341921038],[-0.181685267693576,0.12484346137197916,0.11622548805320168],[-0.6229338770060039,0.22474988299687704,-0.35015333592198594],[0.4956748155439038,-0.3726441410356945,-0.08245304930541907],[-0.4982693801891099,0.6029818360837982,-0.045466479996506715],[0.1369006800310622,-0.45618535670785826,0.24248751438236565],[-0.39478850142973504,0.5027920265196443,-0.2902158074022343],[-0.4172236399779847,-0.5000216035446219,0.0512382047575737],[0.021176172290024126,-0.45911314813991994,0.30113536311028544],[7.493092463933847e-05,0.05368871621894346,-0.12888611587022375]]],"biases":[[0.34356426837003967,0.19397326346300986,0.08752135852976632,-0.30058079151893846,0.08679090216694346,0.36645476153617657,-0.3179068304614895,0.0275558016105584,0.3374082840365515,0.2070913000071561,0.14639771928512532,0.17024734588892879,-0.10692498782858888,-0.11493545722375506,0.2740838362546182,0.2733204795299507,0.3606263138772514,0.28734838825997416,0.07043364463956833,0.05677098834312694,0.21117507514269396,0.13306671147872504,0.12712595264547705,0.2806220986504182,0.24844311743349015,-0.0521702691726426,-0.13746888835459364,-0.3345631715816346,0.12486285586335405,-0.35798429676126403,0.043480837317398366,-0.01281478659437293],[0.22735194932673503,-0.20665054380252915,0.053944016799555294,0.09624683770290306,-0.08206609968347094,0.19685352914904392,0.3052896266924007,0.2671213796006437,-0.03107914051614918,-0.3198066199030713,0.3662374343215758,0.19567151856352866,-0.23224476059494784,0.27938378431085703,0.22672734470959713,0.06060981254411226],[-0.09248860462660814,0.10111192454656318,-0.43788647866657643]],"activation":"relu","output_activation":"softmax","accuracy":0.72,"cv_accuracy_mean":0.6729090909090909,"cv_accuracy_std":0.18765838489523354,"tolerance":1.0,"confusion_matrix":[[6,9,1],[1,34,12],[0,5,32]],"confusion_labels":["shallow","medium","deep"],"target_distribution":{"medium":233,"deep":187,"shallow":79}},"calibration":{"summary":[{"mechanism":"depth","configuration":"deep","loss":3.8607653683,"perplexity":80.8222791912,"latency_seconds":0.1260568705,"relative_flops":1.0,"depth":12.0},{"mechanism":"depth","configuration":"medium","loss":7.2077783263,"perplexity":2973.4732449983,"latency_seconds":0.0941077042,"relative_flops":0.6666666667,"depth":8.0},{"mechanism":"depth","configuration":"shallow","loss":9.0272546732,"perplexity":18291.3199389971,"latency_seconds":0.0603960253,"relative_flops":0.3333333333,"depth":4.0},{"mechanism":"full","configuration":"deep","loss":3.8607653683,"perplexity":80.8222791912,"latency_seconds":0.1262032731,"relative_flops":1.0,"depth":12.0},{"mechanism":"full","configuration":"medium","loss":9.6365378978,"perplexity":31041.6855730022,"latency_seconds":0.0776908792,"relative_flops":0.3333333333,"depth":8.0},{"mechanism":"full","configuration":"shallow","loss":8.409872421,"perplexity":7527.279212264,"latency_seconds":0.0526289858,"relative_flops":0.1666666667,"depth":4.0}],"categories":{"hard_reasoning":190,"seed_handwritten":100,"basic_arithmetic":30,"multi_step_arithmetic":30,"scientific_explanation":30,"code":30,"technical":29,"long_structured":25,"summarization":20,"logical_reasoning":15},"experiments":2994,"prompts":499},"frontier":[{"tolerance":0.05,"average_depth":12.0,"layer_reduction_percent":0.0,"relative_flops":1.0,"compute_reduction_percent":0.0,"average_latency":0.1260568705,"average_loss":3.8607653683,"deep_loss":3.8607653683,"relative_loss_increase":0.0,"shallow":0,"medium":0,"deep":499},{"tolerance":0.1,"average_depth":12.0,"layer_reduction_percent":0.0,"relative_flops":1.0,"compute_reduction_percent":0.0,"average_latency":0.1260568705,"average_loss":3.8607653683,"deep_loss":3.8607653683,"relative_loss_increase":0.0,"shallow":0,"medium":0,"deep":499},{"tolerance":0.25,"average_depth":11.9679358717,"layer_reduction_percent":0.2672010688,"relative_flops":0.9973279893,"compute_reduction_percent":0.2672010688,"average_latency":0.1258531333,"average_loss":3.8659012017,"deep_loss":3.8607653683,"relative_loss_increase":0.001330263,"shallow":2,"medium":0,"deep":497},{"tolerance":0.5,"average_depth":11.4789579158,"layer_reduction_percent":4.3420173681,"relative_flops":0.9565798263,"compute_reduction_percent":4.3420173681,"average_latency":0.1221219657,"average_loss":4.0720208317,"deep_loss":3.8607653683,"relative_loss_increase":0.054718545,"shallow":15,"medium":35,"deep":449},{"tolerance":0.75,"average_depth":10.3887775551,"layer_reduction_percent":13.4268537074,"relative_flops":0.8657314629,"compute_reduction_percent":13.4268537074,"average_latency":0.1151169076,"average_loss":4.7132120734,"deep_loss":3.8607653683,"relative_loss_increase":0.2207973352,"shallow":38,"medium":125,"deep":336},{"tolerance":1.0,"average_depth":8.8657314629,"layer_reduction_percent":26.1189044756,"relative_flops":0.7388109552,"compute_reduction_percent":26.1189044756,"average_latency":0.1033244078,"average_loss":5.8486446288,"deep_loss":3.8607653683,"relative_loss_increase":0.5148925332,"shallow":79,"medium":233,"deep":187},{"tolerance":1.5,"average_depth":5.8196392786,"layer_reduction_percent":51.503006012,"relative_flops":0.4849699399,"compute_reduction_percent":51.503006012,"average_latency":0.0777408539,"average_loss":7.9434845925,"deep_loss":3.8607653683,"relative_loss_increase":1.0574895998,"shallow":291,"medium":189,"deep":19},{"tolerance":2.0,"average_depth":4.4649298597,"layer_reduction_percent":62.792251169,"relative_flops":0.3720774883,"compute_reduction_percent":62.792251169,"average_latency":0.0650811848,"average_loss":8.7386329098,"deep_loss":3.8607653683,"relative_loss_increase":1.2634457358,"shallow":441,"medium":58,"deep":0}],"baselines":[{"samples":60,"loss":3.8889936845,"perplexity":48.8616914951,"latency_mean":0.1679777117,"latency_std":0.0259130374,"latency_p50":0.1653736,"throughput":5.9531707516,"average_depth":12.0,"layer_reduction":0.0,"relative_flops":1.0,"compute_reduction":0.0,"share_shallow":0.0,"share_medium":0.0,"share_deep":1.0,"answer_loss":5.2527401129,"answer_perplexity":191.0891576174,"fallback_rate":0.0,"mean_confidence":null,"variant":"static","label":"Baseline A: Static GPT-2 (12 layers)","switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":60,"loss":5.973593386,"perplexity":392.9150324254,"latency_mean":0.1205232,"latency_std":0.0281802919,"latency_p50":0.1198561001,"throughput":8.297157725,"average_depth":7.7333333333,"layer_reduction":0.3555555556,"relative_flops":0.6444444444,"compute_reduction":0.3555555556,"share_shallow":0.0666666667,"share_medium":0.9333333333,"share_deep":0.0,"answer_loss":14.3021549066,"answer_perplexity":1626847.9157823836,"fallback_rate":0.0,"mean_confidence":0.7154212193,"variant":"depth_adaptive","label":"Baseline B: Depth-adaptive","switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":60,"loss":6.3662922939,"perplexity":581.896323686,"latency_mean":0.313357335,"latency_std":0.0459387834,"latency_p50":0.3016446,"throughput":3.191244909,"average_depth":12.0,"layer_reduction":0.0,"relative_flops":0.6676798948,"compute_reduction":0.3323201052,"share_shallow":0.0,"share_medium":0.0,"share_deep":1.0,"answer_loss":8.7949645996,"answer_perplexity":6600.921896906,"fallback_rate":0.0,"mean_confidence":null,"variant":"routing","label":"Baseline C: Routing / MoE-style FFN","switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":60,"loss":9.0971810897,"perplexity":8930.0840839238,"latency_mean":0.09810536,"latency_std":0.0243724458,"latency_p50":0.09713525,"throughput":10.1931229862,"average_depth":7.7333333333,"layer_reduction":0.3555555556,"relative_flops":0.3222222222,"compute_reduction":0.6777777778,"share_shallow":0.0666666667,"share_medium":0.9333333333,"share_deep":0.0,"answer_loss":14.697794803,"answer_perplexity":2416413.086622029,"fallback_rate":0.0,"mean_confidence":0.7154212193,"variant":"msa","label":"Baseline E: Full MSA","switches":4.0,"switch_rate":0.0677966102,"volatility":0.0666666667,"rollback_count":0.0,"rollback_rate":0.0,"stability_status":"STABLE"}],"ablations":[{"samples":60,"loss":3.8889936845,"perplexity":48.8616914951,"latency_mean":0.2119092567,"latency_std":0.1455321338,"latency_p50":0.17505845,"throughput":4.7190010277,"average_depth":12.0,"layer_reduction":0.0,"relative_flops":1.0,"compute_reduction":0.0,"share_shallow":0.0,"share_medium":0.0,"share_deep":1.0,"answer_loss":5.2527401129,"answer_perplexity":191.0891576174,"fallback_rate":0.0,"mean_confidence":null,"variant":"A1_static","label":"A1: Static GPT-2","switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":60,"loss":8.0671823978,"perplexity":3188.1063468619,"latency_mean":0.1106370417,"latency_std":0.0309258753,"latency_p50":0.1150076,"throughput":9.0385641631,"average_depth":4.0,"layer_reduction":0.6666666667,"relative_flops":0.3333333333,"compute_reduction":0.6666666667,"share_shallow":1.0,"share_medium":0.0,"share_deep":0.0,"answer_loss":13.2248449405,"answer_perplexity":553958.4375839398,"fallback_rate":0.0,"mean_confidence":null,"variant":"A2_analyzer","label":"A2: Analyzer + rule policy","switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":60,"loss":5.973593386,"perplexity":392.9150324254,"latency_mean":0.1904411317,"latency_std":0.0381840125,"latency_p50":0.1922504,"throughput":5.2509664865,"average_depth":7.7333333333,"layer_reduction":0.3555555556,"relative_flops":0.6444444444,"compute_reduction":0.3555555556,"share_shallow":0.0666666667,"share_medium":0.9333333333,"share_deep":0.0,"answer_loss":14.3021549066,"answer_perplexity":1626847.9157823836,"fallback_rate":0.0,"mean_confidence":0.7154212193,"variant":"A3_predictor","label":"A3: Analyzer + f_theta","switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":60,"loss":5.973593386,"perplexity":392.9150324254,"latency_mean":0.2053674983,"latency_std":0.0452554171,"latency_p50":0.20093585,"throughput":4.8693196741,"average_depth":7.7333333333,"layer_reduction":0.3555555556,"relative_flops":0.6444444444,"compute_reduction":0.3555555556,"share_shallow":0.0666666667,"share_medium":0.9333333333,"share_deep":0.0,"answer_loss":14.3021549066,"answer_perplexity":1626847.9157823836,"fallback_rate":0.0,"mean_confidence":0.7154212193,"variant":"A4_depth","label":"A4: Depth only","switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":60,"loss":8.4025919676,"perplexity":4458.6083518182,"latency_mean":0.1855321817,"latency_std":0.0407585974,"latency_p50":0.1840058,"throughput":5.3899005071,"average_depth":7.7333333333,"layer_reduction":0.3555555556,"relative_flops":0.5363807915,"compute_reduction":0.4636192085,"share_shallow":0.0666666667,"share_medium":0.9333333333,"share_deep":0.0,"answer_loss":16.1382627646,"answer_perplexity":10203718.438473882,"fallback_rate":0.0,"mean_confidence":0.7154212193,"variant":"A5_depth_attention","label":"A5: Depth + attention","switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":60,"loss":7.7411050638,"perplexity":2301.0137455729,"latency_mean":0.1387635233,"latency_std":0.0229479356,"latency_p50":0.13604865,"throughput":7.2065048213,"average_depth":7.7333333333,"layer_reduction":0.3555555556,"relative_flops":0.4302858752,"compute_reduction":0.5697141248,"share_shallow":0.0666666667,"share_medium":0.9333333333,"share_deep":0.0,"answer_loss":16.2751853307,"answer_perplexity":11701005.435206182,"fallback_rate":0.0,"mean_confidence":0.7154212193,"variant":"A6_depth_ffn","label":"A6: Depth + FFN","switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":60,"loss":9.0971810897,"perplexity":8930.0840839238,"latency_mean":0.1219767133,"latency_std":0.0214247424,"latency_p50":0.12034945,"throughput":8.1982861541,"average_depth":7.7333333333,"layer_reduction":0.3555555556,"relative_flops":0.3222222222,"compute_reduction":0.6777777778,"share_shallow":0.0666666667,"share_medium":0.9333333333,"share_deep":0.0,"answer_loss":14.697794803,"answer_perplexity":2416413.086622029,"fallback_rate":0.0,"mean_confidence":0.7154212193,"variant":"A7_no_monitor","label":"A7: Full MSA without stability monitor","switches":4.0,"switch_rate":0.0677966102,"volatility":0.0666666667,"rollback_count":0.0,"rollback_rate":0.0,"stability_status":"STABLE"},{"samples":60,"loss":9.0971810897,"perplexity":8930.0840839238,"latency_mean":0.1187428783,"latency_std":0.0172235024,"latency_p50":0.1187695001,"throughput":8.4215576893,"average_depth":7.7333333333,"layer_reduction":0.3555555556,"relative_flops":0.3222222222,"compute_reduction":0.6777777778,"share_shallow":0.0666666667,"share_medium":0.9333333333,"share_deep":0.0,"answer_loss":14.697794803,"answer_perplexity":2416413.086622029,"fallback_rate":0.0,"mean_confidence":0.7154212193,"variant":"A8_full","label":"A8: Full MSA","switches":4.0,"switch_rate":0.0677966102,"volatility":0.0666666667,"rollback_count":0.0,"rollback_rate":0.0,"stability_status":"STABLE"}],"stability":[{"samples":60,"loss":6.7406053185,"perplexity":846.0727243889,"latency_mean":0.1829215283,"latency_std":0.1428963142,"latency_p50":0.09813835,"throughput":5.4668250869,"average_depth":8.0666666667,"layer_reduction":0.3277777778,"relative_flops":0.5111111111,"compute_reduction":0.4888888889,"share_shallow":0.3333333333,"share_medium":0.3166666667,"share_deep":0.35,"fallback_rate":0.05,"mean_confidence":0.6669942013,"switches":58,"switch_rate":0.9830508475,"volatility":0.9666666667,"rollback_count":0,"rollback_rate":0.0,"stability_status":"UNSTABLE","variant":"A7_no_monitor","label":"A7: Full MSA without stability monitor","rollbacks_observed":0},{"samples":60,"loss":6.507735455,"perplexity":670.306757779,"latency_mean":0.1617903267,"latency_std":0.1444067787,"latency_p50":0.0641255,"throughput":6.1808392419,"average_depth":6.6666666667,"layer_reduction":0.4444444444,"relative_flops":0.4444444444,"compute_reduction":0.5555555556,"share_shallow":0.6666666667,"share_medium":0.0,"share_deep":0.3333333333,"fallback_rate":0.05,"mean_confidence":0.6669942013,"switches":59,"switch_rate":1.0,"volatility":0.6377777778,"rollback_count":20,"rollback_rate":0.3333333333,"stability_status":"WARNING","variant":"A8_full","label":"A8: Full MSA","rollbacks_observed":20}],"datasets":[{"samples":40,"loss":3.80167256,"perplexity":44.7760124651,"latency_mean":0.166441345,"latency_std":0.0198616438,"latency_p50":0.1627963,"throughput":6.0081225609,"average_depth":12.0,"layer_reduction":0.0,"relative_flops":1.0,"compute_reduction":0.0,"share_shallow":0.0,"share_medium":0.0,"share_deep":1.0,"accuracy":0.075,"answer_loss":5.6521084487,"answer_perplexity":284.8915121691,"fallback_rate":0.0,"mean_confidence":null,"variant":"static","label":"Baseline A: Static GPT-2 (12 layers)","dataset":"short_qa","wall_clock_seconds":102.7956874,"switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":40,"loss":5.9740093946,"perplexity":393.0785224746,"latency_mean":0.10982005,"latency_std":0.0177270624,"latency_p50":0.1138922,"throughput":9.1058053606,"average_depth":7.6,"layer_reduction":0.3666666667,"relative_flops":0.6333333333,"compute_reduction":0.3666666667,"share_shallow":0.1,"share_medium":0.9,"share_deep":0.0,"accuracy":0.025,"answer_loss":14.6508125782,"answer_perplexity":2305510.253900961,"fallback_rate":0.0,"mean_confidence":0.6915270376,"variant":"depth_adaptive","label":"Baseline B: Depth-adaptive","dataset":"short_qa","wall_clock_seconds":89.5409905,"switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":40,"loss":8.9889521837,"perplexity":8014.0552369046,"latency_mean":0.0803270825,"latency_std":0.0116628171,"latency_p50":0.08330105,"throughput":12.4491014595,"average_depth":7.6,"layer_reduction":0.3666666667,"relative_flops":0.3166666667,"compute_reduction":0.6833333333,"share_shallow":0.1,"share_medium":0.9,"share_deep":0.0,"accuracy":0.0,"answer_loss":13.7523342609,"answer_perplexity":938777.9553399036,"fallback_rate":0.0,"mean_confidence":0.6915270376,"variant":"msa","label":"Baseline E: Full MSA","dataset":"short_qa","wall_clock_seconds":10.114802,"switches":4.0,"switch_rate":0.1025641026,"volatility":0.0,"rollback_count":0.0,"rollback_rate":0.0,"stability_status":"STABLE"},{"samples":40,"loss":3.4066439927,"perplexity":30.1638441226,"latency_mean":0.31076981,"latency_std":0.0816781935,"latency_p50":0.29387125,"throughput":3.2178157847,"average_depth":12.0,"layer_reduction":0.0,"relative_flops":1.0,"compute_reduction":0.0,"share_shallow":0.0,"share_medium":0.0,"share_deep":1.0,"accuracy":0.0,"answer_loss":7.3862478316,"answer_perplexity":1613.6400902981,"fallback_rate":0.0,"mean_confidence":null,"variant":"static","label":"Baseline A: Static GPT-2 (12 layers)","dataset":"gsm8k","wall_clock_seconds":194.4252650001,"switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":40,"loss":3.5799605191,"perplexity":35.8721245545,"latency_mean":0.2601329625,"latency_std":0.1005144487,"latency_p50":0.26433495,"throughput":3.8441879504,"average_depth":11.8,"layer_reduction":0.0166666667,"relative_flops":0.9833333333,"compute_reduction":0.0166666667,"share_shallow":0.0,"share_medium":0.05,"share_deep":0.95,"accuracy":0.0,"answer_loss":7.6678152382,"answer_perplexity":2138.4044337903,"fallback_rate":0.1,"mean_confidence":0.6469955246,"variant":"depth_adaptive","label":"Baseline B: Depth-adaptive","dataset":"gsm8k","wall_clock_seconds":173.1777302,"switches":null,"switch_rate":null,"volatility":null,"rollback_count":null,"rollback_rate":null,"stability_status":null},{"samples":40,"loss":3.5516577423,"perplexity":34.8710768571,"latency_mean":0.374515045,"latency_std":0.112156984,"latency_p50":0.36142015,"throughput":2.6701197011,"average_depth":11.9,"layer_reduction":0.0083333333,"relative_flops":0.9833333333,"compute_reduction":0.0166666667,"share_shallow":0.0,"share_medium":0.025,"share_deep":0.975,"accuracy":0.0,"answer_loss":7.441387099,"answer_perplexity":1705.1137431674,"fallback_rate":0.1,"mean_confidence":0.6469955246,"variant":"msa","label":"Baseline E: Full MSA","dataset":"gsm8k","wall_clock_seconds":238.7450370999,"switches":3.0,"switch_rate":0.0769230769,"volatility":0.0,"rollback_count":1.0,"rollback_rate":0.025,"stability_status":"STABLE"}],"benchmark":[{"mechanism":"depth_only","configuration":"shallow","sequence_length":16,"depth":4,"warmup":10,"runs":50,"latency_mean":0.035178,"latency_std":0.0030184119,"latency_trimmed_mean":0.03479973,"latency_p50":0.0346879,"latency_p95":0.03766091,"outlier_suspected":false,"throughput":28.7358551412,"relative_flops":0.3333333333,"layer_reduction":0.6666666667,"device":"cpu"},{"mechanism":"depth_only","configuration":"medium","sequence_length":16,"depth":8,"warmup":10,"runs":50,"latency_mean":0.055885534,"latency_std":0.0015882963,"latency_trimmed_mean":0.05578965,"latency_p50":0.0556707,"latency_p95":0.059109725,"outlier_suspected":false,"throughput":17.9244716579,"relative_flops":0.6666666667,"layer_reduction":0.3333333333,"device":"cpu"},{"mechanism":"depth_only","configuration":"deep","sequence_length":16,"depth":12,"warmup":10,"runs":50,"latency_mean":0.077178184,"latency_std":0.0019791447,"latency_trimmed_mean":0.077132085,"latency_p50":0.07716625,"latency_p95":0.079737945,"outlier_suspected":false,"throughput":12.9647733479,"relative_flops":1.0,"layer_reduction":0.0,"device":"cpu"},{"mechanism":"depth_attention_ffn","configuration":"shallow","sequence_length":16,"depth":4,"warmup":10,"runs":50,"latency_mean":0.028704166,"latency_std":0.0014555977,"latency_trimmed_mean":0.028785885,"latency_p50":0.02886755,"latency_p95":0.030872045,"outlier_suspected":false,"throughput":34.7392480757,"relative_flops":0.1666666667,"layer_reduction":0.6666666667,"device":"cpu"},{"mechanism":"depth_attention_ffn","configuration":"medium","sequence_length":16,"depth":8,"warmup":10,"runs":50,"latency_mean":0.044598134,"latency_std":0.001542936,"latency_trimmed_mean":0.044575735,"latency_p50":0.04469095,"latency_p95":0.04658053,"outlier_suspected":false,"throughput":22.4337299229,"relative_flops":0.3333333333,"layer_reduction":0.3333333333,"device":"cpu"},{"mechanism":"depth_attention_ffn","configuration":"deep","sequence_length":16,"depth":12,"warmup":10,"runs":50,"latency_mean":0.076623504,"latency_std":0.0028542813,"latency_trimmed_mean":0.07678745,"latency_p50":0.0769239,"latency_p95":0.08038219,"outlier_suspected":false,"throughput":13.0229614342,"relative_flops":1.0,"layer_reduction":0.0,"device":"cpu"},{"mechanism":"routing","configuration":"shallow","sequence_length":16,"depth":4,"warmup":10,"runs":50,"latency_mean":0.056888684,"latency_std":0.002173001,"latency_trimmed_mean":0.0568386775,"latency_p50":0.0565902001,"latency_p95":0.060030135,"outlier_suspected":false,"throughput":17.5936535432,"relative_flops":0.2226066897,"layer_reduction":0.6666666667,"device":"cpu"},{"mechanism":"routing","configuration":"medium","sequence_length":16,"depth":8,"warmup":10,"runs":50,"latency_mean":0.098856766,"latency_std":0.0048889971,"latency_trimmed_mean":0.098048995,"latency_p50":0.09830395,"latency_p95":0.106541285,"outlier_suspected":false,"throughput":10.1989826612,"relative_flops":0.4452133795,"layer_reduction":0.3333333333,"device":"cpu"},{"mechanism":"routing","configuration":"deep","sequence_length":16,"depth":12,"warmup":10,"runs":50,"latency_mean":0.146273986,"latency_std":0.0072849007,"latency_trimmed_mean":0.1464276725,"latency_p50":0.14587915,"latency_p95":0.156850415,"outlier_suspected":false,"throughput":6.8293102183,"relative_flops":0.6678200692,"layer_reduction":0.0,"device":"cpu"},{"mechanism":"depth_only","configuration":"shallow","sequence_length":64,"depth":4,"warmup":10,"runs":50,"latency_mean":0.097048552,"latency_std":0.0125707506,"latency_trimmed_mean":0.09432284,"latency_p50":0.0943437,"latency_p95":0.1215970149,"outlier_suspected":false,"throughput":10.6018860329,"relative_flops":0.3333333333,"layer_reduction":0.6666666667,"device":"cpu"},{"mechanism":"depth_only","configuration":"medium","sequence_length":64,"depth":8,"warmup":10,"runs":50,"latency_mean":0.14328519,"latency_std":0.0139933308,"latency_trimmed_mean":0.1416759875,"latency_p50":0.14187685,"latency_p95":0.14769025,"outlier_suspected":false,"throughput":7.0583591309,"relative_flops":0.6666666667,"layer_reduction":0.3333333333,"device":"cpu"},{"mechanism":"depth_only","configuration":"deep","sequence_length":64,"depth":12,"warmup":10,"runs":50,"latency_mean":0.186767208,"latency_std":0.0172568339,"latency_trimmed_mean":0.1833537725,"latency_p50":0.1832754,"latency_p95":0.20316175,"outlier_suspected":false,"throughput":5.4539374149,"relative_flops":1.0,"layer_reduction":0.0,"device":"cpu"},{"mechanism":"depth_attention_ffn","configuration":"shallow","sequence_length":64,"depth":4,"warmup":10,"runs":50,"latency_mean":0.079753892,"latency_std":0.0035595269,"latency_trimmed_mean":0.07960508,"latency_p50":0.0797602,"latency_p95":0.08565793,"outlier_suspected":false,"throughput":12.5620123753,"relative_flops":0.1666666667,"layer_reduction":0.6666666667,"device":"cpu"},{"mechanism":"depth_attention_ffn","configuration":"medium","sequence_length":64,"depth":8,"warmup":10,"runs":50,"latency_mean":0.112755518,"latency_std":0.0030906569,"latency_trimmed_mean":0.1127246025,"latency_p50":0.1121086,"latency_p95":0.118109105,"outlier_suspected":false,"throughput":8.871177878,"relative_flops":0.3333333333,"layer_reduction":0.3333333333,"device":"cpu"},{"mechanism":"depth_attention_ffn","configuration":"deep","sequence_length":64,"depth":12,"warmup":10,"runs":50,"latency_mean":0.189363738,"latency_std":0.0136033035,"latency_trimmed_mean":0.187493585,"latency_p50":0.1871745,"latency_p95":0.1942043101,"outlier_suspected":false,"throughput":5.3335158106,"relative_flops":1.0,"layer_reduction":0.0,"device":"cpu"},{"mechanism":"routing","configuration":"shallow","sequence_length":64,"depth":4,"warmup":10,"runs":50,"latency_mean":0.117954542,"latency_std":0.0303875505,"latency_trimmed_mean":0.1111438825,"latency_p50":0.10843815,"latency_p95":0.1516869751,"outlier_suspected":false,"throughput":8.9973462995,"relative_flops":0.2237442922,"layer_reduction":0.6666666667,"device":"cpu"},{"mechanism":"routing","configuration":"medium","sequence_length":64,"depth":8,"warmup":10,"runs":50,"latency_mean":0.187426722,"latency_std":0.0196777868,"latency_trimmed_mean":0.18424216,"latency_p50":0.1839528999,"latency_p95":0.19846761,"outlier_suspected":false,"throughput":5.4276393633,"relative_flops":0.4474885845,"layer_reduction":0.3333333333,"device":"cpu"},{"mechanism":"routing","configuration":"deep","sequence_length":64,"depth":12,"warmup":10,"runs":50,"latency_mean":0.263015128,"latency_std":0.0150457626,"latency_trimmed_mean":0.26172599,"latency_p50":0.26185925,"latency_p95":0.27239558,"outlier_suspected":false,"throughput":3.8207898268,"relative_flops":0.6712328767,"layer_reduction":0.0,"device":"cpu"},{"mechanism":"depth_only","configuration":"shallow","sequence_length":256,"depth":4,"warmup":10,"runs":50,"latency_mean":0.26915834,"latency_std":0.0132248568,"latency_trimmed_mean":0.2676361025,"latency_p50":0.2666294,"latency_p95":0.28976013,"outlier_suspected":false,"throughput":3.7364166892,"relative_flops":0.3333333333,"layer_reduction":0.6666666667,"device":"cpu"},{"mechanism":"depth_only","configuration":"medium","sequence_length":256,"depth":8,"warmup":10,"runs":50,"latency_mean":0.41187413,"latency_std":0.0194740343,"latency_trimmed_mean":0.4096376925,"latency_p50":0.4089107999,"latency_p95":0.43323976,"outlier_suspected":false,"throughput":2.4411816059,"relative_flops":0.6666666667,"layer_reduction":0.3333333333,"device":"cpu"},{"mechanism":"depth_only","configuration":"deep","sequence_length":256,"depth":12,"warmup":10,"runs":50,"latency_mean":0.52375732,"latency_std":0.0388100303,"latency_trimmed_mean":0.5184900325,"latency_p50":0.50257465,"latency_p95":0.5892982549,"outlier_suspected":false,"throughput":1.9286773849,"relative_flops":1.0,"layer_reduction":0.0,"device":"cpu"},{"mechanism":"depth_attention_ffn","configuration":"shallow","sequence_length":256,"depth":4,"warmup":10,"runs":50,"latency_mean":0.193139924,"latency_std":0.0104182691,"latency_trimmed_mean":0.1931739,"latency_p50":0.1967656,"latency_p95":0.207105,"outlier_suspected":false,"throughput":5.1766827713,"relative_flops":0.1666666667,"layer_reduction":0.6666666667,"device":"cpu"},{"mechanism":"depth_attention_ffn","configuration":"medium","sequence_length":256,"depth":8,"warmup":10,"runs":50,"latency_mean":0.289012942,"latency_std":0.0154503369,"latency_trimmed_mean":0.2887851175,"latency_p50":0.28716935,"latency_p95":0.3165960701,"outlier_suspected":false,"throughput":3.4627823229,"relative_flops":0.3333333333,"layer_reduction":0.3333333333,"device":"cpu"},{"mechanism":"depth_attention_ffn","configuration":"deep","sequence_length":256,"depth":12,"warmup":10,"runs":50,"latency_mean":0.512103258,"latency_std":0.0326979046,"latency_trimmed_mean":0.50462741,"latency_p50":0.49959835,"latency_p95":0.578908165,"outlier_suspected":false,"throughput":1.9816600925,"relative_flops":1.0,"layer_reduction":0.0,"device":"cpu"},{"mechanism":"routing","configuration":"shallow","sequence_length":256,"depth":4,"warmup":10,"runs":50,"latency_mean":0.245020298,"latency_std":0.004843273,"latency_trimmed_mean":0.2449833225,"latency_p50":0.24532855,"latency_p95":0.2512259,"outlier_suspected":false,"throughput":4.0819105144,"relative_flops":0.2280701754,"layer_reduction":0.6666666667,"device":"cpu"},{"mechanism":"routing","configuration":"medium","sequence_length":256,"depth":8,"warmup":10,"runs":50,"latency_mean":0.414343936,"latency_std":0.0378654273,"latency_trimmed_mean":0.409691625,"latency_p50":0.41218625,"latency_p95":0.48132312,"outlier_suspected":false,"throughput":2.4408602446,"relative_flops":0.4561403509,"layer_reduction":0.3333333333,"device":"cpu"},{"mechanism":"routing","configuration":"deep","sequence_length":256,"depth":12,"warmup":10,"runs":50,"latency_mean":0.560612706,"latency_std":0.0306765442,"latency_trimmed_mean":0.5589055375,"latency_p50":0.5612065999,"latency_p95":0.610835995,"outlier_suspected":false,"throughput":1.7892111151,"relative_flops":0.6842105263,"layer_reduction":0.0,"device":"cpu"}],"feature_ablation":[{"feature_set":"v1","n_features":4,"accuracy":0.7,"cv_accuracy_mean":0.6289292929,"cv_accuracy_std":0.1541013041},{"feature_set":"v2","n_features":8,"accuracy":0.72,"cv_accuracy_mean":0.6729090909,"cv_accuracy_std":0.1876583849}],"dense_reference":[{"model":"DenseReference (RMSNorm + RoPE + SwiGLU)","parameters":162148608,"trained":false,"quality_metric":"N/A (randomly initialised)","sequence_length":64,"runs":20,"latency_mean":0.44023164,"latency_std":0.0712879203,"vocab_size":50257,"dim":768,"depth":12,"heads":12,"ffn_hidden":2048,"norm":"RMSNorm","position":"RoPE","activation":"SwiGLU"}],"environment":{"python":"3.14.6","platform":"Windows-11-10.0.26200-SP0","processor":"Intel64 Family 6 Model 186 Stepping 2, GenuineIntel","torch":"2.14.0+cpu","transformers":"5.17.0","sklearn":"1.9.1","numpy":"2.5.3","device":"cpu","cuda":null,"gpu":null,"torch_threads":14}}</script>
+<script>
+(function(){
+"use strict";
+var D = JSON.parse(document.getElementById("msa-data").textContent);
+var ORDER = ["shallow","medium","deep"];
+var $ = function(id){ return document.getElementById(id); };
+var fmt = function(v,n){ return (v===null||v===undefined||isNaN(v)) ? "—" : Number(v).toFixed(n===undefined?3:n); };
+
+/* ---------- Task Analyzer: faithful port of analyzer/task_analyzer.py ---------- */
+var REASONING=["why","because","therefore","explain","prove","derive","calculate","reason","compare","evaluate"];
+var MATHW=["calculate","equation","number","percentage","multiply","divide","algebra","geometry","probability"];
+var STEPW=["then","next","after","finally","first","second","step","and then","once","before"];
+var QTYPES=[[0.25,["what is","what are","who","when","where","which"]],
+            [0.50,["how many","how much","list","name"]],
+            [0.75,["how do","how does","how would","describe","summarize"]],
+            [1.00,["why","explain","prove","derive","compare","evaluate"]]];
+var MATHEX=/[-+*\/^=<>]|\d+\s*(?:percent|%)|\b\d+\s*[-+*\/x]\s*\d+/g;
+
+function countSub(s, sub){
+  var n=0, i=0;
+  while(true){ var j=s.indexOf(sub,i); if(j<0) break; n++; i=j+sub.length; }
+  return n;
+}
+function analyze(text){
+  var words = text.split(/\s+/).filter(Boolean);
+  var lower = text.toLowerCase();
+  var sentences = (text.match(/[.!?]/g)||[]).length;
+  var commas = countSub(text,",");
+  var parens = countSub(text,"(")+countSub(text,")");
+  var numeric = words.filter(function(w){ return /\d/.test(w); }).length;
+  var qt = 0;
+  QTYPES.forEach(function(t){ if(t[1].some(function(s){ return lower.indexOf(s)>=0; })) qt=Math.max(qt,t[0]); });
+  var markers = STEPW.reduce(function(a,w){ return a+countSub(lower,w); },0);
+  var clauses = Math.max(text.trim().split(/[.!?;]/).length-1, 0);
+  return {
+    input_length: Math.min(words.length/100,1),
+    reasoning: Math.min(REASONING.reduce(function(a,w){return a+countSub(lower,w);},0)/5,1),
+    domain: Math.min(MATHW.reduce(function(a,w){return a+countSub(lower,w);},0)/5,1),
+    structure: Math.min((sentences+commas+parens)/10,1),
+    numeric_density: words.length ? Math.min(numeric/words.length*4,1) : 0,
+    math_expression: Math.min((text.match(MATHEX)||[]).length/3,1),
+    question_type: qt,
+    reasoning_steps: Math.min((markers+clauses)/6,1)
+  };
+}
+
+/* ---------- f_theta: real MLP forward pass from exported weights ---------- */
+var P = D.predictor;
+function predict(features){
+  var x = P.features.map(function(name,i){
+    return (features[name]-P.scaler_mean[i])/P.scaler_scale[i];
+  });
+  for(var L=0; L<P.weights.length; L++){
+    var W=P.weights[L], b=P.biases[L], out=[];
+    for(var j=0;j<b.length;j++){
+      var s=b[j];
+      for(var i=0;i<x.length;i++) s+=x[i]*W[i][j];
+      out.push(s);
+    }
+    if(L < P.weights.length-1) out = out.map(function(v){ return v>0?v:0; }); /* relu */
+    x = out;
+  }
+  var mx = Math.max.apply(null,x);
+  var ex = x.map(function(v){ return Math.exp(v-mx); });
+  var sum = ex.reduce(function(a,b){return a+b;},0);
+  var probs = {};
+  P.classes.forEach(function(c,i){ probs[c]=ex[i]/sum; });
+  var best = P.classes[0];
+  P.classes.forEach(function(c){ if(probs[c]>probs[best]) best=c; });
+  return { configuration: best, confidence: probs[best], probabilities: probs };
+}
+
+/* ---------- Policy + Stability Monitor: ports of the Python components ---------- */
+var THRESHOLD = 0.5, FALLBACK = "deep";
+function decide(pred){
+  var low = pred.confidence < THRESHOLD;
+  var cfg = low ? FALLBACK : pred.configuration;
+  return { configuration: cfg, predicted: pred.configuration, confidence: pred.confidence,
+           probabilities: pred.probabilities, fallback: low };
+}
+function Monitor(enabled){
+  this.w=6; this.warn=0.4; this.unstable=0.7; this.enabled=enabled!==false;
+  this.hist=[]; this.stable=null; this.rollbacks=0; this.switches=0; this.n=0; this.vols=[];
+}
+Monitor.prototype.volatility=function(){
+  if(this.hist.length<2) return 0;
+  var c=0; for(var i=1;i<this.hist.length;i++) if(this.hist[i]!==this.hist[i-1]) c++;
+  return c/(this.hist.length-1);
+};
+Monitor.prototype.status=function(v){
+  return v>this.unstable?"UNSTABLE":(v>this.warn?"WARNING":"STABLE");
+};
+Monitor.prototype.observe=function(cfg){
+  if(this.hist.length && this.hist[this.hist.length-1]!==cfg) this.switches++;
+  this.n++; this.hist.push(cfg); if(this.hist.length>this.w) this.hist.shift();
+  var v=this.volatility(), st=this.status(v), rolled=false, sel=cfg;
+  if(st==="UNSTABLE" && this.enabled && this.stable && this.stable!==cfg){
+    sel=this.stable; this.rollbacks++; rolled=true;
+    this.hist[this.hist.length-1]=sel; v=this.volatility(); st=this.status(v);
+  } else if(st==="STABLE"){
+    var counts={}, best=null;
+    this.hist.forEach(function(c){ counts[c]=(counts[c]||0)+1; });
+    Object.keys(counts).forEach(function(c){ if(!best||counts[c]>counts[best]) best=c; });
+    this.stable=best;
+  }
+  this.vols.push(v);
+  return { configuration:sel, status:st, volatility:v, rolled:rolled, rollbacks:this.rollbacks };
+};
+Monitor.prototype.meanVol=function(){
+  return this.vols.length ? this.vols.reduce(function(a,b){return a+b;},0)/this.vols.length : 0;
+};
+
+/* ---------- Replayed telemetry lookup ---------- */
+function recorded(mechanism, configuration){
+  var rows = D.calibration.summary.filter(function(r){
+    return r.mechanism===mechanism && r.configuration===configuration; });
+  return rows[0] || null;
+}
+
+/* ---------- Rendering ---------- */
+function kv(label, value, frac){
+  var bar = frac===undefined ? "" :
+    '<div class="bar"><i style="width:'+Math.round(Math.max(0,Math.min(1,frac))*100)+'%"></i></div>';
+  return '<div class="kv"><span>'+label+'</span><b>'+value+'</b></div>'+bar;
+}
+
+var monitor = new Monitor(true);
+
+function run(text){
+  var f = analyze(text);
+  var pred = predict(f);
+  var dec = decide(pred);
+  var ev = monitor.observe(dec.configuration);
+  var cfg = ev.configuration;
+  var knobs = D.configurations[cfg];
+
+  $("features").innerHTML = P.features.map(function(n){
+    return kv(n.replace(/_/g," "), fmt(f[n]), f[n]);
+  }).join("");
+
+  $("probs").innerHTML = ORDER.map(function(c){
+    return kv("P("+c+")", fmt(dec.probabilities[c]), dec.probabilities[c]);
+  }).join("");
+  $("conf").textContent = fmt(dec.confidence);
+
+  $("policy").innerHTML =
+    kv("predicted", dec.predicted) +
+    kv("threshold", fmt(THRESHOLD,2)) +
+    kv("fallback", dec.fallback ? "APPLIED → "+FALLBACK : "none") +
+    kv("selected", dec.configuration);
+
+  $("monitor").innerHTML =
+    '<div class="kv"><span>status</span><b><span class="pill '+ev.status+'">'+ev.status+'</span></b></div>' +
+    kv("volatility", fmt(ev.volatility,2), ev.volatility) +
+    kv("rollback", ev.rolled ? "YES" : "no") +
+    kv("rollbacks", String(ev.rollbacks));
+
+  $("knobs").innerHTML =
+    kv("configuration", cfg) +
+    kv("depth", knobs.depth+"/12", knobs.depth/12) +
+    kv("attention", knobs.attention_mode) +
+    kv("ffn", knobs.ffn_mode);
+
+  var heads = knobs.attention_mode==="full" ? 12 : 6;
+  var chunks = knobs.ffn_mode==="full" ? 4 : 2;
+  var stack = "";
+  for(var i=0;i<12;i++){
+    var on = i < knobs.depth;
+    stack += '<div class="layer '+(on?"on":"off")+'" style="height:'+(on?100:38)+'%" '+
+             'title="block '+i+(on?" executed":" skipped")+'"></div>';
+  }
+  $("stack").innerHTML = stack;
+  $("stack-cap").textContent = knobs.depth+" executed · "+(12-knobs.depth)+" skipped";
+  $("m-depth").textContent = knobs.depth+"/12";
+  $("m-heads").textContent = heads+"/12";
+  $("m-ffn").textContent = chunks+"/4";
+
+  var mech = (knobs.attention_mode==="full" && knobs.ffn_mode==="full") ? "depth" : "full";
+  var rec = recorded(mech, cfg);
+  $("telemetry").innerHTML = rec ? (
+    kv("prompt loss", fmt(rec.loss)) +
+    kv("perplexity", fmt(rec.perplexity,1)) +
+    kv("latency", fmt(rec.latency_seconds*1000,1)+" ms") +
+    kv("relative FLOPs", fmt(rec.relative_flops), rec.relative_flops) +
+    kv("layers skipped", String(12-knobs.depth))
+  ) : "<p class='note'>no recorded run</p>";
+}
+
+/* ---------- Charts (hand-drawn SVG, scaled to the data) ---------- */
+function svg(w,h,body){
+  return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" style="max-width:100%;height:auto" '+
+         'role="img" aria-hidden="false">'+body+'</svg>';
+}
+function lineChart(el, pts, xlab, ylab){
+  var W=440,H=210,L=52,R=14,T=14,B=38;
+  var xs=pts.map(function(p){return p.x;}), ys=pts.map(function(p){return p.y;});
+  var x0=0, x1=Math.max.apply(null,xs), y0=0, y1=Math.max.apply(null,ys)*1.08 || 1;
+  var px=function(v){ return L+(v-x0)/(x1-x0||1)*(W-L-R); };
+  var py=function(v){ return H-B-(v-y0)/(y1-y0||1)*(H-T-B); };
+  var g="";
+  for(var i=0;i<=4;i++){
+    var yv=y0+(y1-y0)*i/4;
+    g+='<line x1="'+L+'" y1="'+py(yv)+'" x2="'+(W-R)+'" y2="'+py(yv)+'" stroke="var(--line)" stroke-width="1"/>';
+    g+='<text x="'+(L-7)+'" y="'+(py(yv)+3.5)+'" text-anchor="end" font-size="9" fill="var(--muted)" font-family="var(--mono)">'+yv.toFixed(0)+'</text>';
+  }
+  for(var j=0;j<=4;j++){
+    var xv=x0+(x1-x0)*j/4;
+    g+='<text x="'+px(xv)+'" y="'+(H-B+15)+'" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="var(--mono)">'+xv.toFixed(0)+'</text>';
+  }
+  g+='<polyline fill="none" stroke="var(--exec)" stroke-width="2" points="'+
+     pts.map(function(p){return px(p.x)+","+py(p.y);}).join(" ")+'"/>';
+  pts.forEach(function(p){
+    g+='<circle cx="'+px(p.x)+'" cy="'+py(p.y)+'" r="3" fill="var(--exec)"/>';
+    if(p.label) g+='<text x="'+px(p.x)+'" y="'+(py(p.y)-8)+'" text-anchor="middle" font-size="8.5" fill="var(--muted)" font-family="var(--mono)">'+p.label+'</text>';
+  });
+  g+='<text x="'+((L+W-R)/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="9" fill="var(--muted)">'+xlab+'</text>';
+  g+='<text x="11" y="'+((T+H-B)/2)+'" text-anchor="middle" font-size="9" fill="var(--muted)" transform="rotate(-90 11 '+((T+H-B)/2)+')">'+ylab+'</text>';
+  el.innerHTML = svg(W,H,g);
+}
+function barChart(el, rows, valueKey, label){
+  var W=760, rowH=25, T=10, L=196, R=64, H=T+rows.length*rowH+26;
+  var max = Math.max.apply(null, rows.map(function(r){ return r[valueKey]; }))*1.05 || 1;
+  var g="";
+  rows.forEach(function(r,i){
+    var y=T+i*rowH, w=(r[valueKey]/max)*(W-L-R);
+    g+='<text x="'+(L-9)+'" y="'+(y+14)+'" text-anchor="end" font-size="10" fill="var(--ink)" font-family="var(--mono)">'+r.name+'</text>';
+    g+='<rect x="'+L+'" y="'+(y+4)+'" width="'+Math.max(w,1)+'" height="14" fill="'+(r.hi?"var(--exec)":"var(--skip)")+'" rx="1"/>';
+    g+='<text x="'+(L+w+7)+'" y="'+(y+14.5)+'" font-size="9.5" fill="var(--muted)" font-family="var(--mono)">'+fmt(r[valueKey],3)+'</text>';
+  });
+  g+='<text x="'+((L+W-R)/2)+'" y="'+(H-5)+'" text-anchor="middle" font-size="9" fill="var(--muted)">'+label+'</text>';
+  el.innerHTML = svg(W,H,g);
+}
+function table(el, cols, rows, bestCol){
+  var best = bestCol ? Math.min.apply(null, rows.map(function(r){ return r[bestCol]; })) : null;
+  el.innerHTML =
+    "<thead><tr>"+cols.map(function(c){ return "<th>"+c.label+"</th>"; }).join("")+"</tr></thead>"+
+    "<tbody>"+rows.map(function(r){
+      return "<tr>"+cols.map(function(c){
+        var v=r[c.key];
+        var txt = c.fmt ? c.fmt(v,r) : (typeof v==="number" ? fmt(v,c.dp===undefined?3:c.dp) : (v===undefined||v===null?"—":v));
+        var cls = (bestCol && c.key===bestCol && v===best) ? ' class="best"' : "";
+        return "<td"+cls+">"+txt+"</td>";
+      }).join("")+"</tr>";
+    }).join("")+"</tbody>";
+}
+
+/* ---------- Static sections ---------- */
+function renderStatic(){
+  var e=D.environment;
+  $("env-tag").textContent = e.device.toUpperCase()+" · torch "+e.torch+" · seed 42";
+  $("env-line").textContent = "Python "+e.python+" · PyTorch "+e.torch+" · Transformers "+
+    e.transformers+" · scikit-learn "+e.sklearn+" · "+e.device+" · "+
+    D.calibration.experiments+" calibration experiments over "+D.calibration.prompts+" prompts";
+  $("fset").textContent = P.feature_set+" · "+P.features.length+" features · tolerance "+P.tolerance;
+
+  lineChart($("chart-frontier"), D.frontier.map(function(r){
+    return { x:r.compute_reduction_percent, y:r.relative_loss_increase*100, label:r.tolerance.toFixed(2) };
+  }), "compute reduction (%)  — labels: tolerance", "loss increase (%)");
+
+  var depth = D.calibration.summary.filter(function(r){ return r.mechanism==="depth"; })
+    .sort(function(a,b){ return a.depth-b.depth; });
+  lineChart($("chart-depth"), depth.map(function(r){
+    return { x:r.depth, y:r.loss, label:r.configuration };
+  }), "depth (layers executed)", "prompt loss");
+
+  barChart($("chart-ablation"), D.ablations.map(function(r){
+    return { name:r.label.replace(/^A\d: /,"").slice(0,34), loss:r.loss, hi:r.variant==="A1_static" };
+  }), "loss", "prompt loss — lower is better (teal = static reference)");
+
+  table($("t-base"), [
+    {key:"label",label:"Method"},{key:"loss",label:"Loss"},
+    {key:"average_depth",label:"Avg depth",dp:2},
+    {key:"layer_reduction",label:"Layer red.",fmt:function(v){return (v*100).toFixed(1)+"%";}},
+    {key:"relative_flops",label:"Rel. FLOPs"},
+    {key:"latency_mean",label:"Latency",fmt:function(v){return (v*1000).toFixed(1)+" ms";}}
+  ], D.baselines, "loss");
+
+  table($("t-data"), [
+    {key:"dataset",label:"Dataset"},
+    {key:"label",label:"Method",fmt:function(v){return v.replace(/^Baseline [A-E]: /,"");}},
+    {key:"answer_perplexity",label:"Answer PPL",dp:1},
+    {key:"accuracy",label:"Exact match",dp:3},
+    {key:"average_depth",label:"Avg depth",dp:2},
+    {key:"relative_flops",label:"Rel. FLOPs"}
+  ], D.datasets);
+
+  var cm=P.confusion_matrix, labs=P.confusion_labels;
+  var mx=Math.max.apply(null,cm.map(function(r){return Math.max.apply(null,r);}));
+  var html='<table><thead><tr><th>actual \\ pred</th>'+labs.map(function(l){return "<th>"+l+"</th>";}).join("")+'</tr></thead><tbody>';
+  cm.forEach(function(row,i){
+    html+="<tr><td>"+labs[i]+"</td>"+row.map(function(v){
+      var a=(v/mx)*0.85+0.05;
+      return '<td style="background:color-mix(in srgb, var(--exec) '+(a*100).toFixed(0)+'%, transparent)">'+v+"</td>";
+    }).join("")+"</tr>";
+  });
+  $("confusion").innerHTML = html+"</tbody></table>";
+
+  var fa = D.feature_ablation;
+  $("predstats").innerHTML =
+    kv("held-out accuracy", fmt(P.accuracy,3), P.accuracy) +
+    kv("5-fold CV", fmt(P.cv_accuracy_mean,3)+" ± "+fmt(P.cv_accuracy_std,3), P.cv_accuracy_mean) +
+    kv("majority baseline", "0.467", 0.467) +
+    fa.map(function(r){ return kv(r.feature_set+" ("+r.n_features+" feat) CV",
+      fmt(r.cv_accuracy_mean,3), r.cv_accuracy_mean); }).join("");
+}
+
+/* ---------- Stability simulation ---------- */
+var PRESETS = [
+  "What is the capital of France?",
+  "Explain why the sky appears blue.",
+  "A shop starts with 47 boxes, receives 19 more, then sells 8. How many boxes remain, and what is 20 percent of that number?",
+  "Write a Python function that merges two sorted lists. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "Compare a monolithic application with a microservices architecture. Explain one advantage and one disadvantage of each approach."
+];
+function simulate(){
+  var pool = { shallow:[], medium:[], deep:[] };
+  PRESETS.concat([
+    "What is 2 plus 2?","How many days are in a week?","What is the chemical symbol for gold?",
+    "Explain in detail why the greenhouse effect warms the atmosphere, describe the main stages involved, and give one everyday example.",
+    "You are given a report about renewable energy adoption. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed.",
+    "Calculate 144 divided by 12.","Summarize the industrial revolution in two sentences."
+  ]).forEach(function(t){ pool[predict(analyze(t)).configuration].push(t); });
+
+  var buckets = ORDER.filter(function(c){ return pool[c].length; });
+  var on = new Monitor(true), off = new Monitor(false);
+  var cells = [];
+  for(var i=0;i<60;i++){
+    var c = buckets[i % buckets.length];
+    var evOn = on.observe(c); off.observe(c);
+    cells.push('<i data-c="'+evOn.configuration+'" data-r="'+(evOn.rolled?1:0)+
+               '" title="decision '+(i+1)+': '+evOn.configuration+(evOn.rolled?" (rollback)":"")+'"></i>');
+  }
+  $("trace").innerHTML = cells.join("");
+  $("simstats").innerHTML =
+    '<div><div class="eyebrow">Monitor OFF volatility</div><div class="mono" style="font-size:1.25rem">'+fmt(off.meanVol(),3)+'</div></div>'+
+    '<div><div class="eyebrow">Monitor ON volatility</div><div class="mono" style="font-size:1.25rem;color:var(--exec)">'+fmt(on.meanVol(),3)+'</div></div>'+
+    '<div><div class="eyebrow">Rollbacks</div><div class="mono" style="font-size:1.25rem">'+on.rollbacks+' / 60</div></div>';
+}
+
+/* ---------- Boot ---------- */
+$("presets").innerHTML = PRESETS.map(function(t,i){
+  return '<button type="button" data-i="'+i+'">'+(["factual","explain","arithmetic","code","compare"][i])+'</button>';
+}).join("");
+$("presets").addEventListener("click", function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  $("prompt").value = PRESETS[+b.dataset.i]; run($("prompt").value);
+});
+$("run").addEventListener("click", function(){ run($("prompt").value); });
+$("prompt").addEventListener("input", function(){ run($("prompt").value); });
+$("sim").addEventListener("click", simulate);
+$("simreset").addEventListener("click", function(){
+  $("trace").innerHTML=""; $("simstats").innerHTML="";
+});
+
+renderStatic();
+$("prompt").value = PRESETS[2];
+run($("prompt").value);
+simulate();
+})();
+</script>

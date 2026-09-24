@@ -1,0 +1,642 @@
+<title>MSA Control Room</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --ground:#e9edf1; --surface:#ffffff; --surface2:#f3f6f8;
+    --ink:#131820; --muted:#5d6673; --line:#d2d9e1;
+    --exec:#0b6e5f; --exec-soft:#0b6e5f22; --skip:#aeb7c2;
+    --stable:#0b6e5f; --warning:#a16207; --unstable:#9f1239;
+    --live:#0b6e5f; --replay:#5d6673;
+    --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --ground:#0d1218; --surface:#151c25; --surface2:#1b232e;
+    --ink:#e7ebf0; --muted:#95a1b1; --line:#2a3542;
+    --exec:#2dd4bf; --exec-soft:#2dd4bf22; --skip:#3f4b5b;
+    --stable:#2dd4bf; --warning:#d4a017; --unstable:#f43f5e;
+    --live:#2dd4bf; --replay:#95a1b1;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#0d1218; --surface:#151c25; --surface2:#1b232e;
+    --ink:#e7ebf0; --muted:#95a1b1; --line:#2a3542;
+    --exec:#2dd4bf; --exec-soft:#2dd4bf22; --skip:#3f4b5b;
+    --stable:#2dd4bf; --warning:#d4a017; --unstable:#f43f5e;
+    --live:#2dd4bf; --replay:#95a1b1;
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);
+       line-height:1.5;margin:0}
+  .wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 56px}
+  h1,h2,h3{text-wrap:balance;margin:0}
+  h1{font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:700;letter-spacing:-.02em}
+  h2{font-size:1.02rem;font-weight:600;letter-spacing:-.01em}
+  .eyebrow{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;
+           letter-spacing:.14em;color:var(--muted)}
+  .lede{color:var(--muted);max-width:66ch;margin-top:8px}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  header{border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:24px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .tag{font-family:var(--mono);font-size:.7rem;border:1px solid var(--line);
+       border-radius:2px;padding:4px 8px;display:inline-flex;align-items:center;gap:6px;
+       background:var(--surface)}
+  .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dot.live{background:var(--live)} .dot.replay{background:var(--replay)}
+
+  section{margin-top:34px}
+  .sechead{display:flex;align-items:baseline;justify-content:space-between;
+           gap:12px;flex-wrap:wrap;margin-bottom:12px}
+
+  .chain{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(178px,1fr))}
+  .stage{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+         padding:12px 13px;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .stage-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .stage-n{font-family:var(--mono);font-size:.64rem;color:var(--muted);
+           letter-spacing:.1em}
+  .stage-t{font-size:.86rem;font-weight:600}
+
+  .kv{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);
+      font-size:.72rem;font-variant-numeric:tabular-nums}
+  .kv span:first-child{color:var(--muted);overflow:hidden;text-overflow:ellipsis;
+                       white-space:nowrap}
+  .kv b{font-weight:500}
+
+  .bar{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden}
+  .bar>i{display:block;height:100%;background:var(--exec)}
+
+  textarea{width:100%;font-family:var(--mono);font-size:.82rem;padding:11px 12px;
+    border:1px solid var(--line);border-radius:3px;background:var(--surface);
+    color:var(--ink);resize:vertical;min-height:74px}
+  textarea:focus-visible,button:focus-visible,select:focus-visible{
+    outline:2px solid var(--exec);outline-offset:2px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+  button{font-family:var(--sans);font-size:.79rem;font-weight:500;cursor:pointer;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    border-radius:3px;padding:7px 12px}
+  button.primary{background:var(--exec);border-color:var(--exec);color:#fff}
+  button:hover{border-color:var(--exec)}
+  .presets{display:flex;gap:6px;flex-wrap:wrap}
+  .presets button{font-size:.72rem;padding:5px 9px;font-family:var(--mono)}
+
+  /* 12-layer stack: the page's recurring motif */
+  .stack{display:flex;gap:3px;align-items:flex-end;height:58px}
+  .layer{flex:1;border-radius:1px;border:1px solid var(--exec);background:var(--exec-soft);
+         position:relative;min-width:0}
+  .layer.on{background:var(--exec)}
+  .layer.off{border-color:var(--skip);background:transparent}
+  .stacklabels{display:flex;justify-content:space-between;font-family:var(--mono);
+               font-size:.63rem;color:var(--muted);margin-top:5px}
+
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:14px 15px}
+  .panel h3{font-size:.82rem;font-weight:600;margin-bottom:10px}
+
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:3px;
+             background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:.73rem;
+        font-variant-numeric:tabular-nums}
+  th,td{padding:7px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+  th:first-child,td:first-child{text-align:left}
+  thead th{color:var(--muted);font-weight:500;font-size:.66rem;text-transform:uppercase;
+           letter-spacing:.07em;background:var(--surface2);position:sticky;top:0}
+  tbody tr:last-child td{border-bottom:none}
+  td.best{color:var(--exec);font-weight:600}
+
+  .pill{font-family:var(--mono);font-size:.66rem;padding:2px 7px;border-radius:2px;
+        border:1px solid currentColor;display:inline-block}
+  .pill.STABLE{color:var(--stable)} .pill.WARNING{color:var(--warning)}
+  .pill.UNSTABLE{color:var(--unstable)}
+
+  .trace{display:flex;gap:2px;flex-wrap:wrap;margin-top:10px}
+  .trace i{width:11px;height:17px;border-radius:1px;display:block}
+  .trace i[data-c="shallow"]{background:var(--skip)}
+  .trace i[data-c="medium"]{background:var(--exec-soft);border:1px solid var(--exec)}
+  .trace i[data-c="deep"]{background:var(--exec)}
+  .trace i[data-r="1"]{outline:2px solid var(--unstable);outline-offset:1px}
+
+  .note{font-size:.76rem;color:var(--muted);max-width:74ch}
+  .warn{border-left:2px solid var(--warning);padding-left:11px}
+  footer{margin-top:44px;padding-top:20px;border-top:1px solid var(--line);
+         font-size:.75rem;color:var(--muted)}
+  ul{margin:8px 0 0;padding-left:18px} li{margin-bottom:5px}
+  @media (prefers-reduced-motion:no-preference){
+    .layer,.bar>i{transition:background .18s ease,border-color .18s ease}
+  }
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Metamorphic Self-Adaptation &middot; GPT-2 small</p>
+  <h1>MSA Control Room</h1>
+  <p class="lede">Per-input architecture selection. The analyzer, the learned predictor
+    <span class="mono">f_theta</span>, the decision policy and the stability monitor all execute
+    in this page. The GPT-2 figures are replayed from recorded runs &mdash; nothing here runs a
+    transformer.</p>
+  <div class="legend">
+    <span class="tag"><span class="dot live"></span>LIVE in browser &mdash; analyzer, f_theta, policy, monitor</span>
+    <span class="tag"><span class="dot replay"></span>REPLAYED from results/ &mdash; all GPT-2 loss, latency, accuracy</span>
+    <span class="tag" id="env-tag">&mdash;</span>
+  </div>
+</header>
+
+<section>
+  <div class="sechead">
+    <h2>Live pipeline</h2>
+    <span class="eyebrow" id="fset">&mdash;</span>
+  </div>
+  <label for="prompt" class="eyebrow">Input prompt</label>
+  <textarea id="prompt" spellcheck="false"></textarea>
+  <div class="controls">
+    <button class="primary" id="run" type="button">Analyze</button>
+    <span class="presets" id="presets"></span>
+  </div>
+
+  <div class="chain" style="margin-top:14px">
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">Task Analyzer</span><span class="stage-n">01</span></div>
+      <div id="features"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">f_theta</span><span class="stage-n">02</span></div>
+      <div id="probs"></div>
+      <div class="kv" style="border-top:1px solid var(--line);padding-top:7px">
+        <span>confidence</span><b id="conf">&mdash;</b></div>
+    </div>
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">Policy</span><span class="stage-n">03</span></div>
+      <div id="policy"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">Stability Monitor</span><span class="stage-n">04</span></div>
+      <div id="monitor"></div>
+    </div>
+    <div class="stage">
+      <div class="stage-h"><span class="stage-t">Controller</span><span class="stage-n">05</span></div>
+      <div id="knobs"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Executed architecture</h2>
+    <span class="eyebrow"><span class="dot live" style="display:inline-block"></span> live selection &middot;
+      <span class="dot replay" style="display:inline-block"></span> replayed telemetry</span>
+  </div>
+  <div class="grid g2">
+    <div class="panel">
+      <h3>Transformer blocks</h3>
+      <div class="stack" id="stack"></div>
+      <div class="stacklabels"><span>block 0</span><span id="stack-cap">&mdash;</span><span>block 11</span></div>
+      <div class="grid g3" style="margin-top:14px">
+        <div><div class="eyebrow">Depth</div><div class="mono" id="m-depth" style="font-size:1.3rem">&mdash;</div></div>
+        <div><div class="eyebrow">Heads</div><div class="mono" id="m-heads" style="font-size:1.3rem">&mdash;</div></div>
+        <div><div class="eyebrow">FFN chunks</div><div class="mono" id="m-ffn" style="font-size:1.3rem">&mdash;</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Inference telemetry <span class="tag" style="float:right"><span class="dot replay"></span>replayed</span></h3>
+      <div id="telemetry"></div>
+      <p class="note" style="margin-top:11px">Mean over the 499-prompt calibration corpus for the
+        selected configuration, not a live forward pass for your text.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Stability experiment</h2>
+    <span class="eyebrow">monitor on vs off</span>
+  </div>
+  <div class="panel">
+    <p class="note">Feeds a sequence built to force configuration switching through the live monitor.
+      Each cell is one decision; a crimson outline marks a rollback.</p>
+    <div class="controls">
+      <button class="primary" id="sim" type="button">Run 60-decision sequence</button>
+      <button id="simreset" type="button">Reset</button>
+    </div>
+    <div class="trace" id="trace"></div>
+    <div class="grid g3" style="margin-top:14px" id="simstats"></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Quality&ndash;compute frontier</h2><span class="eyebrow">499 prompts &middot; depth-only</span></div>
+  <div class="grid g2">
+    <div class="panel"><h3>Compute reduction vs loss increase</h3><div id="chart-frontier"></div></div>
+    <div class="panel"><h3>Depth vs prompt loss</h3><div id="chart-depth"></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Ablation ladder</h2><span class="eyebrow">60 short-QA prompts</span></div>
+  <div class="panel"><div id="chart-ablation"></div></div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Baselines</h2><span class="eyebrow">Phase 12</span></div>
+  <div class="tablewrap"><table id="t-base"></table></div>
+</section>
+
+<section>
+  <div class="sechead"><h2>Downstream datasets</h2><span class="eyebrow">answer-conditional</span></div>
+  <div class="tablewrap"><table id="t-data"></table></div>
+  <p class="note warn" style="margin-top:10px"><b>Every variant, including static 12-layer GPT-2,
+    scores 0.000 exact match on GSM8K.</b> GPT-2 small cannot solve that task, so GSM8K separates
+    compute behaviour, not quality. On GSM8K the predictor also routes almost everything to
+    <span class="mono">deep</span>, so the compute saving seen on short QA largely disappears.</p>
+</section>
+
+<section>
+  <div class="sechead"><h2>Predictor</h2><span class="eyebrow">held-out confusion</span></div>
+  <div class="grid g2">
+    <div class="panel"><h3>Confusion matrix</h3><div id="confusion"></div></div>
+    <div class="panel"><h3>Reported accuracy</h3><div id="predstats"></div>
+      <p class="note" style="margin-top:10px">Cross-validated accuracy carries a large standard
+        deviation. The v2 feature set scores higher than v1 but the gap sits inside one standard
+        deviation and is not statistically established.</p></div>
+  </div>
+</section>
+
+<footer>
+  <p><b>What this page does and does not do.</b> The Task Analyzer heuristics, the
+    <span class="mono">f_theta</span> forward pass (exported weights, 8&rarr;32&rarr;16&rarr;3), the
+    confidence policy and the stability monitor are reimplemented here and genuinely execute on your
+    input. Every loss, perplexity, latency and accuracy figure is a recorded measurement replayed
+    from <span class="mono">results/</span>. This page does not run GPT-2.</p>
+  <p style="margin-top:10px"><b>Measured limitations.</b></p>
+  <ul>
+    <li>Full MSA is the worst-quality variant tested; attention and FFN slicing are applied to pretrained weights with no retraining.</li>
+    <li>Calibration targets come from prompt loss, which is not downstream task quality.</li>
+    <li>Latency was measured on CPU; the routing baseline uses less arithmetic yet runs slower.</li>
+    <li>Evaluation sets are small (60 short-QA, 40 GSM8K); small differences are not meaningful.</li>
+  </ul>
+  <p class="mono" id="env-line" style="margin-top:12px">&mdash;</p>
+</footer>
+</div>
+
+<script id="msa-data" type="application/json">__MSA_DATA__</script>
+<script>
+(function(){
+"use strict";
+var D = JSON.parse(document.getElementById("msa-data").textContent);
+var ORDER = ["shallow","medium","deep"];
+var $ = function(id){ return document.getElementById(id); };
+var fmt = function(v,n){ return (v===null||v===undefined||isNaN(v)) ? "—" : Number(v).toFixed(n===undefined?3:n); };
+
+/* ---------- Task Analyzer: faithful port of analyzer/task_analyzer.py ---------- */
+var REASONING=["why","because","therefore","explain","prove","derive","calculate","reason","compare","evaluate"];
+var MATHW=["calculate","equation","number","percentage","multiply","divide","algebra","geometry","probability"];
+var STEPW=["then","next","after","finally","first","second","step","and then","once","before"];
+var QTYPES=[[0.25,["what is","what are","who","when","where","which"]],
+            [0.50,["how many","how much","list","name"]],
+            [0.75,["how do","how does","how would","describe","summarize"]],
+            [1.00,["why","explain","prove","derive","compare","evaluate"]]];
+var MATHEX=/[-+*\/^=<>]|\d+\s*(?:percent|%)|\b\d+\s*[-+*\/x]\s*\d+/g;
+
+function countSub(s, sub){
+  var n=0, i=0;
+  while(true){ var j=s.indexOf(sub,i); if(j<0) break; n++; i=j+sub.length; }
+  return n;
+}
+function analyze(text){
+  var words = text.split(/\s+/).filter(Boolean);
+  var lower = text.toLowerCase();
+  var sentences = (text.match(/[.!?]/g)||[]).length;
+  var commas = countSub(text,",");
+  var parens = countSub(text,"(")+countSub(text,")");
+  var numeric = words.filter(function(w){ return /\d/.test(w); }).length;
+  var qt = 0;
+  QTYPES.forEach(function(t){ if(t[1].some(function(s){ return lower.indexOf(s)>=0; })) qt=Math.max(qt,t[0]); });
+  var markers = STEPW.reduce(function(a,w){ return a+countSub(lower,w); },0);
+  var clauses = Math.max(text.trim().split(/[.!?;]/).length-1, 0);
+  return {
+    input_length: Math.min(words.length/100,1),
+    reasoning: Math.min(REASONING.reduce(function(a,w){return a+countSub(lower,w);},0)/5,1),
+    domain: Math.min(MATHW.reduce(function(a,w){return a+countSub(lower,w);},0)/5,1),
+    structure: Math.min((sentences+commas+parens)/10,1),
+    numeric_density: words.length ? Math.min(numeric/words.length*4,1) : 0,
+    math_expression: Math.min((text.match(MATHEX)||[]).length/3,1),
+    question_type: qt,
+    reasoning_steps: Math.min((markers+clauses)/6,1)
+  };
+}
+
+/* ---------- f_theta: real MLP forward pass from exported weights ---------- */
+var P = D.predictor;
+function predict(features){
+  var x = P.features.map(function(name,i){
+    return (features[name]-P.scaler_mean[i])/P.scaler_scale[i];
+  });
+  for(var L=0; L<P.weights.length; L++){
+    var W=P.weights[L], b=P.biases[L], out=[];
+    for(var j=0;j<b.length;j++){
+      var s=b[j];
+      for(var i=0;i<x.length;i++) s+=x[i]*W[i][j];
+      out.push(s);
+    }
+    if(L < P.weights.length-1) out = out.map(function(v){ return v>0?v:0; }); /* relu */
+    x = out;
+  }
+  var mx = Math.max.apply(null,x);
+  var ex = x.map(function(v){ return Math.exp(v-mx); });
+  var sum = ex.reduce(function(a,b){return a+b;},0);
+  var probs = {};
+  P.classes.forEach(function(c,i){ probs[c]=ex[i]/sum; });
+  var best = P.classes[0];
+  P.classes.forEach(function(c){ if(probs[c]>probs[best]) best=c; });
+  return { configuration: best, confidence: probs[best], probabilities: probs };
+}
+
+/* ---------- Policy + Stability Monitor: ports of the Python components ---------- */
+var THRESHOLD = 0.5, FALLBACK = "deep";
+function decide(pred){
+  var low = pred.confidence < THRESHOLD;
+  var cfg = low ? FALLBACK : pred.configuration;
+  return { configuration: cfg, predicted: pred.configuration, confidence: pred.confidence,
+           probabilities: pred.probabilities, fallback: low };
+}
+function Monitor(enabled){
+  this.w=6; this.warn=0.4; this.unstable=0.7; this.enabled=enabled!==false;
+  this.hist=[]; this.stable=null; this.rollbacks=0; this.switches=0; this.n=0; this.vols=[];
+}
+Monitor.prototype.volatility=function(){
+  if(this.hist.length<2) return 0;
+  var c=0; for(var i=1;i<this.hist.length;i++) if(this.hist[i]!==this.hist[i-1]) c++;
+  return c/(this.hist.length-1);
+};
+Monitor.prototype.status=function(v){
+  return v>this.unstable?"UNSTABLE":(v>this.warn?"WARNING":"STABLE");
+};
+Monitor.prototype.observe=function(cfg){
+  if(this.hist.length && this.hist[this.hist.length-1]!==cfg) this.switches++;
+  this.n++; this.hist.push(cfg); if(this.hist.length>this.w) this.hist.shift();
+  var v=this.volatility(), st=this.status(v), rolled=false, sel=cfg;
+  if(st==="UNSTABLE" && this.enabled && this.stable && this.stable!==cfg){
+    sel=this.stable; this.rollbacks++; rolled=true;
+    this.hist[this.hist.length-1]=sel; v=this.volatility(); st=this.status(v);
+  } else if(st==="STABLE"){
+    var counts={}, best=null;
+    this.hist.forEach(function(c){ counts[c]=(counts[c]||0)+1; });
+    Object.keys(counts).forEach(function(c){ if(!best||counts[c]>counts[best]) best=c; });
+    this.stable=best;
+  }
+  this.vols.push(v);
+  return { configuration:sel, status:st, volatility:v, rolled:rolled, rollbacks:this.rollbacks };
+};
+Monitor.prototype.meanVol=function(){
+  return this.vols.length ? this.vols.reduce(function(a,b){return a+b;},0)/this.vols.length : 0;
+};
+
+/* ---------- Replayed telemetry lookup ---------- */
+function recorded(mechanism, configuration){
+  var rows = D.calibration.summary.filter(function(r){
+    return r.mechanism===mechanism && r.configuration===configuration; });
+  return rows[0] || null;
+}
+
+/* ---------- Rendering ---------- */
+function kv(label, value, frac){
+  var bar = frac===undefined ? "" :
+    '<div class="bar"><i style="width:'+Math.round(Math.max(0,Math.min(1,frac))*100)+'%"></i></div>';
+  return '<div class="kv"><span>'+label+'</span><b>'+value+'</b></div>'+bar;
+}
+
+var monitor = new Monitor(true);
+
+function run(text){
+  var f = analyze(text);
+  var pred = predict(f);
+  var dec = decide(pred);
+  var ev = monitor.observe(dec.configuration);
+  var cfg = ev.configuration;
+  var knobs = D.configurations[cfg];
+
+  $("features").innerHTML = P.features.map(function(n){
+    return kv(n.replace(/_/g," "), fmt(f[n]), f[n]);
+  }).join("");
+
+  $("probs").innerHTML = ORDER.map(function(c){
+    return kv("P("+c+")", fmt(dec.probabilities[c]), dec.probabilities[c]);
+  }).join("");
+  $("conf").textContent = fmt(dec.confidence);
+
+  $("policy").innerHTML =
+    kv("predicted", dec.predicted) +
+    kv("threshold", fmt(THRESHOLD,2)) +
+    kv("fallback", dec.fallback ? "APPLIED → "+FALLBACK : "none") +
+    kv("selected", dec.configuration);
+
+  $("monitor").innerHTML =
+    '<div class="kv"><span>status</span><b><span class="pill '+ev.status+'">'+ev.status+'</span></b></div>' +
+    kv("volatility", fmt(ev.volatility,2), ev.volatility) +
+    kv("rollback", ev.rolled ? "YES" : "no") +
+    kv("rollbacks", String(ev.rollbacks));
+
+  $("knobs").innerHTML =
+    kv("configuration", cfg) +
+    kv("depth", knobs.depth+"/12", knobs.depth/12) +
+    kv("attention", knobs.attention_mode) +
+    kv("ffn", knobs.ffn_mode);
+
+  var heads = knobs.attention_mode==="full" ? 12 : 6;
+  var chunks = knobs.ffn_mode==="full" ? 4 : 2;
+  var stack = "";
+  for(var i=0;i<12;i++){
+    var on = i < knobs.depth;
+    stack += '<div class="layer '+(on?"on":"off")+'" style="height:'+(on?100:38)+'%" '+
+             'title="block '+i+(on?" executed":" skipped")+'"></div>';
+  }
+  $("stack").innerHTML = stack;
+  $("stack-cap").textContent = knobs.depth+" executed · "+(12-knobs.depth)+" skipped";
+  $("m-depth").textContent = knobs.depth+"/12";
+  $("m-heads").textContent = heads+"/12";
+  $("m-ffn").textContent = chunks+"/4";
+
+  var mech = (knobs.attention_mode==="full" && knobs.ffn_mode==="full") ? "depth" : "full";
+  var rec = recorded(mech, cfg);
+  $("telemetry").innerHTML = rec ? (
+    kv("prompt loss", fmt(rec.loss)) +
+    kv("perplexity", fmt(rec.perplexity,1)) +
+    kv("latency", fmt(rec.latency_seconds*1000,1)+" ms") +
+    kv("relative FLOPs", fmt(rec.relative_flops), rec.relative_flops) +
+    kv("layers skipped", String(12-knobs.depth))
+  ) : "<p class='note'>no recorded run</p>";
+}
+
+/* ---------- Charts (hand-drawn SVG, scaled to the data) ---------- */
+function svg(w,h,body){
+  return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" style="max-width:100%;height:auto" '+
+         'role="img" aria-hidden="false">'+body+'</svg>';
+}
+function lineChart(el, pts, xlab, ylab){
+  var W=440,H=210,L=52,R=14,T=14,B=38;
+  var xs=pts.map(function(p){return p.x;}), ys=pts.map(function(p){return p.y;});
+  var x0=0, x1=Math.max.apply(null,xs), y0=0, y1=Math.max.apply(null,ys)*1.08 || 1;
+  var px=function(v){ return L+(v-x0)/(x1-x0||1)*(W-L-R); };
+  var py=function(v){ return H-B-(v-y0)/(y1-y0||1)*(H-T-B); };
+  var g="";
+  for(var i=0;i<=4;i++){
+    var yv=y0+(y1-y0)*i/4;
+    g+='<line x1="'+L+'" y1="'+py(yv)+'" x2="'+(W-R)+'" y2="'+py(yv)+'" stroke="var(--line)" stroke-width="1"/>';
+    g+='<text x="'+(L-7)+'" y="'+(py(yv)+3.5)+'" text-anchor="end" font-size="9" fill="var(--muted)" font-family="var(--mono)">'+yv.toFixed(0)+'</text>';
+  }
+  for(var j=0;j<=4;j++){
+    var xv=x0+(x1-x0)*j/4;
+    g+='<text x="'+px(xv)+'" y="'+(H-B+15)+'" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="var(--mono)">'+xv.toFixed(0)+'</text>';
+  }
+  g+='<polyline fill="none" stroke="var(--exec)" stroke-width="2" points="'+
+     pts.map(function(p){return px(p.x)+","+py(p.y);}).join(" ")+'"/>';
+  pts.forEach(function(p){
+    g+='<circle cx="'+px(p.x)+'" cy="'+py(p.y)+'" r="3" fill="var(--exec)"/>';
+    if(p.label) g+='<text x="'+px(p.x)+'" y="'+(py(p.y)-8)+'" text-anchor="middle" font-size="8.5" fill="var(--muted)" font-family="var(--mono)">'+p.label+'</text>';
+  });
+  g+='<text x="'+((L+W-R)/2)+'" y="'+(H-4)+'" text-anchor="middle" font-size="9" fill="var(--muted)">'+xlab+'</text>';
+  g+='<text x="11" y="'+((T+H-B)/2)+'" text-anchor="middle" font-size="9" fill="var(--muted)" transform="rotate(-90 11 '+((T+H-B)/2)+')">'+ylab+'</text>';
+  el.innerHTML = svg(W,H,g);
+}
+function barChart(el, rows, valueKey, label){
+  var W=760, rowH=25, T=10, L=196, R=64, H=T+rows.length*rowH+26;
+  var max = Math.max.apply(null, rows.map(function(r){ return r[valueKey]; }))*1.05 || 1;
+  var g="";
+  rows.forEach(function(r,i){
+    var y=T+i*rowH, w=(r[valueKey]/max)*(W-L-R);
+    g+='<text x="'+(L-9)+'" y="'+(y+14)+'" text-anchor="end" font-size="10" fill="var(--ink)" font-family="var(--mono)">'+r.name+'</text>';
+    g+='<rect x="'+L+'" y="'+(y+4)+'" width="'+Math.max(w,1)+'" height="14" fill="'+(r.hi?"var(--exec)":"var(--skip)")+'" rx="1"/>';
+    g+='<text x="'+(L+w+7)+'" y="'+(y+14.5)+'" font-size="9.5" fill="var(--muted)" font-family="var(--mono)">'+fmt(r[valueKey],3)+'</text>';
+  });
+  g+='<text x="'+((L+W-R)/2)+'" y="'+(H-5)+'" text-anchor="middle" font-size="9" fill="var(--muted)">'+label+'</text>';
+  el.innerHTML = svg(W,H,g);
+}
+function table(el, cols, rows, bestCol){
+  var best = bestCol ? Math.min.apply(null, rows.map(function(r){ return r[bestCol]; })) : null;
+  el.innerHTML =
+    "<thead><tr>"+cols.map(function(c){ return "<th>"+c.label+"</th>"; }).join("")+"</tr></thead>"+
+    "<tbody>"+rows.map(function(r){
+      return "<tr>"+cols.map(function(c){
+        var v=r[c.key];
+        var txt = c.fmt ? c.fmt(v,r) : (typeof v==="number" ? fmt(v,c.dp===undefined?3:c.dp) : (v===undefined||v===null?"—":v));
+        var cls = (bestCol && c.key===bestCol && v===best) ? ' class="best"' : "";
+        return "<td"+cls+">"+txt+"</td>";
+      }).join("")+"</tr>";
+    }).join("")+"</tbody>";
+}
+
+/* ---------- Static sections ---------- */
+function renderStatic(){
+  var e=D.environment;
+  $("env-tag").textContent = e.device.toUpperCase()+" · torch "+e.torch+" · seed 42";
+  $("env-line").textContent = "Python "+e.python+" · PyTorch "+e.torch+" · Transformers "+
+    e.transformers+" · scikit-learn "+e.sklearn+" · "+e.device+" · "+
+    D.calibration.experiments+" calibration experiments over "+D.calibration.prompts+" prompts";
+  $("fset").textContent = P.feature_set+" · "+P.features.length+" features · tolerance "+P.tolerance;
+
+  lineChart($("chart-frontier"), D.frontier.map(function(r){
+    return { x:r.compute_reduction_percent, y:r.relative_loss_increase*100, label:r.tolerance.toFixed(2) };
+  }), "compute reduction (%)  — labels: tolerance", "loss increase (%)");
+
+  var depth = D.calibration.summary.filter(function(r){ return r.mechanism==="depth"; })
+    .sort(function(a,b){ return a.depth-b.depth; });
+  lineChart($("chart-depth"), depth.map(function(r){
+    return { x:r.depth, y:r.loss, label:r.configuration };
+  }), "depth (layers executed)", "prompt loss");
+
+  barChart($("chart-ablation"), D.ablations.map(function(r){
+    return { name:r.label.replace(/^A\d: /,"").slice(0,34), loss:r.loss, hi:r.variant==="A1_static" };
+  }), "loss", "prompt loss — lower is better (teal = static reference)");
+
+  table($("t-base"), [
+    {key:"label",label:"Method"},{key:"loss",label:"Loss"},
+    {key:"average_depth",label:"Avg depth",dp:2},
+    {key:"layer_reduction",label:"Layer red.",fmt:function(v){return (v*100).toFixed(1)+"%";}},
+    {key:"relative_flops",label:"Rel. FLOPs"},
+    {key:"latency_mean",label:"Latency",fmt:function(v){return (v*1000).toFixed(1)+" ms";}}
+  ], D.baselines, "loss");
+
+  table($("t-data"), [
+    {key:"dataset",label:"Dataset"},
+    {key:"label",label:"Method",fmt:function(v){return v.replace(/^Baseline [A-E]: /,"");}},
+    {key:"answer_perplexity",label:"Answer PPL",dp:1},
+    {key:"accuracy",label:"Exact match",dp:3},
+    {key:"average_depth",label:"Avg depth",dp:2},
+    {key:"relative_flops",label:"Rel. FLOPs"}
+  ], D.datasets);
+
+  var cm=P.confusion_matrix, labs=P.confusion_labels;
+  var mx=Math.max.apply(null,cm.map(function(r){return Math.max.apply(null,r);}));
+  var html='<table><thead><tr><th>actual \\ pred</th>'+labs.map(function(l){return "<th>"+l+"</th>";}).join("")+'</tr></thead><tbody>';
+  cm.forEach(function(row,i){
+    html+="<tr><td>"+labs[i]+"</td>"+row.map(function(v){
+      var a=(v/mx)*0.85+0.05;
+      return '<td style="background:color-mix(in srgb, var(--exec) '+(a*100).toFixed(0)+'%, transparent)">'+v+"</td>";
+    }).join("")+"</tr>";
+  });
+  $("confusion").innerHTML = html+"</tbody></table>";
+
+  var fa = D.feature_ablation;
+  $("predstats").innerHTML =
+    kv("held-out accuracy", fmt(P.accuracy,3), P.accuracy) +
+    kv("5-fold CV", fmt(P.cv_accuracy_mean,3)+" ± "+fmt(P.cv_accuracy_std,3), P.cv_accuracy_mean) +
+    kv("majority baseline", "0.467", 0.467) +
+    fa.map(function(r){ return kv(r.feature_set+" ("+r.n_features+" feat) CV",
+      fmt(r.cv_accuracy_mean,3), r.cv_accuracy_mean); }).join("");
+}
+
+/* ---------- Stability simulation ---------- */
+var PRESETS = [
+  "What is the capital of France?",
+  "Explain why the sky appears blue.",
+  "A shop starts with 47 boxes, receives 19 more, then sells 8. How many boxes remain, and what is 20 percent of that number?",
+  "Write a Python function that merges two sorted lists. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "Compare a monolithic application with a microservices architecture. Explain one advantage and one disadvantage of each approach."
+];
+function simulate(){
+  var pool = { shallow:[], medium:[], deep:[] };
+  PRESETS.concat([
+    "What is 2 plus 2?","How many days are in a week?","What is the chemical symbol for gold?",
+    "Explain in detail why the greenhouse effect warms the atmosphere, describe the main stages involved, and give one everyday example.",
+    "You are given a report about renewable energy adoption. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed.",
+    "Calculate 144 divided by 12.","Summarize the industrial revolution in two sentences."
+  ]).forEach(function(t){ pool[predict(analyze(t)).configuration].push(t); });
+
+  var buckets = ORDER.filter(function(c){ return pool[c].length; });
+  var on = new Monitor(true), off = new Monitor(false);
+  var cells = [];
+  for(var i=0;i<60;i++){
+    var c = buckets[i % buckets.length];
+    var evOn = on.observe(c); off.observe(c);
+    cells.push('<i data-c="'+evOn.configuration+'" data-r="'+(evOn.rolled?1:0)+
+               '" title="decision '+(i+1)+': '+evOn.configuration+(evOn.rolled?" (rollback)":"")+'"></i>');
+  }
+  $("trace").innerHTML = cells.join("");
+  $("simstats").innerHTML =
+    '<div><div class="eyebrow">Monitor OFF volatility</div><div class="mono" style="font-size:1.25rem">'+fmt(off.meanVol(),3)+'</div></div>'+
+    '<div><div class="eyebrow">Monitor ON volatility</div><div class="mono" style="font-size:1.25rem;color:var(--exec)">'+fmt(on.meanVol(),3)+'</div></div>'+
+    '<div><div class="eyebrow">Rollbacks</div><div class="mono" style="font-size:1.25rem">'+on.rollbacks+' / 60</div></div>';
+}
+
+/* ---------- Boot ---------- */
+$("presets").innerHTML = PRESETS.map(function(t,i){
+  return '<button type="button" data-i="'+i+'">'+(["factual","explain","arithmetic","code","compare"][i])+'</button>';
+}).join("");
+$("presets").addEventListener("click", function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  $("prompt").value = PRESETS[+b.dataset.i]; run($("prompt").value);
+});
+$("run").addEventListener("click", function(){ run($("prompt").value); });
+$("prompt").addEventListener("input", function(){ run($("prompt").value); });
+$("sim").addEventListener("click", simulate);
+$("simreset").addEventListener("click", function(){
+  $("trace").innerHTML=""; $("simstats").innerHTML="";
+});
+
+renderStatic();
+$("prompt").value = PRESETS[2];
+run($("prompt").value);
+simulate();
+})();
+</script>

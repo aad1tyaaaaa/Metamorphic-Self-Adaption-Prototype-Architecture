@@ -1,0 +1,19 @@
+Item,Value
+Backbone,GPT-2 small (HuggingFace `gpt2`)
+Parameters,"124,439,808"
+Layers,12
+Attention heads,12
+Hidden size,768
+FFN inner size,3072
+Feature set,v2 (8 features)
+Features,"input_length, reasoning, domain, structure, numeric_density, math_expression, question_type, reasoning_steps"
+Configurations,"shallow: depth 4, attention reduced, ffn partial; medium: depth 8, attention reduced, ffn partial; deep: depth 12, attention full, ffn full"
+Configuration depths,"shallow=4, medium=8, deep=12"
+Predictor architecture,"StandardScaler + MLPClassifier(32, 16)"
+Predictor held-out accuracy,0.720
+Predictor 5-fold CV accuracy,0.673 +/- 0.188
+Calibration tolerance,1.0
+Seed,42
+Device,cpu
+PyTorch,2.14.0+cpu
+Transformers,5.17.0

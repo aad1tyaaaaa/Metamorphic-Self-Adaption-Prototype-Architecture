@@ -1,0 +1,3 @@
+Variant,Switches,Switch rate,Volatility,Rollbacks,Rollback rate,Prompt loss,Avg depth
+A7: Full MSA without stability monitor,58,0.9831,0.9667,0,0.0,6.7406,8.0667
+A8: Full MSA,59,1.0,0.6378,20,0.3333,6.5077,6.6667

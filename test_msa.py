@@ -204,6 +204,8 @@ def main():
         "Downstream metrics used": "results/dataset_evaluation.csv",
         "Graphs generated automatically": "results/figures",
         "Research tables": "results/tables.md",
+        "Research paper written": "paper/msa_paper.md",
+        "Demonstration page built": "ui/index.html",
     }
 
     for name, path in artefacts.items():

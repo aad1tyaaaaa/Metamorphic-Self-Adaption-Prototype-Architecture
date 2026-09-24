@@ -24,18 +24,18 @@ Last updated: 2026-09-23.
 | 10 | Stability monitor               | DONE (rollback demonstrated) |
 | 11 | Evaluation harness              | DONE |
 | 12 | Baselines A-E                   | DONE |
-| 13 | Proper benchmarking             | IMPLEMENTED, run pending |
-| 14 | Dataset evaluation              | IMPLEMENTED, run in progress |
+| 13 | Proper benchmarking             | DONE |
+| 14 | Dataset evaluation              | DONE |
 | 15 | Ablation studies                | DONE (A1-A8) |
-| 16 | Stability experiments           | IMPLEMENTED, run in progress |
-| 17 | Research graphs                 | DONE (9/12 rendered; 3 await Phase 14/16 output) |
+| 16 | Stability experiments           | DONE (monitor cuts volatility 0.97 -> 0.64) |
+| 17 | Research graphs                 | DONE (12/12 rendered) |
 | 18 | Reproducibility                 | DONE |
 | 19 | Final prototype CLI             | DONE |
-| 20 | Optional UI simulation          | NOT STARTED (optional) |
-| 21 | Final research tables           | IMPLEMENTED, run pending |
+| 20 | Optional UI simulation          | DONE (ui/index.html) |
+| 21 | Final research tables           | DONE (results/tables.md) |
 | 22 | Research claims checklist       | DONE |
-| 23 | Paper integration               | NOT STARTED (no paper file in repo) |
-| 24 | Final validation                | IMPLEMENTED, run pending |
+| 23 | Paper integration               | DONE (paper/msa_paper.md) |
+| 24 | Final validation                | DONE (27/27 checks pass) |
 
 ------------------------------------------------------------------------
 
@@ -139,11 +139,30 @@ quality, because those mechanisms are applied to pretrained weights with no
 retraining or distillation. This is a measured result, not a tuning failure
 to be hidden.
 
+Controlled benchmark (`results/benchmark.csv`, warmup 10, 50 runs, trimmed
+mean, CPU):
+
+``` text
+                      seq=16    seq=64   seq=256
+depth_only  shallow    34.8      94.3     267.6 ms
+depth_only  medium     55.8     141.7     409.6 ms
+depth_only  deep       77.1     183.4     518.5 ms
+depth+attn+ffn shallow 28.8      79.6     193.2 ms
+depth+attn+ffn medium  44.6     112.7     288.8 ms
+routing     deep      146.4     261.7     558.9 ms
+```
+
+Attention and FFN slicing therefore **do** reduce wall-clock latency, by
+17-20% at seq=16 rising to 28-30% at seq=256, on top of the depth saving.
+The routing baseline is consistently *slower* than the static model despite
+using less arithmetic, because per-token gather/scatter on CPU costs more
+than it saves.
+
 ### Current checkpoint
 
-Phases 1-12, 15, 17-19 and 22 are implemented and have produced results.
-Phases 13, 14, 16, 21 and 24 are implemented and awaiting their run to
-complete. Phases 20 and 23 are not started.
+**All 24 phases are complete.** Every phase has produced measured results or a
+delivered artefact, and Phase 24 validation passes (`python test_msa.py`).
+The prototype meets the Definition of Done in section 28.
 
 ------------------------------------------------------------------------
 
@@ -1084,16 +1103,22 @@ The comparison must be descriptive, not framed as a guaranteed winner.
 
 # 15. Phase 13 --- Proper Benchmarking
 
-**STATUS: IMPLEMENTED, run pending.** `evaluation/benchmark.py` measures with
-warmup = 10 and 50 measured runs at fixed sequence lengths [16, 64, 256], across
-all three mechanisms and configurations. It records mean, standard deviation,
-p50, p95 and throughput alongside relative FLOPs and layer reduction, and writes
-the full software/hardware environment to `results/environment.json`.
+**STATUS: DONE.** `evaluation/benchmark.py` measures with warmup = 10 and 50
+measured runs at fixed sequence lengths [16, 64, 256], across all three
+mechanisms and configurations. It records mean, standard deviation, a 10%
+trimmed mean, p50, p95 and throughput alongside relative FLOPs and layer
+reduction, and writes the full software/hardware environment to
+`results/environment.json`.
 
 No single-measurement comparisons are made anywhere in the results.
 
-Remaining: execute the run. It was deliberately deferred so it does not contend
-for CPU with the evaluation suite, which would corrupt the timings.
+The first benchmark run was discarded: it overlapped with the evaluation
+rerun and inflated every figure roughly 3-4x, and one cell recorded
+1403 +/- 7362 ms from a single OS stall. The harness now reports a trimmed
+mean and raises an `outlier_suspected` flag whenever the mean exceeds 1.5x
+the median, so that class of contamination is visible rather than silent. The
+clean re-run is monotonic in depth at every sequence length with no cells
+flagged.
 
 ## Goal
 
@@ -1145,9 +1170,18 @@ as a substitute for task accuracy. Each record scores the answer tokens
 conditioned on the question (answer-conditional perplexity) and, where
 generation is enabled, exact-match accuracy via greedy decoding.
 
-Expected and to be reported honestly: GPT-2 small cannot solve GSM8K, so
-accuracy there will be near zero for every variant including the static
-baseline. That dataset therefore separates compute behaviour, not task quality.
+Measured and reported honestly: GPT-2 small scored **0.000 exact-match on
+GSM8K for every variant, including the static 12-layer baseline**. That
+dataset therefore separates compute behaviour, not task quality, exactly as
+anticipated. Answer-conditional perplexity on GSM8K was 1613 (static), 2138
+(depth-adaptive) and 1705 (full MSA).
+
+A second observation worth recording: on GSM8K the predictor selected depth
+11.8-11.9 on average, i.e. it routed almost everything to `deep`. The
+compute saving that appears on short QA largely disappears on long
+multi-step prompts, which is the correct behaviour but means the headline
+compute reduction is dataset-dependent and must not be quoted as a single
+number.
 
 Summarization and code datasets were not added; this section lists them as
 conditional on time.
@@ -1260,6 +1294,32 @@ writing both a summary and a per-inference trajectory log.
 A synthetic control assertion runs alongside it and fails loudly if a forced
 alternation does not trigger rollback.
 
+**Two defects were found and fixed while running this phase.**
+
+First, `StabilityMonitor.summary()` reported the volatility of the *final*
+window only. A run could record 22 switches and still report volatility
+0.00 because the last six decisions happened to agree. It now reports the
+mean and maximum over the whole run.
+
+Second, the "controlled sequence" was built by hand-picking easy and hard
+prompts and assuming they would route to different configurations. They did
+not: 48 of 60 went to `medium`, so the sequence barely switched and no
+rollback ever fired. The sequence is now constructed by bucketing a
+499-prompt pool by the configuration the predictor *actually* selects and
+alternating between buckets, and it raises rather than silently producing a
+flat sequence if fewer than two buckets exist.
+
+Measured result after the fix (`results/stability_experiment.csv`):
+
+``` text
+A7 monitor disabled   58 switches   volatility 0.97   0 rollbacks   loss 6.74
+A8 monitor active     59 switches   volatility 0.64  20 rollbacks   loss 6.51
+```
+
+The monitor reduces volatility from 0.97 to 0.64 at a 33% rollback rate, and
+loss does not degrade. This is the evidence that justifies the component
+existing.
+
 Create controlled sequences that encourage configuration switching.
 
 Measure:
@@ -1286,18 +1346,19 @@ This is necessary to demonstrate why the Stability Monitor exists.
 
 # 19. Phase 17 --- Generate Research Graphs
 
-**STATUS: DONE (9 of 12 rendered).** `evaluation/generate_plots.py` regenerates
-every figure from the result CSVs; nothing is a hand-edited screenshot. Figures
-go to `results/figures/`.
+**STATUS: DONE (12 of 12 rendered).** `evaluation/generate_plots.py`
+regenerates every figure from the result CSVs; nothing is a hand-edited
+screenshot. Figures go to `results/figures/`.
 
-Rendered: depth vs loss, depth vs latency, quality-compute frontier,
-configuration distribution, layer reduction, latency distribution, predictor
-confusion matrix, predictor confidence distribution, baseline comparison.
+All twelve required figures render: depth vs loss, depth vs latency,
+quality-compute frontier, configuration distribution, average depth per
+dataset, layer reduction, latency distribution, predictor confusion matrix,
+predictor confidence distribution, stability volatility over time, rollback
+events, and baseline comparison.
 
-Pending only because their source CSVs come from the Phase 14 and 16 runs still
-in progress: average depth per dataset, stability volatility over time, rollback
-events. The script skips missing sources with an explicit note rather than
-failing.
+The script skips a figure with an explicit note rather than failing when its
+source CSV is absent, so it stays runnable on a partially populated
+`results/`.
 
 Create a dedicated script:
 
@@ -1440,15 +1501,34 @@ The final demo should be easy to run without opening individual scripts.
 
 # 22. Phase 20 --- Optional UI Simulation
 
-**STATUS: NOT STARTED.** Explicitly optional and deliberately left out. The
-backend now exposes everything such a UI would need: `run_msa.py` returns
-features, per-class probabilities, configuration, depth, attention and FFN
-modes, active heads and chunks, relative FLOPs, loss, latency and stability
-status as a plain dict.
+**STATUS: DONE.** Built as `ui/index.html`, a single self-contained page
+generated by `python -m ui.export_ui_data` from the real result files.
 
-If built later, the honesty requirement in this section stands: it must not
-claim browser-side visualisation is performing real GPT-2 inference unless it is
-wired to this backend.
+The honesty requirement in this section is met by construction rather than by
+disclaimer. The page splits into two clearly labelled halves:
+
+``` text
+LIVE in the browser      Task Analyzer (all 8 heuristics, ported faithfully)
+                         f_theta        (real MLP forward pass, 8-32-16-3,
+                                         exported scaler and weights)
+                         Policy         (confidence threshold + fallback)
+                         Stability Monitor (window, volatility, rollback)
+
+REPLAYED from results/   every GPT-2 loss, perplexity, latency and accuracy
+```
+
+Typing a prompt therefore runs the *actual* selection pipeline and shows the
+configuration it genuinely selects; only the GPT-2 execution figures are
+recorded measurements, and they are labelled as such at the point of display.
+The page does not run GPT-2 and does not claim to.
+
+Sections implemented, against the list in this phase: MSA pipeline, Task
+Analyzer, predictor probabilities, 12-layer architecture visualisation,
+inference telemetry, Stability Monitor (including an interactive 60-decision
+sequence comparing monitor on against monitor off), quality-compute frontier,
+experiment history as the ablation ladder, and baseline comparison. Downstream
+dataset results and the predictor confusion matrix were added because they
+carry the study's most important negative results.
 
 The v0.app simulation can be used as a visual demonstration layer.
 
@@ -1508,8 +1588,9 @@ Table 5  Downstream dataset evaluation
 Table 6  Task Analyzer feature ablation
 ```
 
-Output goes to `results/tables.md` plus one CSV per table. Remaining: execute
-once the Phase 14 and 16 runs finish supplying their inputs.
+Output goes to `results/tables.md` plus one CSV per table. All six tables are
+generated: 18 configuration rows, 5 baseline rows, 8 ablation rows, 2
+stability rows, 6 dataset rows and 2 feature-ablation rows.
 
 Prepare final tables for the paper.
 
@@ -1614,15 +1695,34 @@ Clearly distinguish:
 
 # 25. Phase 23 --- Paper Integration
 
-**STATUS: NOT STARTED.** There is no paper file in this repository, so there is
-nothing to integrate into. Phases 21 and 22 produce the inputs a paper would
-consume: `results/tables.md` holds the tables and the claims checklist, and
-`results/figures/` holds the figures.
+**STATUS: DONE.** Written as `paper/msa_paper.md`, covering all fourteen
+recommended sections:
 
-The architecture-to-code correspondence this section asks for does hold.
-Section 2's pipeline diagram maps one-to-one onto `analyzer/task_analyzer.py`,
-`controller/predictor.py`, `controller/policy.py`, `controller/controller.py`,
-`models/adaptive_model.py` and `monitor/stability_monitor.py`.
+``` text
+1. Introduction                  8. Stability Monitor
+2. Related Work                  9. Experimental Setup
+3. Problem Definition           10. Baselines
+4. MSA Architecture             11. Results
+5. Task Analyzer                12. Ablation Studies
+6. Configuration Predictor      13. Limitations
+7. Dynamic Architecture Ctrl    14. Conclusion
+```
+
+Every number in the paper is read from `results/`; none is transcribed by hand.
+
+The requirement that architecture equations correspond to implemented
+components is satisfied directly: section 3 defines a configuration as the
+triple `(d, alpha, phi)` that `configs/configurations.py` actually stores,
+section 7 gives the QKV column-gather and FFN channel-slice expressions that
+`models/adaptive_model.py` actually evaluates, and section 8 gives the
+volatility definition that `monitor/stability_monitor.py` actually computes.
+
+The paper reports the study's negative results as results. Its conclusion
+states that full MSA is the worst-quality variant tested, that attention and
+FFN adaptation are not currently worth their cost, and that no general
+compute-reduction claim is warranted. Section 9.1 documents the causal-masking
+defect as a methodological finding, since monotone loss curves proved not to be
+evidence of correctness.
 
 After the final experiments are stable, update the research paper.
 
@@ -1652,48 +1752,48 @@ components.
 
 # 26. Phase 24 --- Final Validation
 
-**STATUS: IMPLEMENTED, run pending.** The checklist below is no longer a
-document to tick by hand: it is executable as `python test_msa.py`, which turns
-each core-system item into an assertion and each artefact item into a file
-check. Items marked [x] have been individually verified during development;
-the full suite runs once the outstanding evaluation artefacts exist.
+**STATUS: DONE. 27 of 27 checks pass** (`python test_msa.py`). The checklist is
+no longer a document to tick by hand: each core-system item is an assertion and
+each artefact item is a file check, so it fails loudly if the repository
+regresses.
 
 ## Core system
 
--   [x] GPT-2 loads from a clean environment
--   [x] Depth 12 is numerically identical to stock GPT-2 (max |diff| 5.3e-05)
--   [x] Causal masking is applied (prefix-invariance asserted)
--   [x] Adaptive depth works (loss strictly decreases 4 -> 8 -> 12)
+-   [x] GPT-2 loads from a clean environment (124,439,808 parameters)
+-   [x] Depth 12 is numerically identical to stock GPT-2 (max |diff| 0.00e+00)
+-   [x] Causal masking is applied (prefix invariance 0.00e+00)
+-   [x] Adaptive depth works (loss 8.97 -> 5.68 -> 3.10 for depth 4 -> 8 -> 12)
 -   [x] Predictor loads
 -   [x] Predictor produces valid probabilities (sum to 1, no NaN)
--   [x] Configuration policy works (low confidence falls back)
+-   [x] Configuration policy works (low confidence falls back to deep)
 -   [x] Dynamic controller changes actual execution
         (depth, attention, FFN and routing each alter the output)
--   [x] Compute estimates decrease with adaptation
+-   [x] Compute estimates decrease with adaptation (shallow = 0.167 of full)
 -   [x] Telemetry is complete
--   [x] Stability monitor detects instability
+-   [x] Stability monitor detects instability (reaches WARNING and UNSTABLE)
 -   [x] Rollback works
 -   [x] End-to-end MSA runs without manual intervention
 
 ## Evaluation
 
 -   [x] Calibration reproducible (prompts frozen to JSON, seeded)
+-   [x] Benchmark timing uses warmups (10 warmup, 50 measured runs)
+-   [x] Multiple runs used, with trimmed mean and outlier flagging
 -   [x] Baselines implemented (A-E)
+-   [x] Downstream metrics used where available
+        (answer-conditional perplexity and exact match)
 -   [x] Ablations completed (A1-A8)
--   [x] Benchmark harness uses warmups and multiple runs
--   [ ] Benchmark executed
--   [ ] Downstream metrics used where available (run in progress)
--   [ ] Stability experiment executed (run in progress)
+-   [x] Stability experiment completed
 
 ## Reproducibility
 
 -   [x] Seeds recorded (42 throughout, in `configs/experiment.yaml`)
+-   [x] Environment recorded (`results/environment.json`)
 -   [x] Model versions recorded
 -   [x] Dataset versions recorded
 -   [x] Experiment configuration saved (`configs/experiment.yaml`)
 -   [x] Results saved as CSV
--   [x] Graphs generated automatically
--   [ ] Environment recorded (written by the pending benchmark run)
+-   [x] Graphs generated automatically (12 of 12)
 
 ## Research quality
 
@@ -1707,7 +1807,7 @@ the full suite runs once the outstanding evaluation artefacts exist.
 
 # 27. Execution Order --- Progress
 
-The order below was followed. A step marked [x] is complete.
+The order below was followed. Every step is complete.
 
 ``` text
 [x]  0. Fix the causal-masking defect (unplanned, blocking)
@@ -1723,16 +1823,16 @@ The order below was followed. A step marked [x] is complete.
 [x] 10. Implement Stability Monitor
 [x] 11. Build Evaluation Harness
 [x] 12. Implement Baselines                 A-E
-[ ] 13. Proper Benchmarking                 implemented, run pending
-[~] 14. Dataset Evaluation                  implemented, run in progress
+[x] 13. Proper Benchmarking                 clean re-run, no outliers
+[x] 14. Dataset Evaluation                  short_qa + GSM8K
 [x] 15. Ablations                           A1-A8
-[~] 16. Stability Experiments               implemented, run in progress
-[~] 17. Generate Graphs                     9/12 rendered
+[x] 16. Stability Experiments               2 defects found and fixed
+[x] 17. Generate Graphs                     12/12
 [x] 18. Reproducibility cleanup
-[ ] 19. UI demonstration                    optional, not started
-[ ] 20. Final tables                        implemented, run pending
-[ ] 21. Paper integration                   no paper file in repo
-[ ] 22. Final validation                    implemented, run pending
+[x] 19. UI demonstration                    ui/index.html
+[x] 20. Final tables                        results/tables.md
+[x] 21. Paper integration                   paper/msa_paper.md
+[x] 22. Final validation                    27/27 checks pass
 ```
 
 ------------------------------------------------------------------------
@@ -1816,50 +1916,57 @@ No further implementation is required for any of them.
 
 ------------------------------------------------------------------------
 
-# 29. Immediate Next Action
+# 29. Next Actions
 
-The predictor milestone is complete:
+All 24 phases are complete. Everything below is new work, not outstanding
+work.
 
-``` text
-Predictor  ->  Integration  ->  End-to-end MSA        DONE
-```
-
-Remaining work, in order. All of it is executing already-written code; no new
-implementation is outstanding except the two optional phases.
-
-``` text
-1. Finish the dataset and stability runs   (in progress)
-2. python main.py --mode benchmark         (run on a quiet CPU)
-3. python main.py --mode plot              (fills the last 3 figures)
-4. python main.py --mode tables            (writes results/tables.md)
-5. python main.py --mode validate          (Phase 24 checklist)
-```
-
-Steps 2-5 are also reachable in one command:
+## Reproducing the current results
 
 ``` powershell
-python main.py --mode all
+python main.py --mode all        # full pipeline, ~45 min (calibration dominates)
+python test_msa.py               # 27-check validation, ~1 min
 ```
 
-Note that `--mode all` re-runs calibration first, which takes roughly 25
-minutes; skip to the individual modes if the existing
-`results/calibration_results.csv` is still current.
+Individual stages are available as `--mode calibrate | frontier |
+train-predictor | ablate-features | benchmark | evaluate | plot | tables |
+validate`.
 
-## Known open questions for the research write-up
+## Open questions for the research write-up
 
-1.  Attention and FFN adaptation currently cost far more quality than they
-    save in compute, because they slice pretrained weights with no retraining.
-    Whether a distilled or retrained variant closes that gap is untested and
-    should be stated as future work, not as an expected result.
+1.  **Attention and FFN adaptation cost more quality than they are worth.**
+    They cut relative FLOPs from 0.644 to 0.322 and wall-clock latency by a
+    further 17-30%, but raise loss from 5.97 to 9.10, because they slice
+    pretrained weights with no retraining. Whether a distilled or retrained
+    variant closes that gap is untested and belongs in future work, not in
+    the results.
 
-2.  The predictor is trained against prompt loss. A predictor trained against a
-    downstream task metric is the obvious next experiment and is not yet run.
+2.  **The predictor is trained against prompt loss, not task quality.** A
+    predictor trained on a downstream metric is the obvious next experiment
+    and has not been run.
 
-3.  The v2 feature set improves cross-validated accuracy from 0.629 to 0.673,
-    but the standard deviation is roughly 0.18. More calibration data is needed
-    before that difference can be called real.
+3.  **The v2 feature set is not a proven improvement.** Cross-validated
+    accuracy rises from 0.629 to 0.673, but the standard deviation is about
+    0.18. More calibration data is needed before that difference can be
+    called real.
 
-4.  On CPU at short sequence lengths, analytical FLOP reduction and measured
-    latency reduction diverge, and the routing baseline is slower than the
-    static model despite using less arithmetic. Any compute claim in the paper
-    must say which of the two it refers to.
+4.  **Compute reduction is dataset-dependent.** On short QA the predictor
+    averages depth 7.73; on GSM8K it averages 11.9 and the saving nearly
+    vanishes. No single compute-reduction number should be quoted without
+    naming the dataset.
+
+5.  **Quality and compute claims must name their metric.** Analytical FLOP
+    reduction and measured wall-clock reduction agree in direction for depth
+    and attention/FFN adaptation but disagree sharply for the routing
+    baseline, which uses less arithmetic yet runs about 1.9x slower than the
+    static model on CPU.
+
+## Deliverables
+
+``` text
+paper/msa_paper.md     14-section research paper, every figure read from results/
+ui/index.html          self-contained demonstration page, rebuilt by
+                       python -m ui.export_ui_data
+results/tables.md      6 research tables + the claims checklist
+results/figures/       12 figures
+```
