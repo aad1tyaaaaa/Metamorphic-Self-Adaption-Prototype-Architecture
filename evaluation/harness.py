@@ -9,7 +9,7 @@ set of flags, so they cannot drift apart. `VARIANTS` is the whole definition.
 import torch
 
 from analyzer.task_analyzer import TaskAnalyzer
-from configs.configurations import CONFIG_NAMES
+from configs.configurations import CONFIDENCE_THRESHOLD, CONFIG_NAMES, FALLBACK_CONFIGURATION
 from controller.complexity import ComplexityScorer
 from controller.controller import DynamicArchitectureController
 from controller.policy import ConfigurationPolicy
@@ -66,8 +66,8 @@ ABLATIONS = ["A1_static", "A2_analyzer", "A3_predictor", "A4_depth",
 class MSASystem:
     """Shared, loaded-once components for every variant."""
 
-    def __init__(self, model_path=None, confidence_threshold=0.5, fallback="deep",
-                 seed=42):
+    def __init__(self, model_path=None, confidence_threshold=CONFIDENCE_THRESHOLD,
+                 fallback=FALLBACK_CONFIGURATION, seed=42):
         torch.manual_seed(seed)
 
         model, self.tokenizer = load_model()
@@ -158,6 +158,7 @@ def run_variant(system, name, dataset, generate=False, max_new_tokens=24,
             "rolled_back": bool(stability and stability["rolled_back"]),
             "stability_status": stability["status"] if stability else None,
             "volatility": stability["volatility"] if stability else None,
+            "stability_score": stability["stability_score"] if stability else None,
             # Phase 3 requires the predicted probabilities on every record.
             **{f"p_{name}": decision["probabilities"].get(name, float("nan"))
                for name in CONFIG_NAMES},

@@ -1,6 +1,6 @@
-Method,Prompt loss,Perplexity,Latency (s),Latency std,Avg depth,Layer red.,Rel. FLOPs,Compute red.
-Baseline A: Static GPT-2 (12 layers),3.889,48.8617,0.168,0.0259,12.0,0.0,1.0,0.0
-Baseline B: Depth-adaptive,5.9736,392.915,0.1205,0.0282,7.7333,0.3556,0.6444,0.3556
-Baseline C: Routing / MoE-style FFN,6.3663,581.8963,0.3134,0.0459,12.0,0.0,0.6677,0.3323
-Baseline E: Full MSA,9.0972,8930.0841,0.0981,0.0244,7.7333,0.3556,0.3222,0.6778
-"Baseline D: Dense reference (RMSNorm/RoPE/SwiGLU, untrained)",,,0.4402,0.0713,12.0,0.0,,
+Method,Prompt loss,Perplexity,Accuracy,Answer PPL,Latency (s),Latency std,Avg depth,Layer red.,Rel. FLOPs,Compute red.
+Baseline A: Static GPT-2 (12 layers),3.889,48.8617,0.1333,191.0893,0.0228,0.0023,12.0,0.0,1.0,0.0
+Baseline B: Depth-adaptive,5.9736,392.915,0.0167,1626849.3509,0.0278,0.0168,7.7333,0.3556,0.6444,0.3556
+Baseline C: Routing / MoE-style FFN,6.3663,581.8963,0.0,6600.9205,0.1053,0.0291,12.0,0.0,0.6677,0.3323
+Baseline E: Full MSA,9.0972,8930.0866,0.0,2416410.5133,0.0444,0.0155,7.7333,0.3556,0.3222,0.6778
+"Baseline D: Dense reference (HuggingFaceTB/SmolLM-135M, 134,515,008 params)",1.9846,7.276,0.75,12.5063,0.1099,0.0046,30.0,0.0,,

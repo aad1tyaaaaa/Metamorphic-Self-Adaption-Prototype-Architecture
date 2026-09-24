@@ -1,3 +1,7 @@
-Variant,Switches,Switch rate,Volatility,Rollbacks,Rollback rate,Prompt loss,Avg depth
-A7: Full MSA without stability monitor,58,0.9831,0.9667,0,0.0,6.7406,8.0667
-A8: Full MSA,59,1.0,0.6378,20,0.3333,6.5077,6.6667
+Switching,Variant,Proposed switches,Executed switches,Volatility V,S = 1 - V,Rollbacks,Rollback rate,Prompt loss,Loss @ rollback steps,"Same steps, no monitor",Latency (s),Avg depth
+low,A7: Full MSA without stability monitor,5,5,0.0864,0.9136,0,0.0,5.8911,,,0.0332,7.8
+low,A8: Full MSA,5,5,0.0864,0.9136,0,0.0,5.8911,,,0.0352,7.8
+medium,A7: Full MSA without stability monitor,21,21,0.3231,0.6769,0,0.0,7.116,,,0.0321,7.9333
+medium,A8: Full MSA,21,21,0.3231,0.6769,0,0.0,7.116,,,0.0245,7.9333
+high,A7: Full MSA without stability monitor,50,50,0.8303,0.1697,0,0.0,7.0346,,,0.0296,8.2667
+high,A8: Full MSA,50,34,0.5656,0.4344,13,0.2167,7.7071,8.7581,5.6542,0.0234,8.0

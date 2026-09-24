@@ -48,7 +48,14 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+**Always run inside the virtual environment.** Running the system `python`
+without activating `.venv` fails with `ModuleNotFoundError: No module named
+'joblib'` (or `torch`), because the dependencies are installed only in `.venv`.
+In a new terminal run `.venv\Scripts\Activate.ps1` first, or call
+`.venv\Scripts\python.exe` directly.
+
 Modules are run with `-m` so the package imports resolve from the repository root.
+Baseline D downloads `HuggingFaceTB/SmolLM-135M` (~270 MB) on first use.
 
 ## Usage
 
@@ -56,15 +63,17 @@ One command per stage, or the whole pipeline at once:
 
 ```powershell
 python main.py --mode simulate          # end-to-end MSA on sample prompts
-python main.py --mode calibrate         # 499 prompts x 3 configs x 2 mechanisms
+python main.py --mode calibrate         # 799 prompts x 3 configs x 2 mechanisms
 python main.py --mode frontier          # quality-compute tolerance sweep
-python main.py --mode train-predictor   # train f_theta
+python main.py --mode train-predictor   # train f_theta (+ macro F1, confusion, confidence)
 python main.py --mode ablate-features   # Task Analyzer v1 vs v2
+python main.py --mode threshold-sweep   # policy confidence threshold 0.40-0.80
 python main.py --mode benchmark         # warmup + repeated latency runs
 python main.py --mode evaluate          # baselines, ablations, datasets, stability
+python main.py --mode runner            # standard per-sample evaluation schema
 python main.py --mode plot              # all figures into results/figures/
 python main.py --mode tables            # research tables into results/tables.md
-python main.py --mode validate          # Phase 24 checklist
+python main.py --mode validate          # phase-gate validation
 python main.py --mode ui                # rebuild ui/index.html from results
 python main.py --mode all               # everything, in order
 ```
@@ -73,10 +82,14 @@ Individual entry points:
 
 ```powershell
 python test_predictor.py                        # Phase 1 predictor validation
-python test_msa.py                              # Phase 24 final validation
+python test_msa.py                              # phase-gate validation (P1-P20)
 python run_msa.py --text "Explain why the sky appears blue."
 python run_static.py --all-depths               # Baseline A at depths 4/8/12
 python -m evaluation.evaluate --suite stability
+python -m evaluation.evaluate_static --dataset short_qa --generate
+python -m evaluation.evaluate_depth_adaptive --dataset gsm8k --limit 40 --generate
+python -m evaluation.evaluate_msa --dataset short_qa --generate
+python -m evaluation.runner --methods dense_reference --dataset short_qa --generate
 ```
 
 Every module has a runnable self-check:
@@ -96,21 +109,28 @@ python -m data.load_data
 ```
 analyzer/task_analyzer.py        8 heuristic features (v1 = original 4, v2 = +4)
 calibration/run_calibration.py   depth/attention/FFN sweep → calibration_results.csv
-configs/configurations.py        configuration library + analytical FLOP model
-configs/experiment.yaml          every default in one place (Phase 18)
+configs/configurations.py        configuration library, policy operating point, FLOP model
+configs/experiment.yaml          every default in one place (asserted by test_msa.py)
 controller/controller.py         Dynamic Architecture Controller + telemetry
+controller/dynamic_controller.py plan-named entry point for the controller
 controller/predictor.py          f_theta inference wrapper
 controller/train_predictor.py    predictor training + feature ablation
 controller/policy.py             calibration targets + inference-time policy
 controller/policy_sweep.py       quality-compute frontier
-data/calibration_dataset.py      499 prompts, 10 categories (rebuild with --build)
+controller/threshold_sweep.py    policy confidence-threshold sweep (Phase 3)
+data/calibration_dataset.py      799 prompts, 12 categories (rebuild with --build)
+data/calibration_prompts_v1_499.json  historical 499-prompt corpus
 data/load_data.py                short_qa + GSM8K downstream sets
 evaluation/harness.py            every baseline and ablation as one flag-set
-evaluation/evaluate.py           single evaluation entry point
-evaluation/baselines.py          Baseline D dense reference (RMSNorm/RoPE/SwiGLU)
+evaluation/runner.py             standard per-sample schema -> results/evaluation/
+evaluation/evaluate_static.py    Baseline A via the runner
+evaluation/evaluate_depth_adaptive.py  Baseline B via the runner
+evaluation/evaluate_msa.py       Baseline E via the runner
+evaluation/evaluate.py           single evaluation entry point (all suites)
+evaluation/baselines.py          Baseline D: pretrained SmolLM-135M + untrained reference
 evaluation/benchmark.py          reproducible latency measurement
 evaluation/metrics.py            standardised metric set
-evaluation/generate_plots.py     12 figures, regenerated from CSVs
+evaluation/generate_plots.py     16 figures, regenerated from CSVs
 evaluation/tables.py             research tables + claims checklist
 models/adaptive_model.py         AdaptiveGPT2: depth + attention + FFN + routing
 monitor/stability_monitor.py     volatility, status, rollback
@@ -138,64 +158,70 @@ when later tokens are removed. All results in `results/` were regenerated afterw
 
 ## Findings
 
-Calibration: 499 prompts × 3 configurations × 2 mechanisms = **2,994 experiments**
-(`results/calibration_results.csv`).
+Calibration: 799 prompts in 12 categories × 3 configurations × 2 mechanisms =
+**4,794 experiments** (`results/calibration_results.csv`). The earlier 499-prompt
+version is preserved in `results/calibration/`.
 
-Depth-only mechanism, mean over 499 prompts:
+Depth-only mechanism, mean over 799 prompts:
 
-| Depth | Prompt LM loss | Relative FLOPs | Latency |
-|-------|----------------|----------------|---------|
-| 4     | 9.03           | 0.333          | 60 ms   |
-| 8     | 7.21           | 0.667          | 94 ms   |
-| 12    | 3.86           | 1.000          | 126 ms  |
+| Depth | Prompt LM loss | Relative FLOPs |
+|-------|----------------|----------------|
+| 4     | 8.99           | 0.333          |
+| 8     | 7.17           | 0.667          |
+| 12    | 3.91           | 1.000          |
 
 Quality-compute frontier (`results/quality_compute_frontier.csv`) — the tolerance is
 the maximum relative loss increase the calibration policy accepts:
 
 | Tolerance | Avg depth | Compute reduction | Relative loss increase | shallow/medium/deep |
 |-----------|-----------|-------------------|------------------------|---------------------|
-| 0.10 | 12.00 |  0.0% |  0.0% | 0 / 0 / 499 |
-| 0.50 | 11.48 |  4.3% |  5.5% | 15 / 35 / 449 |
-| 0.75 | 10.39 | 13.4% | 22.1% | 38 / 125 / 336 |
-| 1.00 |  8.87 | 26.1% | 51.5% | 79 / 233 / 187 |
-| 1.50 |  5.82 | 51.5% | 105.8% | 291 / 189 / 19 |
-| 2.00 |  4.46 | 62.8% | 126.3% | 441 / 58 / 0 |
+| 0.10 | 12.00 |  0.0% |  0.0% | 0 / 1 / 798 |
+| 0.50 | 11.44 |  4.6% |  5.6% | 24 / 63 / 712 |
+| 0.75 | 10.26 | 14.5% | 23.6% | 66 / 216 / 517 |
+| 1.00 |  8.51 | 29.1% | 56.0% | 148 / 402 / 249 |
+| 1.50 |  5.62 | 53.2% | 105.0% | 499 / 277 / 23 |
+| 2.00 |  4.41 | 63.3% | 123.3% | 718 / 81 / 0 |
 
-Tolerance **1.00** is the operating point used to train the shipped predictor: it is
-the setting that produces a non-degenerate three-class target distribution.
+Tolerance **1.00** trains the shipped predictor: it is the setting that produces a
+non-degenerate three-class target distribution.
 
-Predictor (`f_theta`, 8 features, tolerance 1.00): **0.72 held-out accuracy**,
-0.67 ± 0.19 under 5-fold cross-validation. Task Analyzer ablation
-(`results/feature_ablation.csv`): v2's eight features score 0.673 CV against v1's four
-at 0.629 — an improvement, but well inside one standard deviation, so it is not a
-statistically established gain.
+Predictor (`f_theta`, 8 features): held-out **accuracy 0.713, macro F1 0.678**
+(majority class: 0.500 / 0.222); 5-fold CV accuracy 0.731 ± 0.020, macro F1
+0.693 ± 0.030 (`results/calibration/predictor_evaluation.json`). The v2 features
+beat v1's four by 0.081 CV macro F1, more than twice the standard deviation.
 
-Ablation ladder on 60 short-QA prompts (`results/ablations.csv`):
+Policy (`results/policy_threshold_sweep.csv`): thresholds 0.40–0.80 swept on the
+160 held-out prompts. **0.40** was selected by a rule fixed in advance (best
+agreement with the calibration target, ties toward lower FLOPs). Raising it to 0.80
+moves relative loss increase from 56.9% to 10.1% and FLOPs from 0.733 to 0.931.
 
-| Variant | Loss | Avg depth | Rel. FLOPs |
-|---------|------|-----------|------------|
-| A1 static | 3.89 | 12.00 | 1.000 |
-| A2 analyzer + rule | 8.07 | 4.00 | 0.333 |
-| A3/A4 predictor, depth only | 5.97 | 7.73 | 0.644 |
-| A5 depth + attention | 8.40 | 7.73 | 0.536 |
-| A6 depth + FFN | 7.74 | 7.73 | 0.430 |
-| A8 full MSA | 9.10 | 7.73 | 0.322 |
+Baselines on 60 short-QA prompts (`results/baselines.csv`):
 
-Stability (`results/stability_experiment.csv`), on a sequence built to force
-switching: with the monitor disabled, 58 switches at volatility 0.97 and no
-rollbacks; with it active, volatility drops to 0.64 across 20 rollbacks and loss
-does not degrade (6.74 → 6.51).
+| Method | Prompt loss | Exact match | Avg depth | Rel. FLOPs |
+|--------|-------------|-------------|-----------|------------|
+| A static GPT-2 | 3.89 | 0.133 | 12.00 | 1.000 |
+| B depth adaptive | 5.97 | 0.017 | 7.73 | 0.644 |
+| C routing / MoE-style | 6.37 | 0.000 | 12.00 | 0.668 |
+| D SmolLM-135M (pretrained dense) | 1.98* | **0.750** | 30 layers | — |
+| E full MSA | 9.10 | 0.000 | 7.73 | 0.322 |
 
-Downstream (`results/dataset_evaluation.csv`): **every variant, including static
-12-layer GPT-2, scores 0.000 exact-match on GSM8K.** That dataset separates
-compute behaviour, not task quality. Short QA does carry signal, and the ordering
-is unflattering to adaptation: static 7.5% exact-match, depth-adaptive 2.5%, full
-MSA 0.0%. On GSM8K the predictor also routes almost
-everything to `deep` (average depth 11.9), so the compute saving seen on short QA
-largely disappears — no single compute-reduction figure should be quoted without
-naming the dataset.
+\* different tokenizer, not comparable per token.
 
-Remaining measured results are in `results/tables.md`, regenerated by
+Ablation ladder (`results/ablations.csv`): A1 3.89 → A2 rule 8.07 → A3/A4
+predictor 5.97 → A5 +attention 8.40, A6 +FFN 7.74 → A7/A8 full 9.10 prompt loss.
+The learned predictor is the clearest win (8.07 → 5.97 while using *more* depth).
+
+Stability (`results/stability/stability_levels.csv`): the monitor is inert at low
+and medium switching. At high switching it cuts executed switches 50 → 34 and
+volatility 0.830 → 0.566 with 13 rollbacks, but the rolled-back steps lose quality
+(loss 8.76 vs 5.65 without rollback). It buys stability, not quality.
+
+Downstream (`results/dataset_evaluation.csv`): **every GPT-2 variant scores 0.000 on
+GSM8K**; Baseline D reaches 0.050. On GSM8K the predictor routes nearly everything to
+`deep` (average depth 11.5–11.6), so the compute saving seen on short QA largely
+disappears — no compute-reduction figure should be quoted without naming the dataset.
+
+All tables (1–8) are in `results/tables.md`, regenerated by
 `python main.py --mode tables`.
 
 ## Limitations
@@ -212,52 +238,59 @@ These are the honest boundaries of what the experiments establish:
   pretrained weights with no retraining or distillation. The measured loss increase is
   reported rather than explained away.
 - **FLOP reduction is not always latency reduction.** Depth and attention/FFN
-  slicing do cut wall-clock time (17-30%), but the routing baseline uses less
-  arithmetic while running ~1.9x *slower* than static on CPU. Both measures are
+  slicing do cut wall-clock time, but the routing baseline uses less arithmetic
+  while running slower than static at sequence lengths 16 and 64. Both measures are
   reported; neither substitutes for the other.
 - **The routing baseline uses a fixed seeded gate**, not a learned router.
-- **Baseline D is randomly initialised.** Only its parameter count and latency are
-  meaningful; its quality is reported as N/A.
+- **Baseline D uses a different tokenizer.** Its loss/perplexity are not comparable
+  with GPT-2's; exact match and latency are.
+- **Rollback is not quality-aware.** It reverts to the window's most common
+  configuration, which lowered quality on the rolled-back steps.
+- **Summarization and code evaluation were not run** (optional in the plan); GPT-2
+  small's task scores would be floored.
 
 No claim is made that MSA always improves performance, guarantees lower latency, or
 preserves quality. See the claims checklist at the end of `results/tables.md`.
 
 ## Reproducibility
 
-Seeds are fixed at 42 throughout. `configs/experiment.yaml` records every default;
-`results/environment.json` records the Python, PyTorch, Transformers, scikit-learn and
-device versions used for the benchmark run. Calibration prompts are frozen in
-`data/calibration_prompts.json` so no network access is needed to reproduce a run
-(rebuilding the prompt set with `--build` does fetch GSM8K).
+Seeds are fixed at 42 throughout. `configs/experiment.yaml` records every default, and
+`test_msa.py` fails if it drifts from the code. `results/environment.json` records the
+Python, PyTorch, Transformers, scikit-learn, CUDA and device details. Calibration
+prompts are frozen in `data/calibration_prompts.json` (rebuilding with `--build`
+fetches GSM8K). A clean `python main.py --mode all` reproduced calibration losses,
+the predictor and the selected threshold exactly (`results/reproduction_log.txt`).
 
 ## Benchmark
 
-Controlled measurement (`results/benchmark.csv`): warmup 10, 50 runs, 10% trimmed
-mean, CPU. The harness flags any cell whose mean exceeds 1.5x its median, so a
-stray OS stall cannot silently set a headline number.
+Controlled measurement (`results/benchmark.csv`): 6 pinned torch threads, batch 1,
+every cell warmed 10× before any timing, 50 runs split over 5 shuffled interleaved
+rounds. Medians:
 
 | Mechanism | Config | seq=16 | seq=64 | seq=256 |
 |-----------|--------|--------|--------|---------|
-| depth only | shallow | 34.8 ms | 94.3 ms | 267.6 ms |
-| depth only | medium | 55.8 ms | 141.7 ms | 409.6 ms |
-| depth only | deep | 77.1 ms | 183.4 ms | 518.5 ms |
-| depth+attn+ffn | shallow | 28.8 ms | 79.6 ms | 193.2 ms |
-| depth+attn+ffn | medium | 44.6 ms | 112.7 ms | 288.8 ms |
-| routing | deep | 146.4 ms | 261.7 ms | 558.9 ms |
+| depth only | shallow | 14.3 ms | 32.7 ms | 91.0 ms |
+| depth only | medium | 20.2 ms | 45.9 ms | 132.4 ms |
+| depth only | deep | 28.1 ms | 59.8 ms | 175.8 ms |
+| depth+attn+ffn | shallow | 12.6 ms | 28.4 ms | 73.5 ms |
+| depth+attn+ffn | medium | 16.8 ms | 36.1 ms | 93.9 ms |
+| routing | deep | 36.2 ms | 65.1 ms | 155.9 ms |
 
-Attention and FFN slicing cut latency a further 17-20% at seq=16, rising to
-28-30% at seq=256, on top of the depth saving. The routing baseline is slower
-than the static model at every length.
+Depth cuts latency 23–45% at seq=64; attention/FFN slicing cuts a further 12–29%.
+Routing is slower than static below 256 tokens and 11% faster at 256. Baseline D
+(SmolLM-135M, float32) takes 71.8 ms at seq=64.
 
 ## Deliverables
 
 | Artefact | Path |
 |----------|------|
-| Research paper, 14 sections | `paper/msa_paper.md` |
+| Research paper | `paper/msa_paper.md` |
 | Demonstration page | `ui/index.html` |
-| Research tables + claims checklist | `results/tables.md` |
-| Figures | `results/figures/` (12) |
-| Calibration data | `results/calibration_results.csv` (2,994 rows) |
+| Research tables (1–8) + claims checklist | `results/tables.md` |
+| Figures | `results/figures/` (16) |
+| Calibration data | `results/calibration_results.csv` (4,794 rows) |
+| Per-sample evaluation | `results/evaluation/` |
+| Stability experiments | `results/stability/` |
 
 ### The demonstration page
 
@@ -267,13 +300,14 @@ from current results with `python -m ui.export_ui_data`.
 It splits cleanly into what is real and what is replayed:
 
 - **Live in the browser**: the Task Analyzer's eight heuristics, the `f_theta`
-  forward pass (real exported weights, 8→32→16→3), the confidence policy, and the
-  stability monitor. Typing a prompt runs the genuine selection pipeline.
+  forward pass (real exported weights, 8→32→16→3), the confidence policy (threshold
+  0.40), and the stability monitor with V(t) and S(t). Typing previews a decision;
+  Analyze commits it to the monitor and the history panel.
 - **Replayed from `results/`**: every GPT-2 loss, perplexity, latency and accuracy.
 
 The page does not run GPT-2 and does not claim to.
 
 ## Status
 
-**Complete. All 24 phases of `plan.md` are done**, and Phase 24 validation passes
-(`python test_msa.py`).
+**All 20 phases of `MSA-GPT2-plan-phase-1-to-20.md` are complete**, and
+`python test_msa.py` passes all 41 phase-gate checks.

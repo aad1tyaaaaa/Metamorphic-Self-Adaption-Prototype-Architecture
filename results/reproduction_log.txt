@@ -1,0 +1,536 @@
+
+==========================================================================
+>>> calibrate  (calibration.run_calibration)
+==========================================================================
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading GPT-2...
+
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]
+Loading weights:  12%|#2        | 18/148 [00:00<00:00, 174.48it/s]
+Loading weights:  30%|###       | 45/148 [00:00<00:00, 198.67it/s]
+Loading weights:  44%|####3     | 65/148 [00:00<00:00, 197.54it/s]
+Loading weights:  57%|#####7    | 85/148 [00:00<00:00, 194.79it/s]
+Loading weights:  71%|#######   | 105/148 [00:00<00:00, 87.41it/s]
+Loading weights: 100%|##########| 148/148 [00:00<00:00, 160.40it/s]
+GPT-2 loaded successfully.
+[  150/4794] sample 25/799
+[  300/4794] sample 50/799
+[  450/4794] sample 75/799
+[  600/4794] sample 100/799
+[  750/4794] sample 125/799
+[  900/4794] sample 150/799
+[ 1050/4794] sample 175/799
+[ 1200/4794] sample 200/799
+[ 1350/4794] sample 225/799
+[ 1500/4794] sample 250/799
+[ 1650/4794] sample 275/799
+[ 1800/4794] sample 300/799
+[ 1950/4794] sample 325/799
+[ 2100/4794] sample 350/799
+[ 2250/4794] sample 375/799
+[ 2400/4794] sample 400/799
+[ 2550/4794] sample 425/799
+[ 2700/4794] sample 450/799
+[ 2850/4794] sample 475/799
+[ 3000/4794] sample 500/799
+[ 3150/4794] sample 525/799
+[ 3300/4794] sample 550/799
+[ 3450/4794] sample 575/799
+[ 3600/4794] sample 600/799
+[ 3750/4794] sample 625/799
+[ 3900/4794] sample 650/799
+[ 4050/4794] sample 675/799
+[ 4200/4794] sample 700/799
+[ 4350/4794] sample 725/799
+[ 4500/4794] sample 750/799
+[ 4650/4794] sample 775/799
+[ 4794/4794] sample 799/799
+
+CALIBRATION COMPLETE: 4794 experiments -> results/calibration_results.csv
+
+Mean by mechanism and configuration:
+                           loss  perplexity  latency_seconds  relative_flops
+mechanism configuration                                                     
+depth     deep           3.9110     86.5135           0.0454          1.0000
+          medium         7.1654   3076.9794           0.0340          0.6667
+          shallow        8.9934  18194.9414           0.0224          0.3333
+full      deep           3.9110     86.5135           0.0449          1.0000
+          medium         9.5369  28052.3113           0.0276          0.3333
+          shallow        8.3491   7605.5992           0.0192          0.1667
+
+==========================================================================
+>>> frontier  (controller.policy_sweep)
+==========================================================================
+==============================================================================
+QUALITY-COMPUTE FRONTIER (depth-only mechanism)
+==============================================================================
+ tolerance  average_depth  layer_reduction_percent  relative_flops  compute_reduction_percent  average_latency  average_loss  deep_loss  relative_loss_increase  shallow  medium  deep
+      0.05        12.0000                   0.0000          1.0000                     0.0000           0.0454        3.9110      3.911                  0.0000        0       0   799
+      0.10        11.9950                   0.0417          0.9996                     0.0417           0.0454        3.9114      3.911                  0.0001        0       1   798
+      0.25        11.9449                   0.4589          0.9954                     0.4589           0.0453        3.9204      3.911                  0.0024        4       3   792
+      0.50        11.4443                   4.6308          0.9537                     4.6308           0.0444        4.1283      3.911                  0.0556       24      63   712
+      0.75        10.2578                  14.5181          0.8548                    14.5181           0.0420        4.8346      3.911                  0.2362       66     216   517
+      1.00         8.5056                  29.1197          0.7088                    29.1197           0.0366        6.0994      3.911                  0.5596      148     402   249
+      1.50         5.6170                  53.1915          0.4681                    53.1915           0.0278        8.0157      3.911                  1.0495      499     277    23
+      2.00         4.4055                  63.2874          0.3671                    63.2874           0.0238        8.7327      3.911                  1.2329      718      81     0
+
+Saved: results/quality_compute_frontier.csv
+
+Shallowest tolerance that ever selects below depth 12: 0.1
+
+==========================================================================
+>>> train-predictor  (controller.train_predictor)
+==========================================================================
+======================================================================
+TRAINING PREDICTOR  feature_set=v2  tolerance=1.0
+======================================================================
+Calibration rows: 4794  samples: 799
+
+Target distribution:
+target_configuration
+medium     402
+deep       249
+shallow    148
+
+Held-out accuracy: 0.7125  macro F1: 0.6777
+Majority-class baseline: accuracy 0.5000  macro F1 0.2222
+5-fold CV accuracy: 0.7309 +/- 0.0195
+5-fold CV macro F1: 0.6925 +/- 0.0303
+Mean confidence: 0.7011 (correct 0.7254, wrong 0.6410)
+
+Classification report:
+              precision    recall  f1-score   support
+
+     shallow       0.93      0.43      0.59        30
+      medium       0.67      0.86      0.75        80
+        deep       0.74      0.64      0.69        50
+
+    accuracy                           0.71       160
+   macro avg       0.78      0.65      0.68       160
+weighted avg       0.74      0.71      0.70       160
+
+Confusion matrix (rows = actual):
+         shallow  medium  deep
+shallow       13      17     0
+medium         0      69    11
+deep           1      17    32
+
+Saved: results/performance_predictor.pkl
+Saved: results/calibration/predictor_evaluation.json, results/calibration/predictor_held_out.csv
+
+{
+  "features": [
+    "input_length",
+    "reasoning",
+    "domain",
+    "structure",
+    "numeric_density",
+    "math_expression",
+    "question_type",
+    "reasoning_steps"
+  ],
+  "feature_set": "v2",
+  "tolerance": 1.0,
+  "seed": 42,
+  "classes": [
+    "deep",
+    "medium",
+    "shallow"
+  ],
+  "architecture": "StandardScaler + MLPClassifier(32, 16)",
+  "python": "3.14.6",
+  "calibration_prompts": 799,
+  "target_distribution": {
+    "medium": 402,
+    "deep": 249,
+    "shallow": 148
+  },
+  "accuracy": 0.7125,
+  "macro_f1": 0.6777264981918604,
+  "per_class": {
+    "shallow": {
+      "precision": 0.9285714285714286,
+      "recall": 0.43333333333333335,
+      "f1": 0.5909090909090909,
+      "support": 30
+    },
+    "medium": {
+      "precision": 0.6699029126213593,
+      "recall": 0.8625,
+      "f1": 0.7540983606557377,
+      "support": 80
+    },
+    "deep": {
+      "precision": 0.7441860465116279,
+      "recall": 0.64,
+      "f1": 0.6881720430107527,
+      "support": 50
+    }
+  },
+  "majority_class": "medium",
+  "majority_accuracy": 0.5,
+  "majority_macro_f1": 0.2222222222222222,
+  "cv_accuracy_mean": 0.7308805031446541,
+  "cv_accuracy_std": 0.019452402280225906,
+  "cv_macro_f1_mean": 0.6925228795658626,
+  "cv_macro_f1_std": 0.03025870328510152,
+  "mean_confidence": 0.7011490614911959,
+  "mean_confidence_correct": 0.7254287263506055,
+  "mean_confidence_wrong": 0.6409777181439632,
+  "train_samples": 639,
+  "test_samples": 160,
+  "confusion_labels": [
+    "shallow",
+    "medium",
+    "deep"
+  ]
+}
+
+==========================================================================
+>>> ablate-features  (controller.train_predictor)
+==========================================================================
+======================================================================
+PHASE 5 ABLATION: TASK ANALYZER FEATURE SETS
+======================================================================
+feature_set  n_features  accuracy  macro_f1  cv_accuracy_mean  cv_accuracy_std  cv_macro_f1_mean  cv_macro_f1_std
+         v1           4    0.6500    0.5542            0.6971           0.0143            0.6119           0.0112
+         v2           8    0.7125    0.6777            0.7309           0.0195            0.6925           0.0303
+
+Saved: results/feature_ablation.csv
+
+Best by cross-validated accuracy: v2 (0.7309)
+
+==========================================================================
+>>> threshold-sweep  (controller.threshold_sweep)
+==========================================================================
+==============================================================================
+POLICY CONFIDENCE-THRESHOLD SWEEP  (160 held-out prompts, fallback = deep)
+==============================================================================
+mechanism  threshold  accepted  fallback_count  average_depth  relative_flops  latency_mean   loss  relative_loss_increase  target_agreement  share_shallow  share_medium  share_deep
+    depth        0.0       160               0          8.725          0.7271        0.0370 6.2259                  0.5845            0.7125         0.0875        0.6438      0.2688
+    depth        0.4       158               2          8.800          0.7333        0.0372 6.1653                  0.5691            0.7250         0.0812        0.6375      0.2812
+    depth        0.5       143              17          9.050          0.7542        0.0376 5.9771                  0.5212            0.7250         0.0812        0.5750      0.3438
+    depth        0.6       121              39          9.450          0.7875        0.0387 5.6523                  0.4385            0.6688         0.0750        0.4875      0.4375
+    depth        0.7        86              74         10.125          0.8438        0.0401 5.1455                  0.3095            0.5750         0.0750        0.3188      0.6062
+    depth        0.8        40             120         11.175          0.9312        0.0425 4.3243                  0.1005            0.4500         0.0688        0.0688      0.8625
+     full        0.0       160               0          8.725          0.4979        0.0324 7.7350                  0.9685            0.3500         0.0875        0.6438      0.2688
+     full        0.4       158               2          8.800          0.5073        0.0326 7.6563                  0.9485            0.3625         0.0812        0.6375      0.2812
+     full        0.5       143              17          9.050          0.5490        0.0334 7.3097                  0.8603            0.3875         0.0812        0.5750      0.3438
+     full        0.6       121              39          9.450          0.6125        0.0348 6.7565                  0.7195            0.4438         0.0750        0.4875      0.4375
+     full        0.7        86              74         10.125          0.7250        0.0368 5.7989                  0.4758            0.5500         0.0750        0.3188      0.6062
+     full        0.8        40             120         11.175          0.8969        0.0402 4.4116                  0.1227            0.7062         0.0688        0.0688      0.8625
+
+Saved: results/policy_threshold_sweep.csv
+Selected operating point: threshold 0.40 (agreement 0.725, relative FLOPs 0.733, fallback rate 0.013)
+
+==========================================================================
+>>> benchmark  (evaluation.benchmark)
+==========================================================================
+Loading GPT-2...
+
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]
+Loading weights:  14%|#4        | 21/148 [00:00<00:00, 183.91it/s]
+Loading weights:  27%|##7       | 40/148 [00:00<00:00, 137.23it/s]
+Loading weights: 100%|##########| 148/148 [00:00<00:00, 515.53it/s]
+GPT-2 loaded successfully.
+{
+  "python": "3.14.6",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 186 Stepping 2, GenuineIntel",
+  "torch": "2.14.0+cpu",
+  "transformers": "5.17.0",
+  "sklearn": "1.9.1",
+  "numpy": "2.5.3",
+  "device": "cpu",
+  "cuda": null,
+  "gpu": null,
+  "torch_threads": 14
+}
+
+warmup=10 runs=50 sequence_lengths=[16, 64, 256]
+
+depth_only           shallow  seq=  16 trimmed   13.65 ms  median   13.55 ms  mean   13.82 +/-   1.23 ms flops=0.333
+depth_only           medium   seq=  16 trimmed   22.71 ms  median   22.30 ms  mean   23.79 +/-   5.89 ms flops=0.667
+depth_only           deep     seq=  16 trimmed   29.26 ms  median   29.43 ms  mean   29.25 +/-   1.75 ms flops=1.000
+depth_attention_ffn  shallow  seq=  16 trimmed   12.24 ms  median   12.31 ms  mean   12.64 +/-   2.17 ms flops=0.167
+depth_attention_ffn  medium   seq=  16 trimmed   16.52 ms  median   16.07 ms  mean   16.73 +/-   1.61 ms flops=0.333
+depth_attention_ffn  deep     seq=  16 trimmed   28.80 ms  median   29.01 ms  mean   29.31 +/-   3.90 ms flops=1.000
+routing              shallow  seq=  16 trimmed   17.38 ms  median   17.29 ms  mean   17.65 +/-   1.61 ms flops=0.223
+routing              medium   seq=  16 trimmed   32.02 ms  median   32.74 ms  mean   31.87 +/-   3.34 ms flops=0.445
+routing              deep     seq=  16 trimmed   46.70 ms  median   47.03 ms  mean   46.66 +/-   6.02 ms flops=0.668
+depth_only           shallow  seq=  64 trimmed   33.55 ms  median   33.75 ms  mean   33.86 +/-   2.58 ms flops=0.333
+depth_only           medium   seq=  64 trimmed   52.23 ms  median   53.73 ms  mean   52.77 +/-   6.27 ms flops=0.667
+depth_only           deep     seq=  64 trimmed   74.21 ms  median   73.80 ms  mean   74.96 +/-   4.93 ms flops=1.000
+depth_attention_ffn  shallow  seq=  64 trimmed   32.49 ms  median   32.18 ms  mean   32.76 +/-   2.52 ms flops=0.167
+depth_attention_ffn  medium   seq=  64 trimmed   44.70 ms  median   44.45 ms  mean   44.95 +/-   3.03 ms flops=0.333
+depth_attention_ffn  deep     seq=  64 trimmed   70.32 ms  median   72.26 ms  mean   70.75 +/-   8.86 ms flops=1.000
+routing              shallow  seq=  64 trimmed   42.63 ms  median   43.19 ms  mean   42.45 +/-   3.85 ms flops=0.224
+routing              medium   seq=  64 trimmed   56.06 ms  median   56.34 ms  mean   56.59 +/-   6.08 ms flops=0.447
+routing              deep     seq=  64 trimmed  100.18 ms  median  104.79 ms  mean  102.02 +/-  21.48 ms flops=0.671
+depth_only           shallow  seq= 256 trimmed  125.02 ms  median  126.24 ms  mean  127.44 +/-  22.52 ms flops=0.333
+depth_only           medium   seq= 256 trimmed  156.22 ms  median  157.49 ms  mean  157.20 +/-  17.21 ms flops=0.667
+depth_only           deep     seq= 256 trimmed  225.01 ms  median  210.94 ms  mean  307.61 +/- 307.30 ms flops=1.000
+depth_attention_ffn  shallow  seq= 256 trimmed  226.62 ms  median  224.58 ms  mean  228.94 +/-  14.65 ms flops=0.167
+depth_attention_ffn  medium   seq= 256 trimmed   98.92 ms  median   99.46 ms  mean  121.99 +/-  98.15 ms flops=0.333
+depth_attention_ffn  deep     seq= 256 trimmed  321.74 ms  median  216.17 ms  mean  389.10 +/- 369.98 ms flops=1.000  [outlier suspected]
+routing              shallow  seq= 256 trimmed  105.09 ms  median  106.88 ms  mean  105.89 +/-  15.44 ms flops=0.228
+routing              medium   seq= 256 trimmed  159.60 ms  median  160.25 ms  mean  163.08 +/-  33.18 ms flops=0.456
+routing              deep     seq= 256 trimmed  357.46 ms  median  202.49 ms  mean  448.02 +/- 429.27 ms flops=0.684  [outlier suspected]
+
+Saved: results/benchmark.csv and results/environment.json
+
+2 cell(s) flagged for an outlying run; use latency_trimmed_mean or latency_p50 for those:
+  depth_attention_ffn / deep / seq=256: mean 389.1 ms vs median 216.2 ms
+  routing / deep / seq=256: mean 448.0 ms vs median 202.5 ms
+  note: non-monotonic latency for depth_attention_ffn at seq=256
+
+==========================================================================
+>>> evaluate  (evaluation.evaluate)
+==========================================================================
+Loading GPT-2...
+
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]
+Loading weights:  12%|#2        | 18/148 [00:00<00:00, 165.30it/s]
+Loading weights:  24%|##3       | 35/148 [00:00<00:00, 130.85it/s]
+Loading weights:  39%|###8      | 57/148 [00:00<00:00, 142.04it/s]
+Loading weights:  57%|#####6    | 84/148 [00:00<00:00, 179.18it/s]
+Loading weights:  70%|######9   | 103/148 [00:00<00:00, 103.25it/s]
+Loading weights: 100%|##########| 148/148 [00:00<00:00, 172.00it/s]
+GPT-2 loaded successfully.
+
+Evaluation dataset: short_qa (60 samples)
+Predictor: v2 features, tolerance 1.0, policy threshold 0.4
+
+=== BASELINES (Phase 12) ===
+  static               loss=3.8890 acc=0.133 depth=12.00 reduction=  0.0% flops=1.000 latency= 59.56ms
+  depth_adaptive       loss=5.9736 acc=0.017 depth=7.73 reduction= 35.6% flops=0.644 latency= 22.71ms
+  routing              loss=6.3663 acc=0.000 depth=12.00 reduction=  0.0% flops=0.668 latency= 45.32ms
+  msa                  loss=9.0972 acc=0.000 depth=7.73 reduction= 35.6% flops=0.322 latency= 15.88ms
+
+Loading weights:   0%|          | 0/272 [00:00<?, ?it/s]
+Loading weights:  21%|##        | 57/272 [00:00<00:00, 564.11it/s]
+Loading weights:  43%|####3     | 117/272 [00:00<00:00, 571.69it/s]
+Loading weights:  64%|######4   | 175/272 [00:00<00:00, 554.47it/s]
+Loading weights:  85%|########4 | 231/272 [00:00<00:00, 532.79it/s]
+Loading weights: 100%|##########| 272/272 [00:00<00:00, 553.11it/s]
+  dense_reference      loss=1.9793 acc=0.767 depth=30.00 reduction=  0.0% flops=nan latency=131.27ms
+Saved: results/baselines.csv
+Saved: results/inference_log.csv
+
+=== ABLATIONS (Phase 15) ===
+  A1_static            loss=3.8890 acc=0.133 depth=12.00 reduction=  0.0% flops=1.000 latency= 56.87ms
+  A2_analyzer          loss=8.0672 acc=0.017 depth=4.00 reduction= 66.7% flops=0.333 latency= 42.79ms
+  A3_predictor         loss=5.9736 acc=0.017 depth=7.73 reduction= 35.6% flops=0.644 latency= 66.98ms
+  A4_depth             loss=5.9736 acc=0.017 depth=7.73 reduction= 35.6% flops=0.644 latency= 40.67ms
+  A5_depth_attention   loss=8.4026 acc=0.033 depth=7.73 reduction= 35.6% flops=0.536 latency= 42.49ms
+  A6_depth_ffn         loss=7.7411 acc=0.000 depth=7.73 reduction= 35.6% flops=0.430 latency= 35.18ms
+  A7_no_monitor        loss=9.0972 acc=0.000 depth=7.73 reduction= 35.6% flops=0.322 latency= 50.66ms
+  A8_full              loss=9.0972 acc=0.000 depth=7.73 reduction= 35.6% flops=0.322 latency= 16.25ms
+Saved: results/ablations.csv
+
+=== DATASET EVALUATION (Phase 14) ===
+
+short_qa (40 samples, generation=on)
+  static               loss=3.8017 acc=0.075 depth=12.00 reduction=  0.0% flops=1.000 latency= 50.03ms
+  depth_adaptive       loss=5.9740 acc=0.025 depth=7.60 reduction= 36.7% flops=0.633 latency= 19.45ms
+  msa                  loss=8.9890 acc=0.000 depth=7.60 reduction= 36.7% flops=0.317 latency= 27.54ms
+  dense_reference      loss=1.8264 acc=0.700 depth=30.00 reduction=  0.0% flops=nan latency=220.71ms
+
+gsm8k (40 samples, generation=on)
+  static               loss=3.4066 acc=0.000 depth=12.00 reduction=  0.0% flops=1.000 latency= 77.20ms
+  depth_adaptive       loss=3.8708 acc=0.000 depth=11.50 reduction=  4.2% flops=0.958 latency= 86.82ms
+  msa                  loss=4.0065 acc=0.000 depth=11.60 reduction=  3.3% flops=0.933 latency= 54.50ms
+  dense_reference      loss=2.4057 acc=0.025 depth=30.00 reduction=  0.0% flops=nan latency=579.12ms
+Saved: results/dataset_evaluation.csv
+
+=== STABILITY EXPERIMENTS (Phase 16) ===
+  decision buckets: shallow=75, medium=515, deep=209
+  low    A7_no_monitor  proposed_sw=  5 executed_sw=  5 V=0.086 rollbacks=  0 loss=5.8911 latency=66.2ms
+  low    A8_full        proposed_sw=  5 executed_sw=  5 V=0.086 rollbacks=  0 loss=5.8911 latency=41.8ms
+  medium A7_no_monitor  proposed_sw= 21 executed_sw= 21 V=0.323 rollbacks=  0 loss=7.1160 latency=28.2ms
+  medium A8_full        proposed_sw= 21 executed_sw= 21 V=0.323 rollbacks=  0 loss=7.1160 latency=27.5ms
+  high   A7_no_monitor  proposed_sw= 50 executed_sw= 50 V=0.830 rollbacks=  0 loss=7.0346 latency=35.8ms
+  high   A8_full        proposed_sw= 50 executed_sw= 34 V=0.566 rollbacks= 13 loss=7.7071 latency=28.6ms
+         rolled-back steps: loss 8.7581 vs 5.6542 without rollback
+Saved: results/stability/stability_levels.csv
+Saved: results/stability/stability_log_low.csv
+Saved: results/stability/stability_log_medium.csv
+Saved: results/stability/stability_log_high.csv
+Saved: results/stability_experiment.csv
+Saved: results/stability_log.csv
+
+  synthetic control -> 1 rollbacks from 5 switches
+
+=== DENSE REFERENCE (Baseline D) ===
+{
+  "model": "DenseReference (RMSNorm + RoPE + SwiGLU), GPT-2-matched dims",
+  "parameters": 162148608,
+  "trained": false,
+  "quality_metric": "N/A (randomly initialised)",
+  "vocab_size": 50257,
+  "dim": 768,
+  "depth": 12,
+  "heads": 12,
+  "ffn_hidden": 2048,
+  "norm": "RMSNorm",
+  "position": "RoPE",
+  "activation": "SwiGLU",
+  "latency_mean": 0.12957426666738078,
+  "latency_std": 0.24243130744204883,
+  "latency_p50": 0.08073259999946458,
+  "sequence_length": 64,
+  "warmup": 10,
+  "runs": 30
+}
+{
+  "model": "HuggingFaceTB/SmolLM-135M",
+  "architecture": "llama",
+  "parameters": 134515008,
+  "layers": 30,
+  "hidden_size": 576,
+  "heads": 9,
+  "kv_heads": 3,
+  "ffn_hidden": 1536,
+  "norm": "RMSNorm",
+  "position": "RoPE",
+  "activation": "SwiGLU (silu)",
+  "trained": true,
+  "quality_metric": "exact match / answer loss (see dataset_evaluation.csv)",
+  "latency_mean": 1.1234121566652902,
+  "latency_std": 0.6894744040689271,
+  "latency_p50": 1.3337049500041758,
+  "sequence_length": 64,
+  "warmup": 10,
+  "runs": 30
+}
+Saved: results/dense_reference.csv
+
+EVALUATION COMPLETE
+
+==========================================================================
+>>> plot  (evaluation.generate_plots)
+==========================================================================
+Writing figures to results/figures/
+  results/figures/01_depth_vs_loss.png
+  results/figures/02_depth_vs_latency.png
+  results/figures/03_quality_compute_frontier.png
+  results/figures/04_configuration_distribution.png
+  results/figures/05_average_depth_per_dataset.png
+  results/figures/06_layer_reduction.png
+  results/figures/07_latency_distribution.png
+  results/figures/09_predictor_confidence.png
+  results/figures/11_rollback_events.png
+  results/figures/12_baseline_comparison.png
+  results/figures/13_quality_vs_latency.png
+  results/figures/14_ablation_comparison.png
+  results/figures/15_stability_by_switching_level.png
+  results/figures/16_policy_threshold_sweep.png
+  results/figures/10_stability_volatility.png
+  results/figures/08_predictor_confusion_matrix.png
+
+16 figures written, 0 skipped
+
+==========================================================================
+>>> tables  (evaluation.tables)
+==========================================================================
+  table1_system_configuration: 24 rows
+  table2_main_results: 5 rows
+  table3_ablation: 8 rows
+  table4_stability: 6 rows
+  table5_datasets: 8 rows
+  table6_feature_ablation: 2 rows
+  table7_policy_threshold: 12 rows
+  table8_dense_reference: 2 rows
+
+Saved: results/tables.md
+
+==========================================================================
+>>> ui  (ui.export_ui_data)
+==========================================================================
+Wrote C:\Users\Aditya\Developer\MSA-gpt-2\ui\msa_data.json (61 KB)
+Wrote C:\Users\Aditya\Developer\MSA-gpt-2\ui\index.html (97 KB, self-contained)
+  predictor: v2, 8 features, layers [8, 32, 16]
+  calibration: 4794 experiments
+  frontier: 8 rows
+  baselines: 5 rows
+  ablations: 8 rows
+  stability: 6 rows
+  datasets: 8 rows
+  benchmark: 27 rows
+
+==========================================================================
+>>> validate  (test_msa)
+==========================================================================
+==========================================================================
+FINAL VALIDATION -- PHASES 1-20
+==========================================================================
+
+Core system
+Loading GPT-2...
+
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]
+Loading weights:  13%|#2        | 19/148 [00:00<00:00, 148.06it/s]
+Loading weights:  23%|##2       | 34/148 [00:00<00:01, 105.94it/s]
+Loading weights:  32%|###1      | 47/148 [00:00<00:00, 112.23it/s]
+Loading weights:  40%|###9      | 59/148 [00:00<00:01, 74.98it/s] 
+Loading weights: 100%|##########| 148/148 [00:00<00:00, 217.57it/s]
+GPT-2 loaded successfully.
+  [PASS] GPT-2 loads from a clean environment -- 124,439,808 parameters
+  [PASS] Depth 12 matches the reference model -- max |diff| = 0.00e+00
+  [PASS] Causal masking is applied -- prefix invariance = 0.00e+00
+  [PASS] Adaptive depth works -- d4=8.97 d8=5.68 d12=3.10
+  [PASS] Predictor loads -- v2, accuracy 0.7125
+  [PASS] Predictor produces valid probabilities -- no NaN or invalid values
+  [PASS] Configuration policy works -- low confidence falls back to deep
+  [PASS] Dynamic controller changes actual execution -- depth, attention, FFN and routing all change the output
+  [PASS] Compute estimates decrease with adaptation -- shallow = 0.167 of full
+  [PASS] Telemetry is complete -- all required telemetry present
+  [PASS] Stability monitor detects instability -- status reached ['STABLE', 'UNSTABLE', 'WARNING']
+  [PASS] Rollback works -- 3 rollbacks recorded
+Loading GPT-2...
+
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]
+Loading weights:  20%|#9        | 29/148 [00:00<00:00, 287.87it/s]
+Loading weights:  39%|###9      | 58/148 [00:00<00:00, 203.41it/s]
+Loading weights:  54%|#####4    | 80/148 [00:00<00:00, 184.70it/s]
+Loading weights:  78%|#######7  | 115/148 [00:00<00:00, 230.35it/s]
+Loading weights:  95%|#########4| 140/148 [00:00<00:00, 132.48it/s]
+Loading weights: 100%|##########| 148/148 [00:00<00:00, 168.97it/s]
+GPT-2 loaded successfully.
+  [PASS] End-to-end MSA runs without intervention -- selected medium (depth 8)
+  [PASS] P2: f_theta controls executed GPT-2 depth -- factual=8 explanation=8 mathematics=4 multi_step_reasoning=8 long_structured=8 code=8
+  [PASS] P5: analyzer produces eight valid features -- 806 prompts, 8 features each, all in [0, 1]
+  [PASS] P6: every configuration executes its depth -- 4/8/12 verified for depth-only and full mechanisms
+  [PASS] P10: plan synthetic sequence triggers rollback -- 1 rollbacks, executed ['deep', 'deep', 'deep', 'shallow', 'deep', 'medium', 'deep']
+  [PASS] P18: experiment.yaml matches the code -- threshold, configurations, benchmark and predictor settings agree
+
+Reproducibility artefacts
+  [PASS] Calibration reproducible -- data/calibration_prompts.json
+  [PASS] Historical calibration preserved -- results/calibration/calibration_results_v1_499.csv
+  [PASS] Calibration results saved as CSV -- results/calibration_results.csv
+  [PASS] Predictor evaluation artefacts -- results/calibration/predictor_evaluation.json
+  [PASS] Policy threshold sweep -- results/policy_threshold_sweep.csv
+  [PASS] Standardised evaluation outputs -- results/evaluation/msa__short_qa.csv
+  [PASS] Stability switching levels -- results/stability/stability_levels.csv
+  [PASS] Quality vs latency figure -- results/figures/13_quality_vs_latency.png
+  [PASS] Ablation figure -- results/figures/14_ablation_comparison.png
+  [PASS] Experiment configuration saved -- configs/experiment.yaml
+  [PASS] Predictor saved -- results/performance_predictor.pkl
+  [PASS] Quality-compute frontier -- results/quality_compute_frontier.csv
+  [PASS] Feature ablation -- results/feature_ablation.csv
+  [PASS] Benchmark with warmups -- results/benchmark.csv
+  [PASS] Environment recorded -- results/environment.json
+  [PASS] Baselines implemented -- results/baselines.csv
+  [PASS] Ablations completed -- results/ablations.csv
+  [PASS] Stability experiment completed -- results/stability_experiment.csv
+  [PASS] Downstream metrics used -- results/dataset_evaluation.csv
+  [PASS] Graphs generated automatically -- results/figures
+  [PASS] Research tables -- results/tables.md
+  [PASS] Research paper written -- paper/msa_paper.md
+  [PASS] Demonstration page built -- ui/index.html
+
+==========================================================================
+VALIDATION: 41 passed, 0 failed
+==========================================================================
+
+Full pipeline complete.

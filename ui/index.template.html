@@ -1,3 +1,6 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MSA Control Room</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
@@ -201,8 +204,30 @@
     <div class="panel">
       <h3>Inference telemetry <span class="tag" style="float:right"><span class="dot replay"></span>replayed</span></h3>
       <div id="telemetry"></div>
-      <p class="note" style="margin-top:11px">Mean over the 499-prompt calibration corpus for the
+      <p class="note" style="margin-top:11px">Mean over the <span class="n-prompts">&mdash;</span>-prompt calibration corpus for the
         selected configuration, not a live forward pass for your text.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sechead">
+    <h2>Session metrics &amp; history</h2>
+    <span class="eyebrow"><span class="dot live" style="display:inline-block"></span> live decisions &middot;
+      <span class="dot replay" style="display:inline-block"></span> replayed quality/latency</span>
+  </div>
+  <div class="grid g2">
+    <div class="panel">
+      <h3>Metrics over committed decisions</h3>
+      <div id="session"><p class="note">Press Analyze or a preset to commit a decision.</p></div>
+      <p class="note" style="margin-top:11px">Depth and layer reduction are computed live from the
+        decisions below. Latency and quality estimate are recorded calibration means for each
+        executed configuration (replayed), not measurements of these prompts.</p>
+    </div>
+    <div class="panel">
+      <h3>Recent decisions</h3>
+      <div class="tablewrap"><table id="history"></table></div>
+      <div class="controls"><button id="histreset" type="button">Clear history</button></div>
     </div>
   </div>
 </section>
@@ -225,7 +250,7 @@
 </section>
 
 <section>
-  <div class="sechead"><h2>Quality&ndash;compute frontier</h2><span class="eyebrow">499 prompts &middot; depth-only</span></div>
+  <div class="sechead"><h2>Quality&ndash;compute frontier</h2><span class="eyebrow"><span class="n-prompts">&mdash;</span> prompts &middot; depth-only</span></div>
   <div class="grid g2">
     <div class="panel"><h3>Compute reduction vs loss increase</h3><div id="chart-frontier"></div></div>
     <div class="panel"><h3>Depth vs prompt loss</h3><div id="chart-depth"></div></div>
@@ -245,10 +270,12 @@
 <section>
   <div class="sechead"><h2>Downstream datasets</h2><span class="eyebrow">answer-conditional</span></div>
   <div class="tablewrap"><table id="t-data"></table></div>
-  <p class="note warn" style="margin-top:10px"><b>Every variant, including static 12-layer GPT-2,
-    scores 0.000 exact match on GSM8K.</b> GPT-2 small cannot solve that task, so GSM8K separates
-    compute behaviour, not quality. On GSM8K the predictor also routes almost everything to
-    <span class="mono">deep</span>, so the compute saving seen on short QA largely disappears.</p>
+  <p class="note warn" style="margin-top:10px"><b>Every GPT-2 variant, including static 12-layer GPT-2,
+    scores 0.000 exact match on GSM8K</b>; the pretrained dense Baseline D reaches only 0.050.
+    GPT-2 small cannot solve that task, so GSM8K separates compute behaviour, not quality. On GSM8K
+    the predictor also routes almost everything to <span class="mono">deep</span>, so the compute
+    saving seen on short QA largely disappears. Baseline D uses a different tokenizer, so its answer
+    perplexity is not comparable with the GPT-2 rows.</p>
 </section>
 
 <section>
@@ -270,9 +297,10 @@
     from <span class="mono">results/</span>. This page does not run GPT-2.</p>
   <p style="margin-top:10px"><b>Measured limitations.</b></p>
   <ul>
-    <li>Full MSA is the worst-quality variant tested; attention and FFN slicing are applied to pretrained weights with no retraining.</li>
+    <li>Full MSA is the worst-quality GPT-2 variant tested; attention and FFN slicing are applied to pretrained weights with no retraining.</li>
+    <li>A pretrained dense model of similar size (Baseline D) answers far more short questions than any GPT-2 configuration.</li>
     <li>Calibration targets come from prompt loss, which is not downstream task quality.</li>
-    <li>Latency was measured on CPU; the routing baseline uses less arithmetic yet runs slower.</li>
+    <li>Latency was measured on a shared CPU; the routing baseline is slower than static at short sequences and faster only at 256 tokens.</li>
     <li>Evaluation sets are small (60 short-QA, 40 GSM8K); small differences are not meaningful.</li>
   </ul>
   <p class="mono" id="env-line" style="margin-top:12px">&mdash;</p>
@@ -353,7 +381,7 @@ function predict(features){
 }
 
 /* ---------- Policy + Stability Monitor: ports of the Python components ---------- */
-var THRESHOLD = 0.5, FALLBACK = "deep";
+var THRESHOLD = D.policy.confidence_threshold, FALLBACK = D.policy.fallback;
 function decide(pred){
   var low = pred.confidence < THRESHOLD;
   var cfg = low ? FALLBACK : pred.configuration;
@@ -391,6 +419,12 @@ Monitor.prototype.observe=function(cfg){
 Monitor.prototype.meanVol=function(){
   return this.vols.length ? this.vols.reduce(function(a,b){return a+b;},0)/this.vols.length : 0;
 };
+Monitor.prototype.clone=function(){
+  var m=new Monitor(this.enabled);
+  m.hist=this.hist.slice(); m.stable=this.stable; m.rollbacks=this.rollbacks;
+  m.switches=this.switches; m.n=this.n; m.vols=this.vols.slice();
+  return m;
+};
 
 /* ---------- Replayed telemetry lookup ---------- */
 function recorded(mechanism, configuration){
@@ -407,14 +441,62 @@ function kv(label, value, frac){
 }
 
 var monitor = new Monitor(true);
+var history = [];
 
-function run(text){
+function mechanismOf(knobs){
+  return (knobs.attention_mode==="full" && knobs.ffn_mode==="full") ? "depth" : "full";
+}
+
+function renderHistory(){
+  if(!history.length){
+    $("history").innerHTML = "";
+    $("session").innerHTML = '<p class="note">Press Analyze or a preset to commit a decision.</p>';
+    return;
+  }
+  var recent = history.slice(-10).reverse();
+  table($("history"), [
+    {key:"text",label:"Prompt",fmt:function(v){ return v.length>34 ? v.slice(0,34)+"…" : v; }},
+    {key:"predicted",label:"f_theta"},
+    {key:"confidence",label:"Conf.",dp:2},
+    {key:"fallback",label:"Fallback",fmt:function(v){ return v?"yes":"no"; }},
+    {key:"status",label:"Monitor"},
+    {key:"configuration",label:"Executed",fmt:function(v,r){ return v+(r.rolled?" (rollback)":""); }},
+    {key:"depth",label:"Depth",dp:0}
+  ], recent);
+
+  var n=history.length, depth=0, lat=0, loss=0, known=0;
+  history.forEach(function(h){
+    depth+=h.depth;
+    var rec=recorded(h.mechanism, h.configuration);
+    if(rec){ lat+=rec.latency_seconds; loss+=rec.loss; known++; }
+  });
+  var avg=depth/n;
+  $("session").innerHTML =
+    kv("decisions", String(n)) +
+    kv("average depth", fmt(avg,2)+"/12", avg/12) +
+    kv("layer reduction", fmt((1-avg/12)*100,1)+"%", 1-avg/12) +
+    kv("rollbacks", String(monitor.rollbacks)) +
+    kv("stability S = 1 − V (mean)", fmt(1-monitor.meanVol(),3), 1-monitor.meanVol()) +
+    kv("latency (replayed mean)", known ? fmt(lat/known*1000,1)+" ms" : "—") +
+    kv("quality estimate: prompt loss (replayed)", known ? fmt(loss/known,3) : "—");
+}
+
+function run(text, commit){
   var f = analyze(text);
   var pred = predict(f);
   var dec = decide(pred);
-  var ev = monitor.observe(dec.configuration);
+  // Typing previews against a copy so only committed decisions reach the monitor.
+  var active = commit ? monitor : monitor.clone();
+  var ev = active.observe(dec.configuration);
   var cfg = ev.configuration;
   var knobs = D.configurations[cfg];
+
+  if(commit){
+    history.push({ text:text, predicted:dec.predicted, confidence:dec.confidence,
+                   fallback:dec.fallback, status:ev.status, rolled:ev.rolled,
+                   configuration:cfg, depth:knobs.depth, mechanism:mechanismOf(knobs) });
+    renderHistory();
+  }
 
   $("features").innerHTML = P.features.map(function(n){
     return kv(n.replace(/_/g," "), fmt(f[n]), f[n]);
@@ -432,8 +514,10 @@ function run(text){
     kv("selected", dec.configuration);
 
   $("monitor").innerHTML =
+    (commit ? "" : '<p class="note">preview &mdash; Analyze to commit</p>') +
     '<div class="kv"><span>status</span><b><span class="pill '+ev.status+'">'+ev.status+'</span></b></div>' +
-    kv("volatility", fmt(ev.volatility,2), ev.volatility) +
+    kv("volatility V(t)", fmt(ev.volatility,2), ev.volatility) +
+    kv("stability S(t)", fmt(1-ev.volatility,2), 1-ev.volatility) +
     kv("rollback", ev.rolled ? "YES" : "no") +
     kv("rollbacks", String(ev.rollbacks));
 
@@ -457,7 +541,7 @@ function run(text){
   $("m-heads").textContent = heads+"/12";
   $("m-ffn").textContent = chunks+"/4";
 
-  var mech = (knobs.attention_mode==="full" && knobs.ffn_mode==="full") ? "depth" : "full";
+  var mech = mechanismOf(knobs);
   var rec = recorded(mech, cfg);
   $("telemetry").innerHTML = rec ? (
     kv("prompt loss", fmt(rec.loss)) +
@@ -533,7 +617,11 @@ function renderStatic(){
   $("env-line").textContent = "Python "+e.python+" · PyTorch "+e.torch+" · Transformers "+
     e.transformers+" · scikit-learn "+e.sklearn+" · "+e.device+" · "+
     D.calibration.experiments+" calibration experiments over "+D.calibration.prompts+" prompts";
-  $("fset").textContent = P.feature_set+" · "+P.features.length+" features · tolerance "+P.tolerance;
+  $("fset").textContent = P.feature_set+" · "+P.features.length+" features · tolerance "+P.tolerance+
+    " · threshold "+fmt(THRESHOLD,2);
+  Array.prototype.forEach.call(document.querySelectorAll(".n-prompts"), function(el){
+    el.textContent = D.calibration.prompts;
+  });
 
   lineChart($("chart-frontier"), D.frontier.map(function(r){
     return { x:r.compute_reduction_percent, y:r.relative_loss_increase*100, label:r.tolerance.toFixed(2) };
@@ -551,6 +639,7 @@ function renderStatic(){
 
   table($("t-base"), [
     {key:"label",label:"Method"},{key:"loss",label:"Loss"},
+    {key:"accuracy",label:"Exact match",dp:3},
     {key:"average_depth",label:"Avg depth",dp:2},
     {key:"layer_reduction",label:"Layer red.",fmt:function(v){return (v*100).toFixed(1)+"%";}},
     {key:"relative_flops",label:"Rel. FLOPs"},
@@ -580,8 +669,9 @@ function renderStatic(){
   var fa = D.feature_ablation;
   $("predstats").innerHTML =
     kv("held-out accuracy", fmt(P.accuracy,3), P.accuracy) +
+    kv("held-out macro F1", fmt(P.macro_f1,3), P.macro_f1) +
     kv("5-fold CV", fmt(P.cv_accuracy_mean,3)+" ± "+fmt(P.cv_accuracy_std,3), P.cv_accuracy_mean) +
-    kv("majority baseline", "0.467", 0.467) +
+    kv("majority baseline", fmt(P.majority_accuracy,3), P.majority_accuracy) +
     fa.map(function(r){ return kv(r.feature_set+" ("+r.n_features+" feat) CV",
       fmt(r.cv_accuracy_mean,3), r.cv_accuracy_mean); }).join("");
 }
@@ -601,7 +691,7 @@ function simulate(){
     "Explain in detail why the greenhouse effect warms the atmosphere, describe the main stages involved, and give one everyday example.",
     "You are given a report about renewable energy adoption. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed.",
     "Calculate 144 divided by 12.","Summarize the industrial revolution in two sentences."
-  ]).forEach(function(t){ pool[predict(analyze(t)).configuration].push(t); });
+  ]).forEach(function(t){ pool[decide(predict(analyze(t))).configuration].push(t); });
 
   var buckets = ORDER.filter(function(c){ return pool[c].length; });
   var on = new Monitor(true), off = new Monitor(false);
@@ -625,10 +715,13 @@ $("presets").innerHTML = PRESETS.map(function(t,i){
 }).join("");
 $("presets").addEventListener("click", function(e){
   var b=e.target.closest("button"); if(!b) return;
-  $("prompt").value = PRESETS[+b.dataset.i]; run($("prompt").value);
+  $("prompt").value = PRESETS[+b.dataset.i]; run($("prompt").value, true);
 });
-$("run").addEventListener("click", function(){ run($("prompt").value); });
-$("prompt").addEventListener("input", function(){ run($("prompt").value); });
+$("run").addEventListener("click", function(){ run($("prompt").value, true); });
+$("prompt").addEventListener("input", function(){ run($("prompt").value, false); });
+$("histreset").addEventListener("click", function(){
+  history = []; monitor = new Monitor(true); renderHistory(); run($("prompt").value, false);
+});
 $("sim").addEventListener("click", simulate);
 $("simreset").addEventListener("click", function(){
   $("trace").innerHTML=""; $("simstats").innerHTML="";
@@ -636,7 +729,7 @@ $("simreset").addEventListener("click", function(){
 
 renderStatic();
 $("prompt").value = PRESETS[2];
-run($("prompt").value);
+run($("prompt").value, false);
 simulate();
 })();
 </script>

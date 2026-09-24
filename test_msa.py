@@ -1,8 +1,8 @@
-"""Phase 24 final validation.
+"""Final validation for plan phases 1-20.
 
     python test_msa.py
 
-Runs the plan's core-system checklist as executable assertions. Every check
+Runs the plan's phase gates as executable assertions. Every check
 either passes or fails loudly; nothing is reported as working on trust.
 """
 
@@ -22,6 +22,24 @@ from monitor.stability_monitor import StabilityMonitor
 
 PROMPT = "The capital of India is New Delhi and the capital of France is"
 
+# Phase 2 / Phase 5 integration categories.
+CATEGORY_PROMPTS = {
+    "factual": "What is the capital of France?",
+    "explanation": "Explain why the sky appears blue.",
+    "mathematics": "Calculate 15 percent of 240.",
+    "multi_step_reasoning": (
+        "John has 5 apples. He buys 3 more apples, then gives 2 to Sarah. "
+        "Explain step by step how many apples John has remaining."
+    ),
+    "long_structured": (
+        "You are given a report about renewable energy adoption. First, identify the "
+        "three most important claims. Second, explain which claim is best supported by "
+        "evidence. Third, describe what additional information would be needed to "
+        "evaluate the weakest claim."
+    ),
+    "code": "Write a Python function that checks whether a number is prime.",
+}
+
 passed, failed = [], []
 
 
@@ -37,7 +55,7 @@ def check(name, function):
 
 def main():
     print("=" * 74)
-    print("PHASE 24 -- FINAL VALIDATION")
+    print("FINAL VALIDATION -- PHASES 1-20")
     print("=" * 74)
 
     print("\nCore system")
@@ -173,6 +191,56 @@ def main():
         assert record["logits_shape"][-1] == 50257
         return f"selected {record['configuration']} (depth {record['depth']})"
 
+    def f_theta_controls_execution():
+        """Phase 2 gate: the depth f_theta + policy select is the depth GPT-2 runs."""
+        predictor = PerformancePredictor()
+        analyzer = TaskAnalyzer(predictor.metadata.get("feature_set", "v1"))
+        policy = ConfigurationPolicy()
+        controller = DynamicArchitectureController(adaptive, tokenizer)
+        chosen = []
+
+        for category, text in CATEGORY_PROMPTS.items():
+            decision = policy.decide(predictor.predict(analyzer.analyze(text)))
+            outcome = controller.run(text, decision["configuration"])
+
+            assert outcome["executed_depth"] == decision["depth"], category
+            assert adaptive.last_executed_blocks == list(range(decision["depth"]))
+            assert math.isfinite(outcome["loss"])
+            chosen.append(f"{category}={decision['depth']}")
+        return " ".join(chosen)
+
+    def every_depth_executes():
+        """Phase 6 gate: each configuration runs exactly its number of blocks."""
+        for mechanism in ("depth", "full"):
+            controller = DynamicArchitectureController(adaptive, tokenizer, mechanism)
+            for name, depth in DEPTH_MAP.items():
+                outcome = controller.run(PROMPT, name, input_ids=ids)
+                assert outcome["requested_depth"] == outcome["executed_depth"] == depth
+                assert outcome["layers_skipped"] == TOTAL_LAYERS - depth
+        return "4/8/12 verified for depth-only and full mechanisms"
+
+    def analyzer_features_valid():
+        """Phase 5 gate: eight bounded, finite features for every category and prompt."""
+        from data.calibration_dataset import load
+        analyzer = TaskAnalyzer("v2")
+        texts = list(CATEGORY_PROMPTS.values()) + load()[0] + [""]
+
+        for text in texts:
+            features = analyzer.analyze(text)
+            assert len(features) == 8
+            assert all(math.isfinite(v) and 0.0 <= v <= 1.0 for v in features.values())
+        return f"{len(texts)} prompts, 8 features each, all in [0, 1]"
+
+    def plan_sequence_rolls_back():
+        """Phase 10 gate: the plan's synthetic sequence triggers a rollback."""
+        monitor = StabilityMonitor(window=6)
+        events = [monitor.observe(c) for c in
+                  ["deep", "medium", "deep", "shallow", "deep", "medium", "deep"]]
+        assert monitor.rollback_count > 0
+        assert all(0.0 <= e["stability_score"] <= 1.0 for e in events)
+        executed = [e["configuration"] for e in events]
+        return f"{monitor.rollback_count} rollbacks, executed {executed}"
+
     check("GPT-2 loads from a clean environment", gpt2_loads)
     check("Depth 12 matches the reference model", depth_12_matches_reference)
     check("Causal masking is applied", causal_masking_is_applied)
@@ -186,12 +254,48 @@ def main():
     check("Stability monitor detects instability", monitor_detects_instability)
     check("Rollback works", rollback_works)
     check("End-to-end MSA runs without intervention", end_to_end_runs)
+    check("P2: f_theta controls executed GPT-2 depth", f_theta_controls_execution)
+    check("P5: analyzer produces eight valid features", analyzer_features_valid)
+    check("P6: every configuration executes its depth", every_depth_executes)
+    check("P10: plan synthetic sequence triggers rollback", plan_sequence_rolls_back)
+
+    def experiment_config_matches_code():
+        """Phase 18: configs/experiment.yaml must describe what the code runs."""
+        import yaml
+        from configs import configurations as cfg
+        from evaluation.benchmark import RUNS, SEQUENCE_LENGTHS, WARMUP
+
+        with open("configs/experiment.yaml", encoding="utf-8") as handle:
+            config = yaml.safe_load(handle)
+
+        assert config["policy"]["confidence_threshold"] == cfg.CONFIDENCE_THRESHOLD
+        assert config["policy"]["fallback"] == cfg.FALLBACK_CONFIGURATION
+        for name, knobs in cfg.CONFIGURATIONS.items():
+            assert config["configurations"][name] == knobs, name
+        assert config["benchmark"]["warmup"] == WARMUP >= 10
+        assert config["benchmark"]["runs"] == RUNS >= 30
+        assert config["benchmark"]["sequence_lengths"] == SEQUENCE_LENGTHS
+
+        predictor = PerformancePredictor()
+        assert config["predictor"]["feature_set"] == predictor.metadata["feature_set"]
+        assert config["predictor"]["tolerance"] == predictor.metadata["tolerance"]
+        assert config["calibration"]["size"] == predictor.metadata["calibration_prompts"]
+        return "threshold, configurations, benchmark and predictor settings agree"
+
+    check("P18: experiment.yaml matches the code", experiment_config_matches_code)
 
     print("\nReproducibility artefacts")
 
     artefacts = {
         "Calibration reproducible": "data/calibration_prompts.json",
+        "Historical calibration preserved": "results/calibration/calibration_results_v1_499.csv",
         "Calibration results saved as CSV": "results/calibration_results.csv",
+        "Predictor evaluation artefacts": "results/calibration/predictor_evaluation.json",
+        "Policy threshold sweep": "results/policy_threshold_sweep.csv",
+        "Standardised evaluation outputs": "results/evaluation/msa__short_qa.csv",
+        "Stability switching levels": "results/stability/stability_levels.csv",
+        "Quality vs latency figure": "results/figures/13_quality_vs_latency.png",
+        "Ablation figure": "results/figures/14_ablation_comparison.png",
         "Experiment configuration saved": "configs/experiment.yaml",
         "Predictor saved": "results/performance_predictor.pkl",
         "Quality-compute frontier": "results/quality_compute_frontier.csv",

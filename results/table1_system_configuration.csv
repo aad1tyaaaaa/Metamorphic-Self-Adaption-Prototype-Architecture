@@ -10,9 +10,15 @@ Features,"input_length, reasoning, domain, structure, numeric_density, math_expr
 Configurations,"shallow: depth 4, attention reduced, ffn partial; medium: depth 8, attention reduced, ffn partial; deep: depth 12, attention full, ffn full"
 Configuration depths,"shallow=4, medium=8, deep=12"
 Predictor architecture,"StandardScaler + MLPClassifier(32, 16)"
-Predictor held-out accuracy,0.720
-Predictor 5-fold CV accuracy,0.673 +/- 0.188
+Calibration prompts,799
+Predictor held-out accuracy,0.713
+Predictor held-out macro F1,0.678
+Majority-class baseline (acc / macro F1),0.500 / 0.222
+Predictor 5-fold CV accuracy,0.731 +/- 0.019
+Predictor 5-fold CV macro F1,0.693 +/- 0.030
 Calibration tolerance,1.0
+Policy confidence threshold,0.4
+Policy fallback,deep
 Seed,42
 Device,cpu
 PyTorch,2.14.0+cpu

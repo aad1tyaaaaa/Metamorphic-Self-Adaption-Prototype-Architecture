@@ -14,7 +14,13 @@ import os
 import joblib
 import pandas as pd
 
-from configs.configurations import CONFIGURATIONS, DEPTH_MAP, FEATURE_SETS
+from configs.configurations import (
+    CONFIDENCE_THRESHOLD,
+    CONFIGURATIONS,
+    DEPTH_MAP,
+    FALLBACK_CONFIGURATION,
+    FEATURE_SETS,
+)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUTPUT = os.path.join(HERE, "msa_data.json")
@@ -40,6 +46,8 @@ def export_predictor():
         "activation": mlp.activation,
         "output_activation": mlp.out_activation_,
         "accuracy": payload["accuracy"],
+        "macro_f1": payload.get("macro_f1"),
+        "majority_accuracy": payload.get("majority_accuracy"),
         "cv_accuracy_mean": payload["cv_accuracy_mean"],
         "cv_accuracy_std": payload["cv_accuracy_std"],
         "tolerance": payload["tolerance"],
@@ -88,6 +96,8 @@ def main():
             "browser from exported weights."
         ),
         "configurations": CONFIGURATIONS,
+        "policy": {"confidence_threshold": CONFIDENCE_THRESHOLD,
+                   "fallback": FALLBACK_CONFIGURATION},
         "depth_map": DEPTH_MAP,
         "feature_sets": FEATURE_SETS,
         "predictor": export_predictor(),
@@ -96,6 +106,7 @@ def main():
         "baselines": frame("results/baselines.csv"),
         "ablations": frame("results/ablations.csv"),
         "stability": frame("results/stability_experiment.csv"),
+        "policy_sweep": frame("results/policy_threshold_sweep.csv"),
         "datasets": frame("results/dataset_evaluation.csv"),
         "benchmark": frame("results/benchmark.csv"),
         "feature_ablation": frame("results/feature_ablation.csv"),

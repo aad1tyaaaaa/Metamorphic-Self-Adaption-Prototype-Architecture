@@ -14,22 +14,25 @@ configurations; a policy layer applies a confidence threshold; a stability
 monitor suppresses configuration thrash; and a controller executes the selected
 configuration by restricting depth, attention heads and feed-forward width.
 
-We implement all five components on GPT-2 small and calibrate them over 2,994
-controlled experiments. We report what we measured, including results that do
-not favour the method. Depth adaptation reduces executed layers by 35.6% and
-median latency by roughly 28%, at a prompt-loss cost of 3.89 to 5.97. Adding
-attention and feed-forward adaptation reduces estimated compute further, to
-0.322 of the static model, but raises loss to 9.10, because those mechanisms
-slice pretrained weights with no retraining. On short factual QA, exact-match
-accuracy falls monotonically as adaptation is added: 7.5% static, 2.5%
-depth-adaptive, 0.0% full MSA. On GSM8K every variant including the static
-baseline scores 0.000, so that dataset separates compute behaviour rather than
-task quality.
+We implement all five components on GPT-2 small and calibrate them over 4,794
+controlled experiments on 799 prompts. We report what we measured, including
+results that do not favour the method. Depth adaptation reduces executed layers
+by 35.6% on short QA; under a controlled benchmark the 4- and 8-layer
+configurations run 45% and 23% faster than 12 layers at sequence length 64. The
+prompt-loss cost is 3.89 to 5.97. Adding attention and feed-forward adaptation
+reduces estimated compute to 0.322 of the static model and latency by a further
+13–29%, but raises loss to 9.10, because those mechanisms slice pretrained
+weights with no retraining. On short factual QA, exact-match accuracy falls as
+adaptation is added: 13.3% static, 1.7% depth-adaptive, 0.0% full MSA. A
+pretrained dense model of similar size (SmolLM-135M) reaches 75.0%. On GSM8K
+every GPT-2 variant scores 0.000. The stability monitor reduces volatility only
+under high switching (0.83 to 0.57), and the rolled-back steps lose quality.
 
 We do not claim that MSA improves the quality-compute trade-off. We claim that
 its mechanisms are implementable, that their costs are measurable, and that on
 this backbone depth adaptation is the only one of the three that is currently
-worth its quality cost.
+worth its quality cost. The backbone matters far more to task quality than any
+adaptation mechanism tested.
 
 ---
 
@@ -56,9 +59,11 @@ This paper reports a prototype. The contributions are:
    feed-forward adaptation slice weight tensors rather than masking outputs, so
    the skipped arithmetic is genuinely not performed (Section 7).
 
-3. **A calibration and evaluation protocol** covering 499 prompts across ten
-   categories, five baselines, eight ablations, and a controlled stability
-   experiment (Sections 9–12).
+3. **A calibration and evaluation protocol** covering 799 prompts across
+   twelve categories (4,794 controlled runs), a measured policy-threshold sweep,
+   five baselines including a pretrained contemporary dense model, eight
+   ablations, and stability experiments at three switching levels
+   (Sections 9–12).
 
 4. **Negative results reported as results.** Full MSA is the worst-quality
    variant we tested. We report that, quantify it, and explain the cause rather
@@ -255,50 +260,75 @@ stopping on a 15% validation split, seed 42.
 
 **Training data.** One example per calibration prompt: the eight features as
 input, and the target configuration from the calibration objective of Section 3
-at `tau = 1.00`. Target distribution over 499 prompts:
+at `tau = 1.00`. Target distribution over 799 prompts:
 
 ```
-medium   233
-deep     187
-shallow   79
+medium   402
+deep     249
+shallow  148
 ```
 
-`tau = 1.00` was chosen because it is the operating point producing a
-non-degenerate three-class distribution; at `tau <= 0.25` over 99% of prompts
+`tau = 1.00` was kept because it is still the operating point producing a
+non-degenerate three-class distribution; at `tau <= 0.50` over 89% of prompts
 map to `deep` and the classification problem collapses.
 
-**Performance.** 399 training / 100 held-out, stratified.
+**Performance.** 639 training / 160 held-out, stratified. Because the classes
+are imbalanced, macro F1 is reported alongside accuracy, against a
+majority-class reference (`results/calibration/predictor_evaluation.json`).
 
-| Metric | Value |
-|--------|-------|
-| Held-out accuracy | **0.720** |
-| 5-fold CV accuracy | **0.673 ± 0.188** |
-| Majority-class baseline | 0.467 |
+| Metric | f_theta | Majority class |
+|--------|---------|----------------|
+| Held-out accuracy | **0.713** | 0.500 |
+| Held-out macro F1 | **0.678** | 0.222 |
+| 5-fold CV accuracy | **0.731 ± 0.020** | — |
+| 5-fold CV macro F1 | **0.693 ± 0.030** | — |
+| Mean confidence (correct / wrong) | 0.725 / 0.641 | — |
+
+Per class (precision / recall): shallow 0.93 / 0.43, medium 0.67 / 0.86,
+deep 0.74 / 0.64.
 
 Confusion matrix on the held-out split (rows actual, columns predicted):
 
 |  | shallow | medium | deep |
 |--|---------|--------|------|
-| **shallow** | 6 | 9 | 1 |
-| **medium** | 1 | 34 | 12 |
-| **deep** | 0 | 5 | 32 |
+| **shallow** | 13 | 17 | 0 |
+| **medium** | 0 | 69 | 11 |
+| **deep** | 1 | 17 | 32 |
 
-The predictor beats the majority-class baseline by 25 points, which is the
-meaningful comparison. Its weakest class is `shallow` (recall 0.375): it
-systematically routes cheap prompts to `medium`. Since errors in that direction
-cost compute rather than quality, this is the safer failure mode, but it caps
-the achievable saving.
+Expanding the corpus from 499 to 799 prompts cut the cross-validation standard
+deviation from ±0.188 to ±0.020, so the estimate is now stable. The weakest
+class is still `shallow` (recall 0.43): cheap prompts are routed to `medium`.
+That direction costs compute rather than quality, but it caps the saving.
+Confidence is informative but weakly so: wrong predictions average 0.64
+against 0.73 for correct ones.
 
 **Decision policy.** The policy is deliberately separate from the predictor:
 
 ```
 if confidence >= threshold:  c_final = argmax P
-else:                        c_final = fallback        (default: deep)
+else:                        c_final = fallback        (deep)
 ```
 
-with `threshold = 0.50` by default. Every inference logs the full probability
-vector, the predicted configuration, the confidence, whether the fallback fired,
-and the executed depth.
+The threshold was selected by a sweep on the 160 held-out prompts
+(`controller/threshold_sweep.py`, Table 7). Loss, latency and FLOPs for each
+decision are read from that prompt's measured calibration runs. The selection
+rule was fixed in advance: maximise agreement with `c*(x)`, break ties toward
+lower FLOPs.
+
+| Threshold | Accepted | Fallbacks | Avg depth | Rel. FLOPs | Rel. loss increase | Agreement |
+|-----------|----------|-----------|-----------|------------|--------------------|-----------|
+| 0.00 | 160 | 0 | 8.73 | 0.727 | 58.4% | 0.713 |
+| **0.40** | **158** | **2** | **8.80** | **0.733** | **56.9%** | **0.725** |
+| 0.50 | 143 | 17 | 9.05 | 0.754 | 52.1% | 0.725 |
+| 0.60 | 121 | 39 | 9.45 | 0.788 | 43.9% | 0.669 |
+| 0.70 | 86 | 74 | 10.13 | 0.844 | 31.0% | 0.575 |
+| 0.80 | 40 | 120 | 11.18 | 0.931 | 10.1% | 0.450 |
+
+0.40 and 0.50 tie on agreement; the rule selects 0.40. Raising the threshold
+moves the system smoothly back toward the static model, so the threshold is a
+second, explicit quality-compute knob on top of `tau`. Every inference logs
+the full probability vector, the predicted configuration, the confidence,
+whether the fallback fired, and the executed depth.
 
 ---
 
@@ -363,10 +393,13 @@ If configuration selection is volatile across a request stream, the system
 thrashes. The monitor observes the decision sequence over a sliding window of
 `w = 6`.
 
-**Volatility** is the fraction of adjacent pairs in the window that differ:
+**Volatility** is the fraction of adjacent pairs in the window that differ, and
+the **stability score** is its complement:
 
 ```
-V(t) = |{ i : c_{i} != c_{i+1} }| / (w - 1)
+V(t) = |{ i : c_{i} != c_{i+1} }| / (|W_t| - 1)        W_t = last w decisions
+S(t) = 1 - V(t)
+rollback rate = rollbacks / observations
 ```
 
 **Status:** `STABLE` if `V <= 0.4`, `WARNING` if `0.4 < V <= 0.7`, `UNSTABLE`
@@ -378,7 +411,10 @@ stable configuration is the window mode, updated whenever status is `STABLE`.
 
 The monitor also runs in a passive mode that observes and measures without
 acting, which is exactly ablation A7 and makes the with/without comparison
-fair.
+fair. The implementation (`monitor/stability_monitor.py`) computes exactly the
+three quantities above; `test_msa.py` asserts that the synthetic sequence
+`deep, medium, deep, shallow, deep, medium, deep` triggers a rollback that
+changes the executed configuration.
 
 **Reporting note.** An early version reported `V` for the final window only,
 which produced the contradiction of 22 recorded switches alongside a reported
@@ -409,19 +445,25 @@ throughout; no training of the backbone at any point.
 All seeds fixed at 42. Configuration recorded in `configs/experiment.yaml`;
 environment captured programmatically to `results/environment.json`.
 
-**Calibration corpus.** 499 unique prompts across ten categories:
+**Calibration corpus.** 799 unique prompts across twelve categories, covering
+every category the plan requires. The original 499-prompt corpus and its
+results are preserved unchanged as a historical version
+(`data/calibration_prompts_v1_499.json`, `results/calibration/`).
 
 | Category | n | Category | n |
 |----------|---|----------|---|
-| hard_reasoning (GSM8K) | 190 | code | 30 |
-| seed_handwritten | 100 | technical | 29 |
-| basic_arithmetic | 30 | long_structured | 25 |
-| multi_step_arithmetic | 30 | summarization | 20 |
-| scientific_explanation | 30 | logical_reasoning | 15 |
+| hard_reasoning (GSM8K train) | 229 | technical | 49 |
+| seed_handwritten | 100 | multi_step_arithmetic | 47 |
+| factual | 70 | long_structured | 45 |
+| basic_arithmetic | 53 | summarization | 40 |
+| scientific_explanation | 50 | logical_reasoning | 36 |
+| code | 50 | long_explanation | 30 |
 
-Each prompt is executed at three configurations under two mechanisms:
-**2,994 experiments**. Prompts are frozen to `data/calibration_prompts.json` so
-reproduction requires no network access.
+Factual prompts are disjoint from the `short_qa` evaluation set. Each prompt is
+executed at three configurations under two mechanisms: **4,794 experiments**,
+each recording the eight features, complexity, depth, configuration, loss,
+perplexity, latency and relative FLOPs. Prompts are frozen to
+`data/calibration_prompts.json` so reproduction requires no network access.
 
 **Benchmarking protocol.** Warm-up 10, measured runs 50, at fixed sequence
 lengths 16, 64 and 256, for every mechanism and configuration. We report a 10%
@@ -479,15 +521,21 @@ evidence of correctness.
 | A | Static GPT-2 | All 12 layers, full width. Reference point. |
 | B | Depth adaptive | `f_theta` selects depth; `alpha = phi = 1.0`; no monitor. |
 | C | Routing / MoE-style | Full depth; per-token top-2-of-4 feed-forward chunk routing via a **fixed seeded random gate, untrained**. |
-| D | Contemporary dense reference | Separate decoder with RMSNorm, RoPE, SwiGLU; 162,148,608 parameters; **randomly initialised**. |
-| E | Full MSA | `f_theta` + depth + attention + feed-forward adaptation + stability monitor. |
+| D | Contemporary dense reference | `HuggingFaceTB/SmolLM-135M`: pretrained Llama-architecture decoder with RMSNorm, RoPE, SwiGLU; no adaptivity. A second, **untrained** RMSNorm/RoPE/SwiGLU decoder at GPT-2 dimensions is kept for latency reference only. |
+| E | Full MSA | `f_theta` + policy + depth + attention + feed-forward adaptation + stability monitor. |
 
-Baseline D is included for architecture-family latency and size reference only.
-It is untrained, so its quality is reported as N/A rather than as a number that
-would invite a meaningless comparison.
+Baseline D uses a different tokenizer from GPT-2, so its per-token loss and
+perplexity are **not** directly comparable to the GPT-2 variants; its
+exact-match accuracy and latency are. Parameter counts are in Table 8 of
+`results/tables.md`.
 
 Baseline C's gate is untrained by design; it is a compute-reduction reference,
 not a claim about trained mixture-of-experts.
+
+All methods run through one runner (`evaluation/runner.py`) that writes a
+fixed per-sample schema (method, dataset, sample id, loss, perplexity, latency,
+depth, layer reduction, configuration, attention mode, FFN mode, confidence,
+rollback) to `results/evaluation/<method>__<dataset>.csv`.
 
 ---
 
@@ -495,13 +543,13 @@ not a claim about trained mixture-of-experts.
 
 ### 11.1 Calibration and the quality-compute frontier
 
-Mean over 499 prompts, depth-only mechanism:
+Mean over 799 prompts, depth-only mechanism:
 
-| Depth | Prompt loss | Perplexity | Relative FLOPs |
-|-------|-------------|------------|----------------|
-| 4 | 9.027 | 18,291 | 0.333 |
-| 8 | 7.208 | 2,973 | 0.667 |
-| 12 | 3.861 | 80.8 | 1.000 |
+| Depth | Prompt loss | Mean perplexity | Relative FLOPs |
+|-------|-------------|-----------------|----------------|
+| 4 | 8.993 | 18,195 | 0.333 |
+| 8 | 7.165 | 3,077 | 0.667 |
+| 12 | 3.911 | 86.5 | 1.000 |
 
 Quality degrades sharply and non-linearly below full depth. The step from 8 to
 12 layers is worth far more than the step from 4 to 8.
@@ -510,13 +558,13 @@ Tolerance sweep, showing the operating points available:
 
 | `tau` | Avg depth | Compute reduction | Relative loss increase | shallow / medium / deep |
 |-------|-----------|-------------------|------------------------|--------------------------|
-| 0.05 | 12.00 | 0.0% | 0.0% | 0 / 0 / 499 |
-| 0.25 | 11.97 | 0.3% | 0.1% | 2 / 0 / 497 |
-| 0.50 | 11.48 | 4.3% | 5.5% | 15 / 35 / 449 |
-| 0.75 | 10.39 | 13.4% | 22.1% | 38 / 125 / 336 |
-| **1.00** | **8.87** | **26.1%** | **51.5%** | **79 / 233 / 187** |
-| 1.50 | 5.82 | 51.5% | 105.8% | 291 / 189 / 19 |
-| 2.00 | 4.46 | 62.8% | 126.3% | 441 / 58 / 0 |
+| 0.05 | 12.00 | 0.0% | 0.0% | 0 / 0 / 799 |
+| 0.25 | 11.94 | 0.5% | 0.2% | 4 / 3 / 792 |
+| 0.50 | 11.44 | 4.6% | 5.6% | 24 / 63 / 712 |
+| 0.75 | 10.26 | 14.5% | 23.6% | 66 / 216 / 517 |
+| **1.00** | **8.51** | **29.1%** | **56.0%** | **148 / 402 / 249** |
+| 1.50 | 5.62 | 53.2% | 105.0% | 499 / 277 / 23 |
+| 2.00 | 4.41 | 63.3% | 123.3% | 718 / 81 / 0 |
 
 The frontier is monotone, as it must be. It also shows the central difficulty:
 meaningful compute reduction on this backbone requires accepting a large
@@ -525,94 +573,150 @@ reduction at under 10% loss increase.
 
 ### 11.2 Main results (60 short-QA prompts)
 
-| Method | Prompt loss | Avg depth | Layer red. | Rel. FLOPs | Latency (s) |
-|--------|-------------|-----------|------------|------------|-------------|
-| A: Static GPT-2 | **3.889** | 12.00 | 0.0% | 1.000 | 0.168 |
-| B: Depth adaptive | 5.974 | 7.73 | 35.6% | 0.644 | 0.121 |
-| C: Routing / MoE-style | 6.366 | 12.00 | 0.0% | 0.668 | 0.313 |
-| E: Full MSA | 9.097 | 7.73 | 35.6% | **0.322** | **0.098** |
-| D: Dense reference (untrained) | N/A | 12.00 | 0.0% | N/A | 0.440 |
+Exact match uses greedy decoding of up to 16 tokens. Latency here is a single
+forward pass per prompt inside the evaluation loop and is noisy; Section 11.4
+is the controlled latency measurement.
 
-Static is the best on quality. Full MSA is the cheapest on both estimated
-compute and latency, and the worst on quality. Depth adaptation occupies the
-middle and is the only variant whose quality cost is arguably proportionate to
-its saving.
+| Method | Prompt loss | Exact match | Avg depth | Layer red. | Rel. FLOPs | Median latency (ms) |
+|--------|-------------|-------------|-----------|------------|------------|---------------------|
+| A: Static GPT-2 | 3.889 | 0.133 | 12.00 | 0.0% | 1.000 | 33.9 |
+| B: Depth adaptive | 5.974 | 0.017 | 7.73 | 35.6% | 0.644 | 22.0 |
+| C: Routing / MoE-style | 6.366 | 0.000 | 12.00 | 0.0% | 0.668 | 40.7 |
+| D: SmolLM-135M (dense, pretrained) | 1.979* | **0.767** | 30 layers | — | — | 104.3 |
+| E: Full MSA | 9.097 | 0.000 | 7.73 | 35.6% | **0.322** | **15.8** |
 
-Baseline C is notable: it uses less arithmetic than static (0.668 relative
-FLOPs) yet runs **1.9× slower**, because per-token gather/scatter on CPU costs
-more than the multiplications it avoids.
+\* Different tokenizer; not comparable per token with the GPT-2 rows.
+
+Among GPT-2 variants, static is the best on quality. Full MSA is the cheapest
+on both estimated compute and latency, and the worst on quality. Depth
+adaptation occupies the middle.
+
+Baseline D changes the frame. A contemporary dense model of similar size
+answers 77% of the short questions against GPT-2's 13%, while no GPT-2
+configuration, adaptive or not, exceeds 13%. On this evidence **the choice of
+backbone matters far more to task quality than any adaptation mechanism tested
+here**. D is about 3× slower per forward pass on CPU (30 layers vs 12).
+
+Baseline C uses less arithmetic than static (0.668 relative FLOPs) yet runs
+slower, because per-token gather/scatter on CPU costs more than the
+multiplications it avoids.
 
 ### 11.3 Downstream task evaluation
 
 | Dataset | Method | Answer PPL | Exact match | Avg depth | Rel. FLOPs |
 |---------|--------|-----------|-------------|-----------|------------|
-| short_qa | Static | **284.9** | **0.075** | 12.0 | 1.000 |
+| short_qa | Static | 284.9 | 0.075 | 12.0 | 1.000 |
 | short_qa | Depth adaptive | 2.31e6 | 0.025 | 7.6 | 0.633 |
 | short_qa | Full MSA | 9.39e5 | 0.000 | 7.6 | 0.317 |
-| gsm8k | Static | **1613.6** | 0.000 | 12.0 | 1.000 |
-| gsm8k | Depth adaptive | 2138.4 | 0.000 | 11.8 | 0.983 |
-| gsm8k | Full MSA | 1705.1 | 0.000 | 11.9 | 0.983 |
+| short_qa | D: SmolLM-135M | 12.7* | **0.675** | 30 layers | — |
+| gsm8k | Static | 1613.6 | 0.000 | 12.0 | 1.000 |
+| gsm8k | Depth adaptive | 3701.6 | 0.000 | 11.5 | 0.958 |
+| gsm8k | Full MSA | 1857.8 | 0.000 | 11.6 | 0.933 |
+| gsm8k | D: SmolLM-135M | 8.5* | **0.050** | 30 layers | — |
 
-Three observations, all stated as measured:
+\* Different tokenizer; not comparable with the GPT-2 rows. The dataset suite
+uses the first 40 short-QA items; Section 11.2 uses all 60.
 
-1. **On short QA, task accuracy falls monotonically as adaptation is added**
+Four observations, all stated as measured:
+
+1. **On short QA, task accuracy falls as adaptation is added**
    (7.5% → 2.5% → 0.0%). The compute saving is real and so is the quality loss.
 
-2. **On GSM8K every variant scores 0.000, including the static baseline.**
+2. **On GSM8K every GPT-2 variant scores 0.000, including the static baseline.**
    GPT-2 small cannot solve GSM8K. That dataset therefore measures compute
-   behaviour, not task quality, and no quality conclusion may be drawn from it.
+   behaviour, not task quality, for GPT-2. Even Baseline D reaches only 5%.
 
 3. **Compute saving is dataset-dependent.** On GSM8K the predictor routes
-   almost everything to `deep` (average depth 11.8–11.9), and the saving nearly
+   almost everything to `deep` (average depth 11.5–11.6), and the saving nearly
    vanishes. This is arguably correct behaviour, but it means **no single
    compute-reduction figure should be quoted without naming the dataset.**
 
+4. **The dense pretrained reference dominates on quality.** 67.5% against 7.5%
+   on the same 40 questions.
+
 ### 11.4 Controlled latency benchmark
 
-Trimmed mean of 50 runs after 10 warm-ups, milliseconds, CPU:
+Median of 50 runs, milliseconds, CPU, 6 pinned torch threads, batch size 1.
+Every cell is warmed 10 times before any timing starts, and the 50 runs are
+split over 5 shuffled interleaved rounds so background drift is spread across
+all cells:
 
 | Mechanism | Config | seq 16 | seq 64 | seq 256 |
 |-----------|--------|--------|--------|---------|
-| depth only | shallow | 34.8 | 94.3 | 267.6 |
-| depth only | medium | 55.8 | 141.7 | 409.6 |
-| depth only | deep | 77.1 | 183.4 | 518.5 |
-| depth+attn+ffn | shallow | **28.8** | **79.6** | **193.2** |
-| depth+attn+ffn | medium | 44.6 | 112.7 | 288.8 |
-| depth+attn+ffn | deep | 76.8 | 187.5 | 504.6 |
-| routing | shallow | 56.8 | 111.1 | 245.0 |
-| routing | medium | 98.0 | 184.2 | 409.7 |
-| routing | deep | 146.4 | 261.7 | 558.9 |
+| depth only | shallow | 14.3 | 32.7 | 91.0 |
+| depth only | medium | 20.2 | 45.9 | 132.4 |
+| depth only | deep | 28.1 | 59.8 | 175.8 |
+| depth+attn+ffn | shallow | **12.6** | **28.4** | **73.5** |
+| depth+attn+ffn | medium | 16.8 | 36.1 | 93.9 |
+| depth+attn+ffn | deep | 28.7 | 59.5 | 175.0 |
+| routing | shallow | 18.0 | 36.5 | 84.1 |
+| routing | medium | 27.5 | 50.5 | 121.5 |
+| routing | deep | 36.2 | 65.1 | 155.9 |
 
-Attention and feed-forward slicing reduce latency by a further 17–20% at
-sequence length 16, rising to 28–30% at 256. The mechanisms therefore deliver
-genuine wall-clock savings; their problem is quality, not speed.
+The two `deep` rows for depth-only and depth+attn+ffn execute identical
+computation and agree within 1%, which is the check that the protocol is
+stable. No cell is flagged as an outlier; the largest standard deviation is
+19 ms.
 
-Routing is slower than depth-only at every length and configuration.
+- **Depth** cuts latency by 45% (shallow) and 23% (medium) at seq 64.
+- **Attention and FFN slicing** reduce latency by a further 12–19% (shallow)
+  and 17–29% (medium) at the same depth, growing with sequence length. They
+  therefore deliver genuine wall-clock savings; their problem is quality, not
+  speed.
+- **Routing** is 29% slower than static depth-only at seq 16 and 9% slower at
+  seq 64, but 11% faster at seq 256, where the saved feed-forward arithmetic
+  finally outweighs per-token gather/scatter.
+
+**Baseline D at seq 64:** SmolLM-135M (float32) 71.8 ms, untrained GPT-2-sized
+RMSNorm/RoPE/SwiGLU reference 52.3 ms, against 59.8 ms for static GPT-2.
 
 **Analytical and empirical cost disagree.** For the adaptive mechanisms they
-agree in direction. For routing they invert: less arithmetic, more time. Any
-compute claim must state which measure it refers to.
+agree in direction. For routing the relationship depends on sequence length.
+Any compute claim must state which measure it refers to.
 
-*Reproducibility note.* Our first benchmark run was discarded. It overlapped
-with another job, inflating all figures roughly 3–4×, and one cell recorded
-1403 ± 7362 ms from a single scheduler stall. The harness now reports a trimmed
-mean and raises an `outlier_suspected` flag when the mean exceeds 1.5× the
-median.
+*Reproducibility note.* Two earlier benchmark runs were discarded. The first
+overlapped with another job. The second used all 14 threads on a machine with
+15–20% background load: cells that execute identical computation differed by
+up to 36 ms, and seq 16 timed slower than seq 64. Pinning to 6 threads with
+global warm-up and interleaved rounds removed both artefacts. The harness also
+flags any cell whose mean exceeds 1.5× its median. A separate issue: Baseline D
+first loaded in its checkpoint dtype, bfloat16, and was about 15× slower than
+float32 on this CPU. It is now loaded in float32 to match GPT-2.
 
 ### 11.5 Stability
 
-Controlled sequence of 60 inputs constructed to force switching (Section 12.3):
+Three 60-input sequences drawn over the policy's decision buckets with switch
+probability 0.1, 0.4 and 0.8 (Section 12.3). Each is run with the monitor
+disabled (A7, passive) and active (A8). Volatility is the mean `V(t)` of the
+*executed* configurations; `S = 1 - V`.
 
-| Variant | Switches | Volatility | Rollbacks | Rollback rate | Prompt loss | Avg depth |
-|---------|----------|-----------|-----------|---------------|-------------|-----------|
-| A7: monitor disabled | 58 | 0.967 | 0 | 0.000 | 6.741 | 8.07 |
-| A8: monitor active | 59 | **0.638** | 20 | 0.333 | **6.508** | 6.67 |
+| Switching | Variant | Proposed sw. | Executed sw. | V | S | Rollbacks | Rollback rate | Prompt loss |
+|-----------|---------|--------------|--------------|---|---|-----------|---------------|-------------|
+| low | monitor off | 5 | 5 | 0.086 | 0.914 | 0 | 0.000 | 5.891 |
+| low | monitor on | 5 | 5 | 0.086 | 0.914 | 0 | 0.000 | 5.891 |
+| medium | monitor off | 21 | 21 | 0.323 | 0.677 | 0 | 0.000 | 7.116 |
+| medium | monitor on | 21 | 21 | 0.323 | 0.677 | 0 | 0.000 | 7.116 |
+| high | monitor off | 50 | 50 | 0.830 | 0.170 | 0 | 0.000 | **7.035** |
+| high | monitor on | 50 | **34** | **0.566** | **0.434** | 13 | 0.217 | 7.707 |
 
-The monitor reduces volatility from 0.967 to 0.638 at a 33% rollback rate, and
-loss does **not** degrade — it improves slightly, while average depth falls.
-This is the evidence that justifies the component. We note the loss improvement
-is small and from a single sequence; we do not claim rollback improves quality
-in general.
+**Quality after rollback.** On the 13 rolled-back steps, the executed
+(rolled-back) configuration averaged loss **8.758**; the unmonitored run on
+the same inputs at the same steps averaged **5.654**.
+
+What this shows, as measured:
+
+1. The monitor is inert at low and medium switching, as designed: volatility
+   never crosses the 0.7 rollback threshold, so the two runs are identical.
+2. At high switching it cuts executed switches from 50 to 34 and volatility
+   from 0.830 to 0.566.
+3. **Rollback costs quality.** The stable configuration it reverts to is the
+   window mode, which on this stream is cheaper than what the predictor
+   proposed, so the rolled-back steps lose 3.1 nats of loss and overall loss
+   rises from 7.03 to 7.71. The monitor buys stability, not quality.
+
+An earlier, smaller experiment on the 499-prompt corpus showed a slight loss
+*improvement* under the monitor. That did not replicate, and we do not claim
+it.
 
 ---
 
@@ -620,28 +724,32 @@ in general.
 
 ### 12.1 Task Analyzer feature set
 
-| Feature set | n features | Held-out | 5-fold CV |
-|-------------|-----------|----------|-----------|
-| v1 | 4 | 0.700 | 0.629 ± 0.154 |
-| v2 | 8 | 0.720 | **0.673 ± 0.188** |
+| Feature set | n features | Held-out acc. | Held-out macro F1 | 5-fold CV acc. | 5-fold CV macro F1 |
+|-------------|-----------|---------------|-------------------|----------------|--------------------|
+| v1 | 4 | 0.650 | 0.554 | 0.697 ± 0.014 | 0.612 ± 0.011 |
+| v2 | 8 | **0.713** | **0.678** | **0.731 ± 0.020** | **0.693 ± 0.030** |
 
-v2 is better on both measures. **The difference is well inside one standard
-deviation and is not statistically established.** We use v2 in the shipped
-predictor because it is no worse, not because the added features are
-demonstrated to help. A larger calibration corpus is required to settle this.
+On the 499-prompt corpus the v2 advantage sat inside one standard deviation.
+On 799 prompts the cross-validated macro-F1 gap (0.081) is more than twice the
+larger standard deviation, so **v2's added features now measurably help**.
+This is still a single corpus and a single seed; it is evidence, not proof.
 
 ### 12.2 Mechanism ablation (60 short-QA prompts)
 
-| Variant | Prompt loss | Avg depth | Rel. FLOPs | Latency (s) |
-|---------|-------------|-----------|------------|-------------|
-| A1: Static | **3.889** | 12.00 | 1.000 | 0.212 |
-| A2: Analyzer + rule policy | 8.067 | 4.00 | 0.333 | 0.111 |
-| A3: Analyzer + `f_theta` | 5.974 | 7.73 | 0.644 | 0.190 |
-| A4: Depth only | 5.974 | 7.73 | 0.644 | 0.205 |
-| A5: Depth + attention | 8.403 | 7.73 | 0.536 | 0.186 |
-| A6: Depth + FFN | 7.741 | 7.73 | 0.430 | 0.139 |
-| A7: Full, no monitor | 9.097 | 7.73 | 0.322 | 0.122 |
-| A8: Full MSA | 9.097 | 7.73 | 0.322 | 0.119 |
+| Variant | Prompt loss | Exact match | Avg depth | Rel. FLOPs |
+|---------|-------------|-------------|-----------|------------|
+| A1: Static | **3.889** | **0.133** | 12.00 | 1.000 |
+| A2: Analyzer + rule policy | 8.067 | 0.017 | 4.00 | 0.333 |
+| A3: Analyzer + `f_theta` | 5.974 | 0.017 | 7.73 | 0.644 |
+| A4: Depth only | 5.974 | 0.017 | 7.73 | 0.644 |
+| A5: Depth + attention | 8.403 | 0.033 | 7.73 | 0.536 |
+| A6: Depth + FFN | 7.741 | 0.000 | 7.73 | 0.430 |
+| A7: Full, no monitor | 9.097 | 0.000 | 7.73 | 0.322 |
+| A8: Full MSA | 9.097 | 0.000 | 7.73 | 0.322 |
+
+Single-pass latencies for these runs are in `results/ablations.csv`; they are
+too noisy to rank variants (A3 and A4 execute identical computation yet differ
+by 26 ms), so compute is compared on FLOPs and Section 11.4.
 
 Incremental contributions:
 
@@ -669,10 +777,11 @@ routed to `medium`, the sequence barely switched, and no rollback fired. The
 conclusion that the monitor "did nothing" would have been an artifact of the
 stimulus, not a property of the monitor.
 
-The corrected design buckets a 499-prompt pool by the configuration the
-predictor *actually* selects, then alternates between buckets, and raises an
-error rather than silently producing a flat sequence if fewer than two buckets
-are populated. The results in Section 11.5 use the corrected design.
+The corrected design buckets the calibration pool by the configuration the
+policy *actually* selects, then draws a Markov sequence over the buckets with a
+controlled switch probability (0.1 / 0.4 / 0.8 for low / medium / high), and
+raises an error rather than silently producing a flat sequence if fewer than two
+buckets are populated. The results in Section 11.5 use the corrected design.
 
 ---
 
@@ -694,27 +803,35 @@ Stated plainly, because several of them bound the conclusions materially.
    scores 0.000 on GSM8K in every configuration. Only the short-QA results carry
    task-quality signal, and that set is small (60 items) and local.
 
-4. **Single-backbone, single-device study.** GPT-2 small on CPU. Nothing here
-   establishes behaviour at larger scale or on accelerators, where the relative
-   cost of slicing overhead versus arithmetic differs substantially.
+4. **Single-backbone, single-device study.** GPT-2 small on a shared CPU with 6
+   pinned threads. Nothing here establishes behaviour at larger scale or on
+   accelerators, where the relative cost of slicing overhead versus arithmetic
+   differs substantially. In-loop latencies recorded during evaluation are
+   single-pass and noisy; only Section 11.4 is a controlled measurement.
 
 5. **The routing baseline is untrained.** It bounds what an untrained gate
    achieves and says nothing about trained mixture-of-experts.
 
-6. **Baseline D is randomly initialised.** Only its parameter count and latency
-   are meaningful.
+6. **Baseline D uses a different tokenizer.** Its loss and perplexity are not
+   comparable with GPT-2's; only exact match and latency are. It is a single
+   model, not a survey of contemporary dense models.
 
-7. **The predictor's improvement from v2 features is not statistically
-   established** (Section 12.1).
+7. **The heuristic analyzer.** Features are keyword and punctuation counts.
+   The v2 set now measurably beats v1 (Section 12.1), but on one corpus and
+   one seed.
 
-8. **The confidence threshold and monitor thresholds were not tuned.** They are
-   defaults exposed as parameters; no sweep is reported.
+8. **Monitor thresholds were not tuned.** The confidence threshold was swept
+   (Section 6); the monitor's window and 0.4 / 0.7 thresholds are defaults.
 
 9. **Small evaluation sets.** 60 short-QA items and 40 GSM8K items. Differences
    of a few percent in exact match are not meaningful at this size.
 
 10. **Statistical significance is not established for any quality comparison.**
     We report point estimates and, where available, standard deviations.
+
+11. **Summarization and code evaluation were not run.** The plan lists them as
+    optional; with GPT-2 small scoring 0.000 on GSM8K and 13% on one-word
+    factual QA, task metrics on either would be floored and uninformative.
 
 ### Claims we explicitly do not make
 
@@ -737,31 +854,43 @@ configuration.
 What the measurements support:
 
 - **Depth adaptation is viable on this backbone.** 35.6% fewer executed layers
-  and roughly 28% lower latency, for a prompt-loss increase from 3.89 to 5.97.
+  on short QA, and 23–45% lower controlled latency at seq 64, for a prompt-loss
+  increase from 3.89 to 5.97.
 
 - **A learned predictor clearly beats a hand-tuned threshold rule.** Loss
   improves from 8.07 to 5.97 while allocating *more* compute, which is the
-  behaviour a calibrated selector should exhibit. This is the strongest
-  component-level result in the study.
+  behaviour a calibrated selector should exhibit. On 799 prompts it reaches
+  0.693 cross-validated macro F1 against 0.222 for the majority class.
 
-- **The stability monitor does what it was designed to do**, reducing volatility
-  from 0.97 to 0.64 without degrading loss on a controlled sequence.
+- **The policy threshold is a usable, measured knob.** Raising it from 0.40 to
+  0.80 moves relative loss increase from 56.9% to 10.1% at the cost of FLOPs
+  0.733 → 0.931.
+
+- **The stability monitor does what it was designed to do, and no more.** It
+  is inert at low and medium switching, and at high switching cuts volatility
+  from 0.83 to 0.57, but the rolled-back steps lose quality.
 
 What the measurements do not support:
 
 - **Attention and feed-forward adaptation are not currently worth their cost.**
   They deliver real compute and latency savings but degrade quality far more
   than depth adaptation does, because they slice pretrained weights with no
-  recovery step. Full MSA is the worst-quality variant we tested.
+  recovery step. Full MSA is the worst-quality GPT-2 variant we tested.
 
 - **No general compute-reduction claim is warranted.** The saving is strongly
-  dataset-dependent: 35.6% layer reduction on short QA, 1.7% on GSM8K.
+  dataset-dependent: 36.7% layer reduction on short QA, 3.3–4.2% on GSM8K.
+
+- **Adaptation is not the lever that matters most for quality here.** A
+  pretrained dense model of similar size answers 75% of the short questions,
+  against at most 13% for any GPT-2 configuration.
 
 The most useful next experiments follow directly from these negatives: retrain
 or distil the sliced configurations so the non-depth mechanisms become
 competitive; train the predictor against a downstream task metric rather than
-prompt loss; and repeat on a backbone capable of the evaluation tasks, so that
-quality differences are measurable rather than floored at zero.
+prompt loss; make rollback quality-aware rather than reverting to the window
+mode; and repeat on a backbone capable of the evaluation tasks, such as the
+Baseline D model, so that quality differences are measurable rather than
+floored at zero.
 
 We also record a methodological result of independent interest: a single
 argument in an adaptive forward pass silently disabled causal masking while
@@ -774,19 +903,44 @@ identity configuration.
 ## Reproducibility
 
 ```powershell
-python main.py --mode all        # full pipeline (~45 min, calibration dominates)
-python test_msa.py               # 27-check validation suite
+.venv\Scripts\Activate.ps1
+python main.py --mode all        # full pipeline (calibration + generation dominate)
+python test_msa.py               # 41-check phase-gate validation
 ```
+
+The full pipeline was re-run from a clean state. Calibration losses, the
+frontier, the trained predictor and the selected threshold reproduced
+exactly; only wall-clock latencies vary between runs.
 
 | Artefact | Location |
 |----------|----------|
-| Calibration data (2,994 rows) | `results/calibration_results.csv` |
-| Frozen prompt set (499) | `data/calibration_prompts.json` |
+| Calibration data (4,794 rows) | `results/calibration_results.csv` |
+| Frozen prompt set (799) | `data/calibration_prompts.json` |
+| Historical 499-prompt version | `data/calibration_prompts_v1_499.json`, `results/calibration/` |
 | Trained predictor + metadata | `results/performance_predictor.pkl` |
-| All result tables | `results/tables.md` |
-| All 12 figures | `results/figures/` |
+| Predictor evaluation | `results/calibration/predictor_evaluation.json` |
+| Policy threshold sweep | `results/policy_threshold_sweep.csv` |
+| Per-sample evaluation (standard schema) | `results/evaluation/` |
+| Stability experiments | `results/stability/` |
+| All result tables (Tables 1–8) | `results/tables.md` |
+| All 16 figures | `results/figures/` |
 | Environment capture | `results/environment.json` |
 | Experiment configuration | `configs/experiment.yaml` |
+| Reproduction log | `results/reproduction_log.txt` |
+
+**Claim-to-evidence map.** Each architectural claim, with the component that
+implements it, the check that verifies it and the result file behind its
+numbers:
+
+| Claim | Component | Verified by | Numbers from |
+|-------|-----------|-------------|--------------|
+| Eight bounded features per input | `analyzer/task_analyzer.py` | `test_msa.py` P5 | `results/feature_ablation.csv` |
+| f_theta selects the executed depth | `controller/predictor.py`, `run_msa.py` | `test_msa.py` P2 | `results/calibration/predictor_evaluation.json` |
+| Policy thresholding with fallback | `controller/policy.py` | `test_msa.py` policy check | `results/policy_threshold_sweep.csv` |
+| 4/8/12-layer execution | `controller/controller.py`, `models/adaptive_model.py` | `test_msa.py` P6 | `results/calibration_results.csv` |
+| Attention/FFN slicing changes computation | `models/adaptive_model.py` | `test_msa.py` controller check | `results/ablations.csv`, `results/benchmark.csv` |
+| Rollback under instability | `monitor/stability_monitor.py` | `test_msa.py` P10 | `results/stability/stability_levels.csv` |
+| Baselines A-E | `evaluation/harness.py`, `evaluation/baselines.py` | `evaluation/runner.py` schema asserts | `results/baselines.csv`, `results/dataset_evaluation.csv` |
 
 Every number in this paper is read from those artefacts; none is transcribed by
 hand. Seeds are fixed at 42 throughout.

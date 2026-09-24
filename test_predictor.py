@@ -23,7 +23,7 @@ def main():
     predictor = PerformancePredictor()
     feature_set = predictor.metadata.get("feature_set", "v1")
     analyzer = TaskAnalyzer(feature_set)
-    policy = ConfigurationPolicy(confidence_threshold=0.5)
+    policy = ConfigurationPolicy()
 
     print("=" * 72)
     print("PHASE 1 -- PREDICTOR VALIDATION")

@@ -1,7 +1,9 @@
 """Reproducible latency benchmarking (Phase 13).
 
-Fixed sequence lengths, warm-up runs, repeated measured runs, mean and standard
-deviation. Replaces the single noisy timings taken during calibration.
+Fixed sequence lengths, a warm-up of every cell before any timing, then the
+measured runs split across shuffled interleaved rounds so background drift on a
+shared machine is spread over all cells. Replaces the single noisy timings
+taken during calibration.
 
     python -m evaluation.benchmark [--warmup 10] [--runs 50]
 """
@@ -21,6 +23,10 @@ from models.backbone import load_model
 
 WARMUP = 10
 RUNS = 50
+ROUNDS = 5
+# Fewer threads than cores leaves headroom for background load, which otherwise
+# stalls synchronised matmul threads and corrupts timings on a shared machine.
+THREADS = 6
 SEQUENCE_LENGTHS = [16, 64, 256]
 
 OUTPUT_PATH = "results/benchmark.csv"
@@ -67,9 +73,10 @@ def time_configuration(controller, input_ids, configuration, warmup, runs):
 
 
 def main(warmup=WARMUP, runs=RUNS, sequence_lengths=None, seed=42,
-         output_path=OUTPUT_PATH):
+         output_path=OUTPUT_PATH, threads=THREADS):
     sequence_lengths = sequence_lengths or SEQUENCE_LENGTHS
     torch.manual_seed(seed)
+    torch.set_num_threads(threads)
 
     model, tokenizer = load_model()
     adaptive_model = AdaptiveGPT2(model).eval()
@@ -84,56 +91,80 @@ def main(warmup=WARMUP, runs=RUNS, sequence_lengths=None, seed=42,
 
     info = environment()
     print(json.dumps(info, indent=2))
-    print(f"\nwarmup={warmup} runs={runs} sequence_lengths={sequence_lengths}\n")
+    print(f"\nwarmup={warmup} runs={runs} rounds={ROUNDS} sequence_lengths={sequence_lengths}\n")
+
+    # Fixed synthetic input per length so length is controlled exactly.
+    inputs = {
+        seq_len: torch.randint(0, 50000, (1, seq_len),
+                               generator=torch.Generator().manual_seed(seed))
+        for seq_len in sequence_lengths
+    }
+    cells = [(seq_len, mechanism, configuration)
+             for seq_len in sequence_lengths
+             for mechanism in variants
+             for configuration in CONFIG_NAMES]
+
+    # Warm every cell before timing any, so CPU frequency ramp-up hits none of them.
+    for seq_len, mechanism, configuration in cells:
+        time_configuration(variants[mechanism], inputs[seq_len], configuration, warmup, 0)
+
+    # Interleave cells over shuffled rounds so slow background drift is spread evenly.
+    rng = np.random.default_rng(seed)
+    per_round = max(1, runs // ROUNDS)
+    collected = {cell: [] for cell in cells}
+    for _ in range(ROUNDS):
+        for index in rng.permutation(len(cells)):
+            seq_len, mechanism, configuration = cells[index]
+            collected[cells[index]].extend(time_configuration(
+                variants[mechanism], inputs[seq_len], configuration, 0, per_round))
 
     rows = []
 
-    for seq_len in sequence_lengths:
-        # Fixed synthetic input so length is controlled exactly.
-        input_ids = torch.randint(0, 50000, (1, seq_len), generator=
-                                  torch.Generator().manual_seed(seed))
+    for seq_len, mechanism, configuration in cells:
+        controller = variants[mechanism]
+        input_ids = inputs[seq_len]
+        samples = np.array(collected[(seq_len, mechanism, configuration)])
+        knobs = controller.knobs(configuration)
+        telemetry = controller.telemetry(knobs, seq_len)
 
-        for mechanism, controller in variants.items():
-            for configuration in CONFIG_NAMES:
-                samples = time_configuration(
-                    controller, input_ids, configuration, warmup, runs
-                )
-                knobs = controller.knobs(configuration)
-                telemetry = controller.telemetry(knobs, seq_len)
+        trimmed = trimmed_mean(samples)
+        median = float(np.percentile(samples, 50))
 
-                trimmed = trimmed_mean(samples)
-                median = float(np.percentile(samples, 50))
+        rows.append({
+            "mechanism": mechanism,
+            "configuration": configuration,
+            "sequence_length": seq_len,
+            "batch_size": input_ids.shape[0],
+            "depth": knobs["depth"],
+            "attention_mode": knobs["attention_mode"],
+            "ffn_mode": knobs["ffn_mode"],
+            "warmup": warmup,
+            "runs": len(samples),
+            "rounds": ROUNDS,
+            "latency_mean": float(samples.mean()),
+            "latency_std": float(samples.std(ddof=1)),
+            "latency_trimmed_mean": trimmed,
+            "latency_p50": median,
+            "latency_p95": float(np.percentile(samples, 95)),
+            # A CPU benchmark occasionally catches an OS stall. Flag it
+            # rather than letting one outlier set the headline number.
+            "outlier_suspected": bool(samples.mean() > 1.5 * median),
+            "throughput": float(1.0 / trimmed),
+            "relative_flops": telemetry["relative_flops"],
+            "active_parameters": telemetry["active_parameters"],
+            "layer_reduction": telemetry["layer_reduction"],
+            "device": info["device"],
+        })
 
-                rows.append({
-                    "mechanism": mechanism,
-                    "configuration": configuration,
-                    "sequence_length": seq_len,
-                    "depth": knobs["depth"],
-                    "warmup": warmup,
-                    "runs": runs,
-                    "latency_mean": float(samples.mean()),
-                    "latency_std": float(samples.std(ddof=1)),
-                    "latency_trimmed_mean": trimmed,
-                    "latency_p50": median,
-                    "latency_p95": float(np.percentile(samples, 95)),
-                    # A CPU benchmark occasionally catches an OS stall. Flag it
-                    # rather than letting one outlier set the headline number.
-                    "outlier_suspected": bool(samples.mean() > 1.5 * median),
-                    "throughput": float(1.0 / trimmed),
-                    "relative_flops": telemetry["relative_flops"],
-                    "layer_reduction": telemetry["layer_reduction"],
-                    "device": info["device"],
-                })
-
-                print(
-                    f"{mechanism:20s} {configuration:8s} seq={seq_len:4d} "
-                    f"trimmed {trimmed*1000:7.2f} ms  "
-                    f"median {median*1000:7.2f} ms  "
-                    f"mean {samples.mean()*1000:7.2f} +/- {samples.std(ddof=1)*1000:6.2f} ms "
-                    f"flops={telemetry['relative_flops']:.3f}"
-                    + ("  [outlier suspected]" if samples.mean() > 1.5 * median else ""),
-                    flush=True,
-                )
+        print(
+            f"{mechanism:20s} {configuration:8s} seq={seq_len:4d} "
+            f"trimmed {trimmed*1000:7.2f} ms  "
+            f"median {median*1000:7.2f} ms  "
+            f"mean {samples.mean()*1000:7.2f} +/- {samples.std(ddof=1)*1000:6.2f} ms "
+            f"flops={telemetry['relative_flops']:.3f}"
+            + ("  [outlier suspected]" if samples.mean() > 1.5 * median else ""),
+            flush=True,
+        )
 
     frame = pd.DataFrame(rows)
     frame.to_csv(output_path, index=False)
@@ -166,6 +197,8 @@ if __name__ == "__main__":
     parser.add_argument("--warmup", type=int, default=WARMUP)
     parser.add_argument("--runs", type=int, default=RUNS)
     parser.add_argument("--sequence-lengths", type=int, nargs="+", default=None)
+    parser.add_argument("--threads", type=int, default=THREADS)
     args = parser.parse_args()
 
-    main(warmup=args.warmup, runs=args.runs, sequence_lengths=args.sequence_lengths)
+    main(warmup=args.warmup, runs=args.runs, sequence_lengths=args.sequence_lengths,
+         threads=args.threads)

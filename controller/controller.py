@@ -15,6 +15,7 @@ from configs.configurations import (
     FFN_CHUNKS,
     ATTENTION_HEAD_FRACTION,
     FFN_CHUNK_FRACTION,
+    active_parameters,
     resolve_config,
     relative_flops,
 )
@@ -64,6 +65,12 @@ class DynamicArchitectureController:
         latency = time.perf_counter() - start
 
         loss = self.loss(logits, input_ids if label_ids is None else label_ids)
+        executed = len(self.model.last_executed_blocks)
+
+        if executed != knobs["depth"]:
+            raise RuntimeError(
+                f"requested depth {knobs['depth']} but {executed} blocks executed"
+            )
 
         return {
             "configuration": configuration,
@@ -72,6 +79,8 @@ class DynamicArchitectureController:
             "perplexity": math.exp(min(loss, 20)),
             "latency_seconds": latency,
             **self.telemetry(knobs, input_ids.shape[1]),
+            "requested_depth": knobs["depth"],
+            "executed_depth": executed,
         }
 
     # ------------------------------------------------------------------
@@ -99,6 +108,10 @@ class DynamicArchitectureController:
             "relative_flops": relative_flops(
                 knobs["depth"], knobs["attention_mode"], knobs["ffn_mode"],
                 seq_len=seq_len, ffn_fraction=ffn_fraction,
+            ),
+            "active_parameters": active_parameters(
+                knobs["depth"], knobs["attention_mode"], knobs["ffn_mode"],
+                ffn_fraction=ffn_fraction,
             ),
         }
 

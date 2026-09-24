@@ -9,5 +9,5 @@
   "device": "cpu",
   "cuda": null,
   "gpu": null,
-  "torch_threads": 14
+  "torch_threads": 6
 }

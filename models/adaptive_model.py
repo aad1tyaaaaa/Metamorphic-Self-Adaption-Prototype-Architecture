@@ -27,6 +27,9 @@ class AdaptiveGPT2(nn.Module):
         self.model = model
         self.transformer = model.transformer
         self.lm_head = model.lm_head
+        # Indices of the blocks the last forward pass actually ran, so callers can
+        # verify the executed depth instead of trusting the requested one.
+        self.last_executed_blocks = []
 
     # ------------------------------------------------------------------
     # Adapted sub-layers
@@ -134,9 +137,11 @@ class AdaptiveGPT2(nn.Module):
         # Unadapted blocks go through the stock implementation, which keeps the
         # deep configuration numerically identical to the reference model.
         stock = head_fraction == 1.0 and ffn_fraction == 1.0 and routing is None
+        executed = []
 
         for index in range(depth):
             block = self.transformer.h[index]
+            executed.append(index)
 
             if stock:
                 # attention_mask must stay None: SDPA only applies GPT-2's causal
@@ -157,6 +162,7 @@ class AdaptiveGPT2(nn.Module):
             else:
                 hidden_states = hidden_states + self._routed_mlp(block.mlp, normed, routing)
 
+        self.last_executed_blocks = executed
         return self.lm_head(self.transformer.ln_f(hidden_states))
 
 

@@ -3,7 +3,9 @@
     python main.py --mode simulate
     python main.py --mode calibrate
     python main.py --mode train-predictor
+    python main.py --mode threshold-sweep
     python main.py --mode evaluate
+    python main.py --mode runner -- --methods static msa --dataset gsm8k
     python main.py --mode benchmark
     python main.py --mode plot
     python main.py --mode tables
@@ -26,7 +28,9 @@ MODES = {
     "train-predictor": ("controller.train_predictor", []),
     "ablate-features": ("controller.train_predictor", ["--ablation"]),
     "frontier": ("controller.policy_sweep", []),
-    "evaluate": ("evaluation.evaluate", []),
+    "threshold-sweep": ("controller.threshold_sweep", []),
+    "evaluate": ("evaluation.evaluate", ["--generate"]),
+    "runner": ("evaluation.runner", []),
     "benchmark": ("evaluation.benchmark", []),
     "plot": ("evaluation.generate_plots", []),
     "tables": ("evaluation.tables", []),
@@ -35,7 +39,8 @@ MODES = {
 }
 
 PIPELINE = ["calibrate", "frontier", "train-predictor", "ablate-features",
-            "benchmark", "evaluate", "plot", "tables", "ui", "validate"]
+            "threshold-sweep", "benchmark", "evaluate", "plot", "tables", "ui",
+            "validate"]
 
 
 def run(mode, extra):

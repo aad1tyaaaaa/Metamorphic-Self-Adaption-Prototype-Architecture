@@ -60,6 +60,7 @@ def aggregate(records, monitor_summary=None):
             "switches": monitor_summary["switches"],
             "switch_rate": monitor_summary["switch_rate"],
             "volatility": monitor_summary["volatility"],
+            "monitor_stability_score": monitor_summary["stability_score"],
             "rollback_count": monitor_summary["rollback_count"],
             "rollback_rate": monitor_summary["rollback_rate"],
             "stability_status": monitor_summary["status"],

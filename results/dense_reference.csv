@@ -1,2 +1,3 @@
-model,parameters,trained,quality_metric,sequence_length,runs,latency_mean,latency_std,vocab_size,dim,depth,heads,ffn_hidden,norm,position,activation
-DenseReference (RMSNorm + RoPE + SwiGLU),162148608,False,N/A (randomly initialised),64,20,0.4402316399908159,0.0712879202908807,50257,768,12,12,2048,RMSNorm,RoPE,SwiGLU
+model,parameters,trained,quality_metric,vocab_size,dim,depth,heads,ffn_hidden,norm,position,activation,latency_mean,latency_std,latency_p50,sequence_length,warmup,runs,torch_threads,architecture,layers,hidden_size,kv_heads,dtype
+"DenseReference (RMSNorm + RoPE + SwiGLU), GPT-2-matched dims",162148608,False,N/A (randomly initialised),50257.0,768.0,12.0,12,2048,RMSNorm,RoPE,SwiGLU,0.058210759999928995,0.0084510213366109,0.05653170000005048,64,10,30,6,,,,,
+HuggingFaceTB/SmolLM-135M,134515008,True,exact match / answer loss (see dataset_evaluation.csv),,,,9,1536,RMSNorm,RoPE,SwiGLU (silu),0.2873182100011036,0.19858246729868587,0.24880744999973103,64,10,30,6,llama,30.0,576.0,3.0,float32

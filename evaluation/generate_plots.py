@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from configs.configurations import CONFIDENCE_THRESHOLD
 RESULTS = "results"
 FIGURES = "results/figures"
 
@@ -27,6 +28,12 @@ plt.rcParams.update({
 })
 
 ORDER = ["shallow", "medium", "deep"]
+DENSE = "dense_reference"
+
+
+def gpt2_only(frame):
+    """Depth/FLOP metrics describe GPT-2's stack; Baseline D has its own."""
+    return frame[frame["variant"] != DENSE] if "variant" in frame else frame
 
 
 def read(name):
@@ -90,6 +97,7 @@ def frontier(frame):
 
 
 def configuration_distribution(baselines):
+    baselines = gpt2_only(baselines)
     fig, ax = plt.subplots(figsize=(6, 3.2))
 
     shares = baselines.set_index("variant")[[f"share_{name}" for name in ORDER]]
@@ -107,6 +115,7 @@ def configuration_distribution(baselines):
 
 
 def average_depth_per_dataset(datasets):
+    datasets = gpt2_only(datasets)
     fig, ax = plt.subplots(figsize=(5.5, 3.2))
 
     pivot = datasets.pivot_table(index="dataset", columns="variant",
@@ -119,6 +128,7 @@ def average_depth_per_dataset(datasets):
 
 
 def layer_reduction(baselines):
+    baselines = gpt2_only(baselines)
     fig, ax = plt.subplots(figsize=(6, 3.2))
 
     ax.bar(baselines["variant"], baselines["layer_reduction"] * 100, color="#0369a1",
@@ -178,7 +188,8 @@ def confidence_distribution(log):
         return None
 
     ax.hist(values, bins=20, color="#7c3aed", alpha=0.85)
-    ax.axvline(0.5, color="#dc2626", linestyle="--", label="policy threshold")
+    ax.axvline(CONFIDENCE_THRESHOLD, color="#dc2626", linestyle="--",
+               label=f"policy threshold ({CONFIDENCE_THRESHOLD:.2f})")
     ax.set(xlabel="Predictor confidence", ylabel="Count",
            title="Predictor confidence distribution")
     ax.legend()
@@ -187,6 +198,9 @@ def confidence_distribution(log):
 
 def stability_over_time(log):
     fig, ax = plt.subplots(figsize=(6, 3.2))
+
+    if "level" in log:
+        log = log[log["level"] == "high"]
 
     depth_of = {"shallow": 4, "medium": 8, "deep": 12}
     plotted = False
@@ -203,28 +217,35 @@ def stability_over_time(log):
         plt.close(fig)
         return None
 
-    ax.set(xlabel="Inference index", ylabel="Selected depth",
-           title="Configuration trajectory", yticks=[4, 8, 12])
+    ax.set(xlabel="Inference index", ylabel="Executed depth",
+           title="Configuration trajectory (high switching)", yticks=[4, 8, 12])
     ax.legend(fontsize=7)
     return save(fig, "10_stability_volatility")
 
 
 def rollback_events(stability):
-    fig, ax = plt.subplots(figsize=(5, 3.2))
+    fig, ax = plt.subplots(figsize=(6.5, 3.2))
 
     x = np.arange(len(stability))
     width = 0.35
+    switches = stability.get("executed_switches", stability["switches"])
+    rollbacks = stability.get("rollbacks_observed", stability["rollback_count"])
+    labels = [
+        f"{row.get('level', '')}\n{'monitor' if row['variant'] == 'A8_full' else 'no monitor'}"
+        for _, row in stability.iterrows()
+    ]
 
-    ax.bar(x - width / 2, stability["switches"], width, label="switches")
-    ax.bar(x + width / 2, stability["rollback_count"], width, label="rollbacks")
+    ax.bar(x - width / 2, switches, width, label="executed switches")
+    ax.bar(x + width / 2, rollbacks, width, label="rollbacks")
 
     ax.set(ylabel="Count", title="Switches and rollback events", xticks=x)
-    ax.set_xticklabels(stability["variant"], rotation=10)
+    ax.set_xticklabels(labels, fontsize=7)
     ax.legend()
     return save(fig, "11_rollback_events")
 
 
 def baseline_comparison(baselines):
+    baselines = gpt2_only(baselines)
     fig, (left, right) = plt.subplots(1, 2, figsize=(9, 3.2))
 
     left.bar(baselines["variant"], baselines["loss"], color="#0f766e")
@@ -235,8 +256,78 @@ def baseline_comparison(baselines):
     right.set(ylabel="Relative FLOPs", title="Compute (lower is cheaper)")
     right.tick_params(axis="x", rotation=20)
 
-    fig.suptitle("Baseline comparison")
+    fig.suptitle("Baseline comparison (GPT-2 variants; Baseline D in figure 13)")
     return save(fig, "12_baseline_comparison")
+
+
+def quality_vs_latency(datasets):
+    fig, axes = plt.subplots(1, datasets["dataset"].nunique(), figsize=(9, 3.2),
+                             squeeze=False)
+
+    for ax, (name, group) in zip(axes[0], datasets.groupby("dataset")):
+        for _, row in group.iterrows():
+            ax.scatter(row["latency_p50"] * 1000, row["accuracy"], s=40)
+            ax.annotate(row["variant"], (row["latency_p50"] * 1000, row["accuracy"]),
+                        textcoords="offset points", xytext=(4, 3), fontsize=7)
+        ax.set(xlabel="Median single-pass latency (ms)", ylabel="Exact-match accuracy",
+               title=name, ylim=(-0.05, 1.05))
+
+    fig.suptitle("Task quality vs latency (in-loop timing; controlled latency in benchmark.csv)")
+    return save(fig, "13_quality_vs_latency")
+
+
+def ablation_comparison(ablations):
+    fig, axes = plt.subplots(1, 3, figsize=(11, 3.2))
+    names = ablations["variant"].str.split("_").str[0]
+
+    for ax, column, title, color in zip(
+        axes,
+        ("loss", "relative_flops", "latency_mean"),
+        ("Prompt LM loss", "Relative FLOPs", "Latency (s)"),
+        ("#0f766e", "#b45309", "#1d4ed8"),
+    ):
+        ax.bar(names, ablations[column], color=color)
+        ax.set(title=title)
+
+    fig.suptitle("Ablations A1-A8")
+    return save(fig, "14_ablation_comparison")
+
+
+def stability_levels(levels):
+    fig, ax = plt.subplots(figsize=(5.5, 3.2))
+    order = ["low", "medium", "high"]
+    x = np.arange(len(order))
+    width = 0.35
+
+    for offset, (variant, label) in zip(
+        (-width / 2, width / 2),
+        (("A7_no_monitor", "without monitor"), ("A8_full", "with monitor")),
+    ):
+        subset = levels[levels["variant"] == variant].set_index("level").reindex(order)
+        ax.bar(x + offset, subset["executed_volatility"], width, label=label)
+
+    ax.set(ylabel="Mean executed volatility V(t)", xlabel="Switching level",
+           title="Volatility by switching level", xticks=x, ylim=(0, 1))
+    ax.set_xticklabels(order)
+    ax.legend()
+    return save(fig, "15_stability_by_switching_level")
+
+
+def threshold_sweep(sweep):
+    sweep = sweep[sweep["mechanism"] == "depth"]
+    fig, ax = plt.subplots(figsize=(5.5, 3.2))
+
+    ax.plot(sweep["threshold"], sweep["relative_flops"], marker="o", label="relative FLOPs")
+    ax.plot(sweep["threshold"], sweep["relative_loss_increase"], marker="s",
+            label="relative loss increase")
+    ax.plot(sweep["threshold"], sweep["fallback_rate"], marker="^", label="fallback rate")
+    ax.plot(sweep["threshold"], sweep["target_agreement"], marker="d",
+            label="agreement with c*(x)")
+    ax.axvline(CONFIDENCE_THRESHOLD, color="#dc2626", linestyle="--", linewidth=1)
+
+    ax.set(xlabel="Confidence threshold", title="Policy threshold sweep (held-out, depth-only)")
+    ax.legend(fontsize=7)
+    return save(fig, "16_policy_threshold_sweep")
 
 
 # ----------------------------------------------------------------------
@@ -272,6 +363,11 @@ def main():
     attempt("confidence distribution", confidence_distribution, log)
     attempt("rollback events", rollback_events, stability)
     attempt("baseline comparison", baseline_comparison, baselines)
+    attempt("quality vs latency", quality_vs_latency, datasets)
+    attempt("ablation comparison", ablation_comparison, read("ablations"))
+    attempt("stability by switching level", stability_levels,
+            read("stability/stability_levels"))
+    attempt("policy threshold sweep", threshold_sweep, read("policy_threshold_sweep"))
 
     stability_log = read("stability_log")
     attempt("stability over time", stability_over_time,

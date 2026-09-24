@@ -14,6 +14,7 @@ import json
 import torch
 
 from analyzer.task_analyzer import TaskAnalyzer
+from configs.configurations import CONFIDENCE_THRESHOLD, FALLBACK_CONFIGURATION
 from controller.controller import DynamicArchitectureController
 from controller.policy import ConfigurationPolicy
 from controller.predictor import PerformancePredictor
@@ -39,8 +40,8 @@ TEST_INPUTS = [
 class MSA:
     """The whole system behind one `run(text)` call."""
 
-    def __init__(self, mechanism="full", confidence_threshold=0.5, fallback="deep",
-                 monitor=True, seed=42):
+    def __init__(self, mechanism="full", confidence_threshold=CONFIDENCE_THRESHOLD,
+                 fallback=FALLBACK_CONFIGURATION, monitor=True, seed=42):
         torch.manual_seed(seed)
 
         model, tokenizer = load_model()
@@ -106,8 +107,8 @@ def show(record):
 
     print("\nEXECUTION:")
     print(f"  configuration : {record['configuration'].upper()}")
-    print(f"  depth         : {record['depth']}/12  "
-          f"(executed {record['layers_executed']}, skipped {record['layers_skipped']})")
+    print(f"  depth         : requested {record['requested_depth']}/12, "
+          f"executed {record['executed_depth']}, skipped {record['layers_skipped']}")
     print(f"  attention     : {record['attention_mode']} "
           f"({record['active_heads']}/12 heads)")
     print(f"  ffn           : {record['ffn_mode']} "
@@ -129,7 +130,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--text", nargs="*", default=None)
     parser.add_argument("--mechanism", default="full", choices=["depth", "full"])
-    parser.add_argument("--confidence-threshold", type=float, default=0.5)
+    parser.add_argument("--confidence-threshold", type=float, default=CONFIDENCE_THRESHOLD)
     parser.add_argument("--no-monitor", action="store_true")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()

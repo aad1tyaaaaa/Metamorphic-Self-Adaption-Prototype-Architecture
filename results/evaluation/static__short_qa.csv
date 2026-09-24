@@ -1,0 +1,67 @@
+method,dataset,sample_id,loss,perplexity,latency,depth,layer_reduction,configuration,attention_mode,ffn_mode,confidence,rollback,executed_depth,relative_flops,active_parameters,sequence_length,proposed_configuration,fallback_applied,stability_status,volatility,stability_score,answer_loss,correct,generated,question
+static,short_qa,0,3.8153111934661865,45.390879530452004,0.03839819999120664,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,4.884260654449463,False," The capital of France is the capital of France.
+",What is the capital of France?
+static,short_qa,1,3.775663375854492,43.62643944510153,0.028842299987445585,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.4821882247924805,False," The capital of Japan is the capital of Japan.
+",What is the capital of Japan?
+static,short_qa,2,3.9276249408721924,50.78621405434998,0.04308669999591075,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.2399492263793945,False," The capital of Italy is the capital of Italy.
+",What is the capital of Italy?
+static,short_qa,3,3.809549331665039,45.130095577594425,0.03842379999696277,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.135553359985352,False," The capital of Egypt is the capital of the Kingdom of God.
+",What is the capital of Egypt?
+static,short_qa,4,3.916550397872925,50.226882828500756,0.03924650000408292,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.207631587982178,False," The capital of Canada is the capital of Canada.
+",What is the capital of Canada?
+static,short_qa,5,3.813720703125,45.318743156290736,0.03822349999973085,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,4.738103866577148,False," The capital of Spain is the capital of Spain.
+",What is the capital of Spain?
+static,short_qa,6,3.712308168411255,40.948212903690035,0.03493680000246968,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,4.23508358001709,False," The capital of Russia is the Russian Federation.
+",What is the capital of Russia?
+static,short_qa,7,3.7477824687957764,42.4268946441874,0.0387821000040276,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.019678592681885,False," The capital of Germany is the capital of the German people.
+",What is the capital of Germany?
+static,short_qa,8,3.802137613296509,44.79684054103901,0.03272010000364389,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.373035430908203,False," The capital of China is the capital of China.
+",What is the capital of China?
+static,short_qa,9,3.4475743770599365,31.424076828250694,0.03613300000142772,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,1.8096026182174683,False," The capital of Kenya is the capital of the United States.
+",What is the capital of Kenya?
+static,short_qa,10,2.8705739974975586,17.64714471016618,0.03455480000411626,12,0.0,deep,full,full,,False,12,1.0,85054464,16,deep,False,,,,3.720625877380371,False," The largest planet in the solar system is the Sun.
+",What is the largest planet in the solar system?
+static,short_qa,11,3.4268033504486084,30.77809853306078,0.03615879999415483,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,5.525097370147705,False," The closest planet is the Sun.
+",What is the closest planet to the Sun?
+static,short_qa,12,3.357172727584839,28.70791094841054,0.0345787999976892,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,2.9955220222473145,False," The Red Planet is the planet that is known as the Red Planet.
+",Which planet is known as the Red Planet?
+static,short_qa,13,4.066920757293701,58.3769288180235,0.028340100005152635,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,4.196834564208984,True," The chemical symbol for oxygen is the symbol for oxygen.
+",What is the chemical symbol for oxygen?
+static,short_qa,14,4.347254753112793,77.26605710269888,0.03172909999557305,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,9.003032684326172,False," The symbol for gold is the ""golden circle"" (the ""golden",What is the chemical symbol for gold?
+static,short_qa,15,4.258303642272949,70.68996621655629,0.02631830000609625,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,6.425464153289795,False, Iron is a chemical symbol for iron. It is a chemical symbol for iron.,What is the chemical symbol for iron?
+static,short_qa,16,4.450681686401367,85.68533462530321,0.03450749999319669,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,5.559035301208496,False, The air is a mixture of nitrogen and oxygen. The nitrogen is the air that,What gas do plants absorb from the air?
+static,short_qa,17,3.8027069568634033,44.82235259589126,0.032665500009898096,12,0.0,deep,full,full,,False,12,1.0,85054464,16,deep,False,,,,6.575007438659668,False," The freezing point of water is about 1.5 degrees Celsius.
+",What is the freezing point of water in Celsius?
+static,short_qa,18,3.596980094909668,36.48787796609788,0.03328970000438858,12,0.0,deep,full,full,,False,12,1.0,85054464,16,deep,False,,,,6.801308631896973,False," The boiling point of water is about 1.5 degrees Celsius.
+",What is the boiling point of water in Celsius?
+static,short_qa,19,3.3012402057647705,27.146285031483114,0.027646199989249,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,4.787146091461182,False,"
+",How many days are in a week?
+static,short_qa,20,3.4135336875915527,30.372381360532675,0.03090610000072047,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.014179706573486,False," The average is about 1 year.
+",How many months are in a year?
+static,short_qa,21,3.228451728820801,25.240547490508007,0.03309199999785051,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.2357177734375,False,"
+",How many hours are in a day?
+static,short_qa,22,3.95865797996521,52.38697438386756,0.024270800000522286,12,0.0,deep,full,full,,False,12,1.0,85054464,12,deep,False,,,,6.037533760070801,False," The number of continents is not known.
+",How many continents are there?
+static,short_qa,23,3.6979317665100098,40.36373633948864,0.03373129999090452,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.625575065612793,False," The spider has about 1.5 legs.
+",How many legs does a spider have?
+static,short_qa,24,4.009079456329346,55.096128819389115,0.03026990000216756,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,4.7510480880737305,False," It's a triangle.
+",How many sides does a triangle have?
+static,short_qa,25,3.984055757522583,53.73452709267635,0.033385200003976934,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,5.111665725708008,False," The hexagon is a unit of length 1.5.
+",How many sides does a hexagon have?
+static,short_qa,26,4.056255340576172,57.75762299338689,0.04328769999847282,12,0.0,deep,full,full,,False,12,1.0,85054464,18,deep,False,,,,5.603005409240723,False, The number of players on a soccer team is determined by the number of players on,How many players are on a soccer team on the field?
+static,short_qa,27,3.9844789505004883,53.7572719796118,0.03276079999341164,12,0.0,deep,full,full,,False,12,1.0,85054464,12,deep,False,,,,5.013151168823242,False, 2 plus 2 is a number that is used to represent the number of times a,What is 2 plus 2?
+static,short_qa,28,4.518373966217041,91.68639153360077,0.04970560000219848,12,0.0,deep,full,full,,False,12,1.0,85054464,12,deep,False,,,,8.026026725769043,False," 5 times 6 is the number of times you can use the word ""5 times",What is 5 times 6?
+static,short_qa,29,4.191492557525635,66.12140735093166,0.036863600005744956,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,7.074307441711426,False, 100 divided by 4 is the number of times you have to divide by 4.,What is 100 divided by 4?
+static,short_qa,30,3.739806652069092,42.08985139253587,0.03041599999414757,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,7.075189590454102,False, The square root of 81 is the square of the square of the square of the,What is the square root of 81?
+static,short_qa,31,5.38632869720459,218.40009900813308,0.03297030000248924,12,0.0,deep,full,full,,False,12,1.0,85054464,11,deep,False,,,,10.650398254394531,False," 7 is the square root of 7.
+",What is 7 squared?
+static,short_qa,32,4.017505645751953,55.562340673527856,0.0317977999948198,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.78031063079834,False," The play was written by the French playwright, Jean-Jacques Rousseau",Who wrote the play Romeo and Juliet?
+static,short_qa,33,3.5019757747650146,33.18094531175603,0.032064699989859946,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,1.865394115447998,True," Einstein.
+",Who developed the theory of relativity?
+static,short_qa,34,2.9909424781799316,19.904433148060416,0.027479800002765842,12,0.0,deep,full,full,,False,12,1.0,85054464,17,deep,False,,,,8.760619163513184,False, The first person to walk on the Moon was the first person to walk on the,Who was the first person to walk on the Moon?
+static,short_qa,35,4.029021263122559,56.20587355663399,0.027569099998800084,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,6.7418107986450195,False," The Mona Lisa was painted by the artist, and the Mona Lisa was",Who painted the Mona Lisa?
+static,short_qa,36,3.816342830657959,45.437730612447005,0.18333070000517182,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,7.607057571411133,False, The largest ocean on Earth is about 1.5 million square kilometers (1.,What is the largest ocean on Earth?
+static,short_qa,37,3.8228507041931152,45.734397906566016,0.032882499988772906,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.560550689697266,True, The longest river in Africa is the Nile. The Nile is the longest river in,What is the longest river in Africa?
+static,short_qa,38,3.0583536624908447,21.292473692232804,0.038102500009699725,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,4.579861164093018,False," The tallest mountain in the world is the Himalayas.
+",What is the tallest mountain in the world?
+static,short_qa,39,3.4146180152893066,30.405332836759218,0.029139799997210503,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,7.256793975830078,False, The largest desert in the world is the Sahara Desert. The Sahara Desert is the,What is the largest desert in the world?

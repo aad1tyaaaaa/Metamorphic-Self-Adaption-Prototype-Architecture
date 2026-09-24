@@ -29,6 +29,12 @@ DEPTH_ONLY_CONFIGURATIONS = {
 
 MECHANISMS = {"depth": DEPTH_ONLY_CONFIGURATIONS, "full": CONFIGURATIONS}
 
+# Phase 3 operating point, selected by controller/threshold_sweep.py
+# (results/policy_threshold_sweep.csv): highest agreement with c*(x) on held-out
+# prompts, ties broken toward lower FLOPs.
+CONFIDENCE_THRESHOLD = 0.40
+FALLBACK_CONFIGURATION = "deep"
+
 FEATURES_V1 = ["input_length", "reasoning", "domain", "structure"]
 FEATURES_V2 = FEATURES_V1 + [
     "numeric_density",
@@ -95,3 +101,24 @@ def relative_flops(depth, attention_mode="full", ffn_mode="full", seq_len=32,
     """Transformer FLOPs as a fraction of the static 12-layer full model."""
     full = estimate_flops(TOTAL_LAYERS, "full", "full", seq_len)
     return estimate_flops(depth, attention_mode, ffn_mode, seq_len, ffn_fraction) / full
+
+
+def active_parameters(depth, attention_mode="full", ffn_mode="full", ffn_fraction=None):
+    """Transformer-block weights actually read by one forward pass.
+
+    A deterministic proxy for the weight-memory footprint of a configuration,
+    since CPU peak-memory measurement is not reliable here. Excludes embeddings
+    and the lm_head, which every configuration reads.
+    """
+    if ffn_fraction is None:
+        ffn_fraction = FFN_CHUNK_FRACTION[ffn_mode]
+
+    heads = max(1, round(TOTAL_HEADS * ATTENTION_HEAD_FRACTION[attention_mode]))
+    active_dim = heads * HEAD_DIM
+    inner = max(1, round(FFN_INNER * ffn_fraction))
+
+    layer_norms = 2 * 2 * HIDDEN_SIZE
+    attention = HIDDEN_SIZE * 3 * active_dim + 3 * active_dim + active_dim * HIDDEN_SIZE + HIDDEN_SIZE
+    mlp = HIDDEN_SIZE * inner + inner + inner * HIDDEN_SIZE + HIDDEN_SIZE
+
+    return depth * (layer_norms + attention + mlp)

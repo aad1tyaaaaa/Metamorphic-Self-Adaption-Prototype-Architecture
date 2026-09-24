@@ -10,17 +10,23 @@ the safety/compute decision so both stay inspectable.
 
 import pandas as pd
 
-from configs.configurations import CONFIG_NAMES, DEPTH_MAP
+from configs.configurations import (
+    CONFIDENCE_THRESHOLD,
+    CONFIG_NAMES,
+    DEPTH_MAP,
+    FALLBACK_CONFIGURATION,
+)
 
 
 class ConfigurationPolicy:
     """Decides the final configuration from predicted probabilities.
 
     The confidence threshold is a tunable knob, not an established constant;
-    `evaluation/harness.py` sweeps it rather than assuming a value.
+    `controller/threshold_sweep.py` sweeps it rather than assuming a value.
     """
 
-    def __init__(self, confidence_threshold=0.5, fallback="deep"):
+    def __init__(self, confidence_threshold=CONFIDENCE_THRESHOLD,
+                 fallback=FALLBACK_CONFIGURATION):
         if fallback not in CONFIG_NAMES:
             raise ValueError(f"fallback must be one of {CONFIG_NAMES}, got {fallback!r}")
 

@@ -1,8 +1,9 @@
 # MSA-GPT-2 experiment configuration (Phase 18).
-# The values the scripts default to. Change here and pass the matching flag, or
-# read this file when reproducing a run.
+# The values the scripts default to. `test_msa.py` asserts that the code
+# constants match this file, so the two cannot drift apart silently.
 
 seed: 42
+device: cpu
 
 model:
   backbone: gpt2                 # HuggingFace model id
@@ -22,13 +23,19 @@ configurations:
 
 calibration:
   prompts: data/calibration_prompts.json
-  size: 499
+  size: 799
+  categories: 12
   mechanisms: [depth, full]
   output: results/calibration_results.csv
-  # 499 prompts x 3 configurations x 2 mechanisms = 2994 experiments
+  # 799 prompts x 3 configurations x 2 mechanisms = 4794 experiments
+  historical_version:
+    prompts: data/calibration_prompts_v1_499.json
+    results: results/calibration/calibration_results_v1_499.csv
+    predictor: results/calibration/performance_predictor_v1_499.pkl
 
 predictor:
   path: results/performance_predictor.pkl
+  evaluation: results/calibration/predictor_evaluation.json
   feature_set: v2                # v1 = original 4 features, v2 = 8 features
   architecture: StandardScaler + MLPClassifier(32, 16)
   tolerance: 1.00                # max relative loss increase vs depth 12
@@ -36,37 +43,49 @@ predictor:
   cross_validation_folds: 5
 
 policy:
-  confidence_threshold: 0.50
+  confidence_threshold: 0.40     # selected by controller/threshold_sweep.py
+  thresholds_swept: [0.0, 0.40, 0.50, 0.60, 0.70, 0.80]
   fallback: deep
 
 stability_monitor:
   window: 6
   warning_threshold: 0.4
   unstable_threshold: 0.7
+  switching_levels: {low: 0.1, medium: 0.4, high: 0.8}
+  sequence_length: 60
 
 routing_baseline:
   chunks: 4
   top_k: 2
   gate: fixed seeded random projection (untrained)
 
+dense_reference:
+  pretrained: HuggingFaceTB/SmolLM-135M   # Llama arch: RMSNorm, RoPE, SwiGLU
+  architecture_only: untrained DenseReference at GPT-2 dims (latency only)
+
 benchmark:
   warmup: 10
   runs: 50
+  rounds: 5                      # runs split over shuffled interleaved rounds
+  torch_threads: 6
+  batch_size: 1
   sequence_lengths: [16, 64, 256]
   device: cpu
 
 datasets:
   short_qa:
     source: data/load_data.py (local, 60 items)
-    metric: answer-conditional perplexity + exact match
+    metric: exact match + answer-conditional perplexity
   gsm8k:
     source: openai/gsm8k (main, test split)
     limit: 40
-    metric: answer-conditional perplexity + exact match
+    metric: exact match (numeric) + answer-conditional perplexity
     note: GPT-2 small is not expected to solve GSM8K; accuracy is near zero for
           every variant including the static baseline.
 
 outputs:
   results_dir: results
+  evaluation_dir: results/evaluation      # standard per-sample schema
+  stability_dir: results/stability
   figures_dir: results/figures
   environment: results/environment.json

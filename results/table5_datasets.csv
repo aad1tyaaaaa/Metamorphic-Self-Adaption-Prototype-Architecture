@@ -1,7 +1,9 @@
-Dataset,Method,Answer PPL,Accuracy,Prompt loss,Avg depth,Layer red.,Rel. FLOPs,Latency (s)
-short_qa,Baseline A: Static GPT-2 (12 layers),284.8915,0.075,3.8017,12.0,0.0,1.0,0.1664
-short_qa,Baseline B: Depth-adaptive,2305510.2539,0.025,5.974,7.6,0.3667,0.6333,0.1098
-short_qa,Baseline E: Full MSA,938777.9553,0.0,8.989,7.6,0.3667,0.3167,0.0803
-gsm8k,Baseline A: Static GPT-2 (12 layers),1613.6401,0.0,3.4066,12.0,0.0,1.0,0.3108
-gsm8k,Baseline B: Depth-adaptive,2138.4044,0.0,3.58,11.8,0.0167,0.9833,0.2601
-gsm8k,Baseline E: Full MSA,1705.1137,0.0,3.5517,11.9,0.0083,0.9833,0.3745
+Dataset,Method,Accuracy,Answer PPL,Prompt loss,Avg depth,Layer red.,Rel. FLOPs,Latency (s)
+short_qa,Baseline A: Static GPT-2 (12 layers),0.075,284.8917,3.8017,12.0,0.0,1.0,0.0376
+short_qa,Baseline B: Depth-adaptive,0.025,2305513.0298,5.974,7.6,0.3667,0.6333,0.0249
+short_qa,Baseline E: Full MSA,0.0,938775.6276,8.989,7.6,0.3667,0.3167,0.0457
+short_qa,"Baseline D: Dense reference (HuggingFaceTB/SmolLM-135M, 134,515,008 params)",0.675,12.7421,1.8313,30.0,0.0,,0.0532
+gsm8k,Baseline A: Static GPT-2 (12 layers),0.0,1613.6405,3.4066,12.0,0.0,1.0,0.188
+gsm8k,Baseline B: Depth-adaptive,0.0,3701.5715,3.8708,11.5,0.0417,0.9583,0.1316
+gsm8k,Baseline E: Full MSA,0.0,1857.8119,4.0065,11.6,0.0333,0.9333,0.1318
+gsm8k,"Baseline D: Dense reference (HuggingFaceTB/SmolLM-135M, 134,515,008 params)",0.05,8.4912,2.4125,30.0,0.0,,0.2312

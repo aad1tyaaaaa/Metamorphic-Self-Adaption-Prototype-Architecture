@@ -1,0 +1,111 @@
+method,dataset,sample_id,loss,perplexity,latency,depth,layer_reduction,configuration,attention_mode,ffn_mode,confidence,rollback,executed_depth,relative_flops,active_parameters,sequence_length,proposed_configuration,fallback_applied,stability_status,volatility,stability_score,answer_loss,correct,generated,question
+routing,short_qa,0,6.108360767364502,449.6011099671154,0.11046100000385195,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,9.07673454284668,False,"
+",What is the capital of France?
+routing,short_qa,1,6.049655437469482,423.9669217590724,0.09944669999822509,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,9.874520301818848,False,"
+",What is the capital of Japan?
+routing,short_qa,2,6.215888977050781,500.64084965198896,0.09710110000742134,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,8.905926704406738,False,"
+",What is the capital of Italy?
+routing,short_qa,3,6.167631149291992,477.05469519411344,0.09906059999775607,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,10.175361633300781,False," I
+",What is the capital of Egypt?
+routing,short_qa,4,5.955894947052002,386.0222255884898,0.10281989999930374,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,11.280294418334961,False, I have no. I have. I have. I. I. I. I. I. I. I.,What is the capital of Canada?
+routing,short_qa,5,6.539113521575928,691.6731528560524,0.10446680001041386,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,8.714546203613281,False,"
+",What is the capital of Spain?
+routing,short_qa,6,6.432245254516602,621.5679607416341,0.097575699997833,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,8.093459129333496,False," to the question, to the question questions of question of question of question of question for the question of to the question of",What is the capital of Russia?
+routing,short_qa,7,5.727153301239014,307.09381930379317,0.1015484999952605,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,9.310836791992188,False,"
+",What is the capital of Germany?
+routing,short_qa,8,6.714822769165039,824.5376204561112,0.09834189999673981,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,10.79761791229248,False,"
+",What is the capital of China?
+routing,short_qa,9,6.92183780670166,1014.1821536251988,0.10563140000158455,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,8.247653007507324,False,"
+",What is the capital of Kenya?
+routing,short_qa,10,5.888128757476807,360.72963978065724,0.09832319999986794,12,0.0,deep,full,full,,False,12,0.6678200692041523,56724480,16,deep,False,,,,10.788078308105469,False,". The question of the "" "" "" "" "" "" ""
+",What is the largest planet in the solar system?
+routing,short_qa,11,5.5299553871154785,252.13266240724593,0.11164370000187773,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,9.489688873291016,False," I, the the the answer,, of the moon,, of moon, and of, of, of, of",What is the closest planet to the Sun?
+routing,short_qa,12,7.021636486053467,1120.618995364504,0.10022469999967143,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,7.774859428405762,False,"
+",Which planet is known as the Red Planet?
+routing,short_qa,13,6.278225898742676,532.8425082220094,0.10179760000028182,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,7.038750648498535,False,"
+",What is the chemical symbol for oxygen?
+routing,short_qa,14,6.801388740539551,899.0950347778573,0.10438109999813605,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,13.314936637878418,False,":
+",What is the chemical symbol for gold?
+routing,short_qa,15,6.537105083465576,690.2853642462237,0.10835539999243338,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,9.27746295928955,False," I have no.
+",What is the chemical symbol for iron?
+routing,short_qa,16,7.653732776641846,2108.5014832358765,0.0981651000038255,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,9.2084379196167,False,"
+",What gas do plants absorb from the air?
+routing,short_qa,17,6.138574600219727,463.39258020122253,0.1012019999907352,12,0.0,deep,full,full,,False,12,0.6678200692041523,56724480,16,deep,False,,,,7.650757312774658,False,"
+",What is the freezing point of water in Celsius?
+routing,short_qa,18,6.675392150878906,792.6582345583741,0.12688880000496283,12,0.0,deep,full,full,,False,12,0.6678200692041523,56724480,16,deep,False,,,,7.894735336303711,False,"
+",What is the boiling point of water in Celsius?
+routing,short_qa,19,5.989495277404785,399.2130672144797,0.09861939999973401,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,6.069884300231934,False,"
+",How many days are in a week?
+routing,short_qa,20,5.881929874420166,358.50043535567033,0.10305109999899287,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,6.468335151672363,False,"
+",How many months are in a year?
+routing,short_qa,21,5.9599127769470215,387.5763171737811,0.10326189998886548,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,6.959501266479492,False,"
+",How many hours are in a day?
+routing,short_qa,22,7.122169017791748,1239.1352270844166,0.10995810000167694,12,0.0,deep,full,full,,False,12,0.6675324675324675,56724480,12,deep,False,,,,6.18806791305542,False," ( (-A,-(,,,,, here here here, here, here, here, here,",How many continents are there?
+routing,short_qa,23,7.130350112915039,1249.3142914206783,0.0935172000026796,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,6.745309829711914,False,"
+",How many legs does a spider have?
+routing,short_qa,24,6.274975776672363,531.1135162654823,0.09338439999555703,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,5.347635269165039,False," ( )
+",How many sides does a triangle have?
+routing,short_qa,25,6.143584728240967,465.72006197436656,0.10692799999378622,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,5.594208240509033,False," ( ( ) You can only your own
+",How many sides does a hexagon have?
+routing,short_qa,26,5.795852184295654,328.93237558235745,0.10584269999526441,12,0.0,deep,full,full,,False,12,0.6679636835278858,56724480,18,deep,False,,,,6.564727783203125,False,"
+",How many players are on a soccer team on the field?
+routing,short_qa,27,5.769297122955322,320.31251319318994,0.09253989999706391,12,0.0,deep,full,full,,False,12,0.6675324675324675,56724480,12,deep,False,,,,5.521059513092041,False,"
+",What is 2 plus 2?
+routing,short_qa,28,6.141237258911133,464.62808061043074,0.09191839999402873,12,0.0,deep,full,full,,False,12,0.6675324675324675,56724480,12,deep,False,,,,7.727288246154785,False," (
+",What is 5 times 6?
+routing,short_qa,29,6.081058025360107,437.491827384901,0.09929829998873174,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,9.184174537658691,False,",. (. () (. (. [ [ [] [ [ [ [ [ [ [ [ [ The",What is 100 divided by 4?
+routing,short_qa,30,6.282188892364502,534.9583494470082,0.1022207000060007,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,5.7406463623046875,False,"
+",What is the square root of 81?
+routing,short_qa,31,6.253872871398926,520.0229116129325,0.09464090000255965,12,0.0,deep,full,full,,False,12,0.6674604892833946,56724480,11,deep,False,,,,8.547584533691406,False,"
+",What is 7 squared?
+routing,short_qa,32,7.107951641082764,1221.642618920484,0.10217790000024252,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,9.639226913452148,False,"
+",Who wrote the play Romeo and Juliet?
+routing,short_qa,33,6.644938945770264,768.8831026333048,0.09671910000906792,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,8.838899612426758,False,"
+",Who developed the theory of relativity?
+routing,short_qa,34,6.032405853271484,416.71638281715184,0.10851700000057463,12,0.0,deep,full,full,,False,12,0.6678918918918919,56724480,17,deep,False,,,,11.497917175292969,False,"
+",Who was the first person to walk on the Moon?
+routing,short_qa,35,7.600751876831055,1999.6988572519595,0.09136500000022352,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,12.594465255737305,False,"
+",Who painted the Mona Lisa?
+routing,short_qa,36,7.246718883514404,1403.4922635257703,0.11065489999600686,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,10.674849510192871,False," (Answer,, ] ] ]
+",What is the largest ocean on Earth?
+routing,short_qa,37,6.456265926361084,636.6792052961573,0.10073520000150893,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,12.609047889709473,False," I have no.
+",What is the longest river in Africa?
+routing,short_qa,38,5.566440105438232,261.5015224399779,0.09891980000247713,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,10.442343711853027,False," I.
+",What is the tallest mountain in the world?
+routing,short_qa,39,5.880831241607666,358.10679128883106,0.10063839999202173,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,11.815038681030273,False,", of the the the and by by of of of,..,.,.
+",What is the largest desert in the world?
+routing,short_qa,40,6.758734703063965,861.5513875057297,0.10061409999616444,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,8.310172080993652,False," I have.
+",What language is primarily spoken in Brazil?
+routing,short_qa,41,7.210970878601074,1354.2063993542927,0.10305130000051577,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,6.953029632568359,False,"
+",What language is primarily spoken in Austria?
+routing,short_qa,42,6.46641206741333,643.1719246423979,0.10230910000973381,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,11.896156311035156,False, Answer Answer Answer Answer Question: what the question? Answer the question of what you are your and your you have your you,What currency is used in Japan?
+routing,short_qa,43,6.1524858474731445,469.8839961196563,0.0983769000013126,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,9.921746253967285,False, (. ( (....................,What currency is used in the United Kingdom?
+routing,short_qa,44,6.297427654266357,543.1728830583517,0.09963199999765493,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,9.527591705322266,False,"
+",What is the currency of India?
+routing,short_qa,45,7.165946006774902,1294.5857085538416,0.09962739999173209,12,0.0,deep,full,full,,False,12,0.6678200692041523,56724480,16,deep,False,,,,9.274056434631348,False,"
+",In which country is the Eiffel Tower?
+routing,short_qa,46,6.545844554901123,696.3445318648677,0.09793069999432191,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,9.166952133178711,False," ( ( ( I I
+",In which country is the Great Wall?
+routing,short_qa,47,7.223609447479248,1371.4302433088596,0.10038730000087526,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,8.75072956085205,False," Question
+",In which country is the Taj Mahal?
+routing,short_qa,48,6.035188674926758,417.87764523505405,0.10334059999149758,12,0.0,deep,full,full,,False,12,0.6678200692041523,56724480,16,deep,False,,,,9.195704460144043,False," what the question, the "" "" "" "" "" "" "" ""
+",What colour is the sky on a clear day?
+routing,short_qa,49,5.739418029785156,310.8834334261851,0.10345110000343993,12,0.0,deep,full,full,,False,12,0.6678918918918919,56724480,17,deep,False,,,,7.059099197387695,False,"
+",What colour do you get by mixing red and white?
+routing,short_qa,50,6.054208278656006,425.90157656837835,0.10079060000134632,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,10.751485824584961,False," Answer Answer Answer Answer Answer Answer Answer Answer Answer Answer Question Answer Question Question Answer Question question: question, Question question question question",What is the opposite of hot?
+routing,short_qa,51,5.795528411865234,328.82589358656884,0.09647349998704158,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,8.766510009765625,False, Answer Answer Answer Answer Answer Question. Answer: Answer Answer Answer Answer Answer Answer Question. Answer Answer Answer Answer Answer Answer Answer,What is the opposite of ancient?
+routing,short_qa,52,5.102595329284668,164.4481510414213,0.3223314000060782,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,7.785649299621582,False,"
+",What is the first month of the year?
+routing,short_qa,53,5.111771583557129,165.9641138828124,0.10579329999745823,12,0.0,deep,full,full,,False,12,0.6677482154445166,56724480,15,deep,False,,,,7.702610015869141,False," the question of the new and the new of your of your your your of of to your, your, your your,",What is the last month of the year?
+routing,short_qa,54,7.450657367706299,1720.9940995525958,0.10009239999635611,12,0.0,deep,full,full,,False,12,0.6675324675324675,56724480,12,deep,False,,,,9.166727066040039,False," the best to be to be-a-
+",What season comes after winter?
+routing,short_qa,55,6.640902996063232,765.7861828105973,0.09859480000159238,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,8.00047492980957,False,"
+",What organ pumps blood around the body?
+routing,short_qa,56,6.126709461212158,457.9268527526726,0.10133679999853484,12,0.0,deep,full,full,,False,12,0.667676330592817,56724480,14,deep,False,,,,7.766063213348389,False,",,, a of of of of of of of of of, of.
+",What organ is used for breathing?
+routing,short_qa,57,6.084993839263916,439.2171067640711,0.09896499999740627,12,0.0,deep,full,full,,False,12,0.6676044146288682,56724480,13,deep,False,,,,10.112662315368652,False,"
+",What is the hardest natural substance?
+routing,short_qa,58,6.912909030914307,1005.1670553560222,0.10380979999899864,12,0.0,deep,full,full,,False,12,0.6674604892833946,56724480,11,deep,False,,,,7.878100395202637,False,"
+",What do bees produce?
+routing,short_qa,59,6.382247447967529,591.2550304718199,0.10694290000537876,12,0.0,deep,full,full,,False,12,0.6678200692041523,56724480,16,deep,False,,,,8.027472496032715,False,"
+",What is the young of a cat called?

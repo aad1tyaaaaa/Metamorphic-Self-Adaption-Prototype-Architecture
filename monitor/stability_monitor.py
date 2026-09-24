@@ -2,6 +2,12 @@
 
 Watches the recent configuration decisions, measures how often they switch, and
 rolls back to the last stable configuration when switching becomes excessive.
+
+Definitions (match paper Section 8):
+
+    V(t) = |{i in window : c_i != c_{i+1}}| / (|window| - 1)     volatility
+    S(t) = 1 - V(t)                                              stability score
+    rollback rate = rollbacks / observations
 """
 
 from collections import Counter, deque
@@ -96,6 +102,7 @@ class StabilityMonitor:
             "depth": DEPTH_MAP[selected],
             "status": status,
             "volatility": volatility,
+            "stability_score": 1.0 - volatility,
             "rolled_back": rolled_back,
             "rollback_count": self.rollback_count,
             "stable_configuration": self.stable_configuration,
@@ -119,6 +126,7 @@ class StabilityMonitor:
             "volatility_mean": mean_volatility,
             "volatility_max": max(trace),
             "volatility_final": self.volatility(),
+            "stability_score": 1.0 - mean_volatility,
             "rollback_count": self.rollback_count,
             "rollback_rate": self.rollback_count / max(self.observations, 1),
             "status": self.status(mean_volatility),

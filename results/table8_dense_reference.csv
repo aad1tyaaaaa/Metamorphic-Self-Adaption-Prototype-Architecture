@@ -1,0 +1,3 @@
+model,trained,parameters,layers,depth,hidden_size,dim,norm,position,activation,sequence_length,runs,latency_mean,latency_std
+"DenseReference (RMSNorm + RoPE + SwiGLU), GPT-2-matched dims",False,162148608,,12.0,,768.0,RMSNorm,RoPE,SwiGLU,64,30,0.0582,0.0085
+HuggingFaceTB/SmolLM-135M,True,134515008,30.0,,576.0,,RMSNorm,RoPE,SwiGLU (silu),64,30,0.2873,0.1986

@@ -640,6 +640,446 @@
   "category": "multi_step_arithmetic"
  },
  {
+  "text": "A shop starts with 38 boxes, receives 16 more, then sells 2. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "What is 10 percent of 171?",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "A train travels 81 kilometers in 5 hours. What is its average speed?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "What is 5 percent of 185?",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 246 + 81.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 892 + 350.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 538 + 255.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "A train travels 557 kilometers in 5 hours. What is its average speed?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "What is 40 percent of 1955?",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "A shop starts with 20 boxes, receives 27 more, then sells 8. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "A shop starts with 17 boxes, receives 5 more, then sells 2. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "A shop starts with 27 boxes, receives 15 more, then sells 7. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "A shop starts with 60 boxes, receives 25 more, then sells 1. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "Calculate 74 + 424.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "A train travels 171 kilometers in 5 hours. What is its average speed?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "What is 10 percent of 1138?",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "A shop starts with 13 boxes, receives 15 more, then sells 3. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "A train travels 533 kilometers in 5 hours. What is its average speed?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "Calculate 465 + 839.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 63 + 679.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 107 + 960.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "What is 10 percent of 872?",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "A shop starts with 35 boxes, receives 8 more, then sells 7. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "Calculate 180 + 400.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 411 + 283.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "A shop starts with 23 boxes, receives 15 more, then sells 9. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "A shop starts with 14 boxes, receives 8 more, then sells 5. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "What is 5 percent of 1226?",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 777 + 333.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 63 + 610.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "A shop starts with 37 boxes, receives 29 more, then sells 9. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "What is 5 percent of 1080?",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 883 + 202.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 621 + 81.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "What is 20 percent of 285?",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "What is 25 percent of 1257?",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "Calculate 646 + 95.",
+  "category": "basic_arithmetic"
+ },
+ {
+  "text": "A shop starts with 47 boxes, receives 20 more, then sells 10. How many boxes remain, and what is 20 percent of that number?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "A train travels 327 kilometers in 5 hours. What is its average speed?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "A train travels 304 kilometers in 6 hours. What is its average speed?",
+  "category": "multi_step_arithmetic"
+ },
+ {
+  "text": "What is the capital of Australia?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Brazil?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Argentina?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Norway?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Sweden?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Portugal?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Greece?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Turkey?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Mexico?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Thailand?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of South Korea?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Nigeria?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Peru?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Ireland?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Poland?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the capital of Vietnam?",
+  "category": "factual"
+ },
+ {
+  "text": "Who invented the telephone?",
+  "category": "factual"
+ },
+ {
+  "text": "Who invented the light bulb?",
+  "category": "factual"
+ },
+ {
+  "text": "Who discovered penicillin?",
+  "category": "factual"
+ },
+ {
+  "text": "Who discovered gravity?",
+  "category": "factual"
+ },
+ {
+  "text": "Who proposed the theory of evolution?",
+  "category": "factual"
+ },
+ {
+  "text": "Who invented the printing press?",
+  "category": "factual"
+ },
+ {
+  "text": "Who was the first president of the United States?",
+  "category": "factual"
+ },
+ {
+  "text": "Who composed the Fifth Symphony?",
+  "category": "factual"
+ },
+ {
+  "text": "Who wrote Pride and Prejudice?",
+  "category": "factual"
+ },
+ {
+  "text": "Who wrote The Odyssey?",
+  "category": "factual"
+ },
+ {
+  "text": "Who painted The Starry Night?",
+  "category": "factual"
+ },
+ {
+  "text": "Who discovered radium?",
+  "category": "factual"
+ },
+ {
+  "text": "Who built the first airplane?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the smallest planet in the solar system?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the hottest planet in the solar system?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the largest mammal on Earth?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the fastest land animal?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the tallest animal?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the largest bird?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the chemical symbol for sodium?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the chemical symbol for silver?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the chemical symbol for carbon?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the chemical symbol for helium?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the atomic number of hydrogen?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the most abundant gas in air?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the largest country by area?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the smallest country in the world?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the longest river in South America?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the largest lake in Africa?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the highest waterfall in the world?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the deepest ocean trench?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the currency of the United States?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the currency of Mexico?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the currency of the European Union?",
+  "category": "factual"
+ },
+ {
+  "text": "What language is spoken in Argentina?",
+  "category": "factual"
+ },
+ {
+  "text": "What language is spoken in Egypt?",
+  "category": "factual"
+ },
+ {
+  "text": "What is the official language of Japan?",
+  "category": "factual"
+ },
+ {
+  "text": "How many planets are in the solar system?",
+  "category": "factual"
+ },
+ {
+  "text": "How many bones are in the adult human body?",
+  "category": "factual"
+ },
+ {
+  "text": "How many teeth does an adult human have?",
+  "category": "factual"
+ },
+ {
+  "text": "How many strings does a standard guitar have?",
+  "category": "factual"
+ },
+ {
+  "text": "How many minutes are in an hour?",
+  "category": "factual"
+ },
+ {
+  "text": "How many weeks are in a year?",
+  "category": "factual"
+ },
+ {
+  "text": "How many sides does an octagon have?",
+  "category": "factual"
+ },
+ {
+  "text": "How many colours are in a rainbow?",
+  "category": "factual"
+ },
+ {
+  "text": "When did the Second World War end?",
+  "category": "factual"
+ },
+ {
+  "text": "When did humans first land on the Moon?",
+  "category": "factual"
+ },
+ {
+  "text": "When did the Berlin Wall fall?",
+  "category": "factual"
+ },
+ {
+  "text": "Where is the Colosseum located?",
+  "category": "factual"
+ },
+ {
+  "text": "Where is Mount Kilimanjaro located?",
+  "category": "factual"
+ },
+ {
+  "text": "Where is the Sahara Desert?",
+  "category": "factual"
+ },
+ {
+  "text": "Which gas do humans exhale?",
+  "category": "factual"
+ },
+ {
+  "text": "Which organ filters blood in the body?",
+  "category": "factual"
+ },
+ {
+  "text": "Which metal is liquid at room temperature?",
+  "category": "factual"
+ },
+ {
   "text": "Explain why photosynthesis converts sunlight into chemical energy.",
   "category": "scientific_explanation"
  },
@@ -697,6 +1137,46 @@
  },
  {
   "text": "Explain why the seasons change through the year.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why ice floats on liquid water.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why the sky turns red at sunset.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why stars appear to twinkle at night.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why salt lowers the freezing point of water.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why muscles become sore after exercise.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why volcanoes erupt.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why magnets attract iron.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why leaves change colour in autumn.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why the human heart has four chambers.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain why hot air balloons rise.",
   "category": "scientific_explanation"
  },
  {
@@ -760,6 +1240,46 @@
   "category": "scientific_explanation"
  },
  {
+  "text": "Explain in detail why ice floats on liquid water, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain in detail why the sky turns red at sunset, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain in detail why stars appear to twinkle at night, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain in detail why salt lowers the freezing point of water, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain in detail why muscles become sore after exercise, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain in detail why volcanoes erupt, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain in detail why magnets attract iron, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain in detail why leaves change colour in autumn, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain in detail why the human heart has four chambers, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
+  "text": "Explain in detail why hot air balloons rise, describe the main stages involved, and give one everyday example.",
+  "category": "scientific_explanation"
+ },
+ {
   "text": "What is the difference between TCP and UDP?",
   "category": "technical"
  },
@@ -813,6 +1333,46 @@
  },
  {
   "text": "What is the difference between a cache hit and a cache miss?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between IPv4 and IPv6?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between a mutex and a semaphore?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between REST and GraphQL?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between symmetric and asymmetric encryption?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between a linked list and an array?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between static and dynamic typing?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between a CPU and a GPU?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between git merge and git rebase?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between unit tests and integration tests?",
+  "category": "technical"
+ },
+ {
+  "text": "What is the difference between a router and a switch?",
   "category": "technical"
  },
  {
@@ -876,6 +1436,46 @@
   "category": "technical"
  },
  {
+  "text": "Compare IPv4 and IPv6. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
+  "text": "Compare a mutex and a semaphore. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
+  "text": "Compare REST and GraphQL. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
+  "text": "Compare symmetric and asymmetric encryption. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
+  "text": "Compare a linked list and an array. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
+  "text": "Compare static and dynamic typing. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
+  "text": "Compare a CPU and a GPU. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
+  "text": "Compare git merge and git rebase. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
+  "text": "Compare unit tests and integration tests. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
+  "text": "Compare a router and a switch. Explain one advantage of each, and describe a situation where you would choose one over the other.",
+  "category": "technical"
+ },
+ {
   "text": "Write a Python function that reverses a string.",
   "category": "code"
  },
@@ -933,6 +1533,46 @@
  },
  {
   "text": "Write a Python function that sums the digits of a number.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that rotates a matrix by ninety degrees.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that finds the second largest number in a list.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that counts the vowels in a string.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that checks whether two strings are anagrams.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that computes the greatest common divisor of two integers.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that generates the first n Fibonacci numbers.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that transposes a list of lists.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that groups a list of words by their first letter.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that converts a Roman numeral to an integer.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that checks whether brackets are balanced.",
   "category": "code"
  },
  {
@@ -996,6 +1636,46 @@
   "category": "code"
  },
  {
+  "text": "Write a Python function that rotates a matrix by ninety degrees. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that finds the second largest number in a list. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that counts the vowels in a string. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that checks whether two strings are anagrams. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that computes the greatest common divisor of two integers. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that generates the first n Fibonacci numbers. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that transposes a list of lists. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that groups a list of words by their first letter. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that converts a Roman numeral to an integer. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
+  "text": "Write a Python function that checks whether brackets are balanced. Explain how it works, describe its time complexity, and list one edge case it must handle.",
+  "category": "code"
+ },
+ {
   "text": "Summarize the industrial revolution in two sentences.",
   "category": "summarization"
  },
@@ -1033,6 +1713,46 @@
  },
  {
   "text": "Summarize the history of written language in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the fall of the Roman Empire in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the French Revolution in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the development of vaccines in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the invention of the steam engine in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the growth of cities in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the history of aviation in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the discovery of DNA in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the rise of social media in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the Green Revolution in agriculture in two sentences.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the history of the Olympic Games in two sentences.",
   "category": "summarization"
  },
  {
@@ -1076,6 +1796,166 @@
   "category": "summarization"
  },
  {
+  "text": "Summarize the fall of the Roman Empire. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the French Revolution. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the development of vaccines. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the invention of the steam engine. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the growth of cities. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the history of aviation. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the discovery of DNA. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the rise of social media. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the Green Revolution in agriculture. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Summarize the history of the Olympic Games. Cover the main causes, the most important consequences, and explain why it still matters today.",
+  "category": "summarization"
+ },
+ {
+  "text": "Write a detailed explanation of how the internet routes a message from one computer to another. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how the human immune system fights an infection. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how a car engine converts fuel into motion. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how electricity is generated and delivered to homes. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how a search engine ranks web pages. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how vaccines are developed and tested. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how the stock market sets prices. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how climate change affects ocean ecosystems. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how a compiler turns source code into machine instructions. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how the heart and lungs work together. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how a neural network learns from data. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how bees communicate the location of food. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how banks create money through lending. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how earthquakes are measured and predicted. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Write a detailed explanation of how public key cryptography keeps messages secret. Start from the basic principles, walk through each stage of the process in order, explain why each stage is necessary, and finish with a common misconception.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how the internet routes a message from one computer to another to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how the human immune system fights an infection to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how a car engine converts fuel into motion to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how electricity is generated and delivered to homes to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how a search engine ranks web pages to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how vaccines are developed and tested to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how the stock market sets prices to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how climate change affects ocean ecosystems to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how a compiler turns source code into machine instructions to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how the heart and lungs work together to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how a neural network learns from data to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how bees communicate the location of food to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how banks create money through lending to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how earthquakes are measured and predicted to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
+  "text": "Explain how public key cryptography keeps messages secret to a curious high-school student, using an analogy and at least two concrete examples.",
+  "category": "long_explanation"
+ },
+ {
   "text": "All engineers are problem solvers. Some problem solvers are artists. Does it follow that some engineers are artists? Explain why or why not.",
   "category": "logical_reasoning"
  },
@@ -1093,6 +1973,34 @@
  },
  {
   "text": "All bridges are structures. Some structures are tunnels. Does it follow that some bridges are tunnels? Explain why or why not.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "All pilots are trained professionals. Some trained professionals are passengers. Does it follow that some pilots are passengers? Explain why or why not.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "All oak trees are plants. Some plants are fungi. Does it follow that some oak trees are fungi? Explain why or why not.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "All violins are instruments. Some instruments are drums. Does it follow that some violins are drums? Explain why or why not.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "All novels are books. Some books are magazines. Does it follow that some novels are magazines? Explain why or why not.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "All cats are pets. Some pets are wild animals. Does it follow that some cats are wild animals? Explain why or why not.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "All triangles are polygons. Some polygons are circles. Does it follow that some triangles are circles? Explain why or why not.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "All doctors are graduates. Some graduates are patients. Does it follow that some doctors are patients? Explain why or why not.",
   "category": "logical_reasoning"
  },
  {
@@ -1116,6 +2024,34 @@
   "category": "logical_reasoning"
  },
  {
+  "text": "If every pilots needs a trained professionals, and no passengers has a trained professionals, can a passengers be one of the pilots? Explain your reasoning.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "If every oak trees needs a plants, and no fungi has a plants, can a fungi be one of the oak trees? Explain your reasoning.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "If every violins needs a instruments, and no drums has a instruments, can a drums be one of the violins? Explain your reasoning.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "If every novels needs a books, and no magazines has a books, can a magazines be one of the novels? Explain your reasoning.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "If every cats needs a pets, and no wild animals has a pets, can a wild animals be one of the cats? Explain your reasoning.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "If every triangles needs a polygons, and no circles has a polygons, can a circles be one of the triangles? Explain your reasoning.",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "If every doctors needs a graduates, and no patients has a graduates, can a patients be one of the doctors? Explain your reasoning.",
+  "category": "logical_reasoning"
+ },
+ {
   "text": "Either the engineers are in the problem solvers or in the artists. They are not in the problem solvers. Where are they, and why?",
   "category": "logical_reasoning"
  },
@@ -1133,6 +2069,34 @@
  },
  {
   "text": "Either the bridges are in the structures or in the tunnels. They are not in the structures. Where are they, and why?",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "Either the pilots are in the trained professionals or in the passengers. They are not in the trained professionals. Where are they, and why?",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "Either the oak trees are in the plants or in the fungi. They are not in the plants. Where are they, and why?",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "Either the violins are in the instruments or in the drums. They are not in the instruments. Where are they, and why?",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "Either the novels are in the books or in the magazines. They are not in the books. Where are they, and why?",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "Either the cats are in the pets or in the wild animals. They are not in the pets. Where are they, and why?",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "Either the triangles are in the polygons or in the circles. They are not in the polygons. Where are they, and why?",
+  "category": "logical_reasoning"
+ },
+ {
+  "text": "Either the doctors are in the graduates or in the patients. They are not in the graduates. Where are they, and why?",
   "category": "logical_reasoning"
  },
  {
@@ -1173,6 +2137,46 @@
  },
  {
   "text": "You are given a report about the history of written language. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the fall of the Roman Empire. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the French Revolution. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the development of vaccines. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the invention of the steam engine. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the growth of cities. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the history of aviation. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the discovery of DNA. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the rise of social media. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the Green Revolution in agriculture. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
+  "category": "long_structured"
+ },
+ {
+  "text": "You are given a report about the history of the Olympic Games. First, identify the three most important claims. Second, explain which claim is best supported by evidence. Third, describe what additional information would be needed to evaluate the weakest claim.",
   "category": "long_structured"
  },
  {
@@ -1233,6 +2237,46 @@
  },
  {
   "text": "Consider a system that handles a cache hit and a cache miss. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles IPv4 and IPv6. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles a mutex and a semaphore. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles REST and GraphQL. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles symmetric and asymmetric encryption. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles a linked list and an array. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles static and dynamic typing. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles a CPU and a GPU. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles git merge and git rebase. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles unit tests and integration tests. Describe the components involved, explain how they interact, and evaluate one failure mode.",
+  "category": "long_structured"
+ },
+ {
+  "text": "Consider a system that handles a router and a switch. Describe the components involved, explain how they interact, and evaluate one failure mode.",
   "category": "long_structured"
  },
  {
@@ -1993,6 +3037,162 @@
  },
  {
   "text": "Thor is 13 times older than Captain America. Captain America is 7 times older than Peter Parker, and Ironman is 32 years older than Peter Parker. How old is Ironman if Thor is 1456 years old?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Last year Dallas was 3 times the age of his sister Darcy. Darcy is twice as old as Dexter who is 8 right now. How old is Dallas now?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "In a section of the forest, there are 100 weasels and 50 rabbits. Three foxes invade this region and hunt the rodents. Each fox catches an average of 4 weasels and 2 rabbits per week. How many rabbits and weasels will be left after 3 weeks?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Apple sold 100 iPhones at their New York store today for an average cost of $1000. They also sold 20 iPads for an average cost of $900 and 80 Apple TVs for an average cost of $200. What was the average cost across all products sold today?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Melody planted sunflowers from two different seed packets. She found that the sunflowers from Packet A were 20% taller than the sunflowers from Packet B. If the sunflowers from Packet A were 192 inches tall, how tall were the sunflowers from Packet B?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Mr. Grey is purchasing gifts for his family. So far he has purchased 3 polo shirts for $26 each; 2 necklaces for $83 each; and 1 computer game for $90. Since Mr. Grey purchased all those using his credit card, he received a $12 rebate. What is the total cost of the gifts after the rebate?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Mary bought 5 boxes of drinks at $6 each box and 10 boxes of pizzas at $14 each box for her pizza party. She paid $200 for all the items. How much change did she get back?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Herbert is 10 years younger than Kris. If Kris is 24 years old now, how old will Herbert be next year?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "There are 16 people at a dinner party. There are 40 dinner rolls available for them. Half the people eat 1 1/2 rolls each. The other half eat 1/2 a roll each. How many dinner rolls are leftover?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Rosie runs 6 miles per hour. She runs for 1 hour on Monday, 30 minutes on Tuesday, 1 hour on Wednesday, and 20 minutes on Thursday. If she wants to run 20 miles for the week, how many minutes should she run on Friday?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Gary bought his first used car for $6,000. Gary borrowed the money from his dad who said he could pay him back the full amount over 5 years. Gary decided he would pay his dad back the full amount in 2 years. How much more is Gary spending per month to pay the loan off in 2 years instead of 5?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Sansa is a famous artist, she can draw a portrait and sell it according to its size. She sells an 8-inch portrait for $5, and a 16-inch portrait for twice the price of the 8-inch portrait. If she sells three 8-inch portraits and five 16-inch portraits per day, how many does she earns every 3 days?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Archibald eats 1 apple a day for two weeks. Over the next three weeks, he eats the same number of apples as the total of the first two weeks. Over the next two weeks, he eats 3 apples a day. Over these 7 weeks, how many apples does he average a week?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Susie has $200 in her piggy bank. If she puts 20% more money into her piggy bank, how much money she will have?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Benny bought 2 soft drinks for$ 4 each and 5 candy bars. He spent a total of 28 dollars. How much did each candy bar cost?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Jack has a stack of books that is 12 inches thick. He knows from experience that 80 pages is one inch thick. If he has 6 books, how many pages is each one on average?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Wickham is throwing a huge Christmas party. He invites 30 people. Everyone attends the party, and half of the guests bring a plus one (one other person). He plans to serve a 3-course meal for the guests. If he uses a new plate for every course, how many plates does he need in total for his guests?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "There are some lions in Londolozi at first. Lion cubs are born at the rate of 5 per month and lions die at the rate of 1 per month. If there are 148 lions in Londolozi after 1 year, how many lions were there in Londolozi at first?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "John volunteers at a shelter twice a month for 3 hours at a time. How many hours does he volunteer per year?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "John puts $25 in his piggy bank every month for 2 years to save up for a vacation. He had to spend $400 from his piggy bank savings last week to repair his car. How many dollars are left in his piggy bank?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Five coaster vans are used to transport students for their field trip. Each van carries 28 students, 60 of which are boys. How many are girls?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Bobby has 16 toy cars, and the number of cars he has increases by 50% every year. How many toy cars will Bobby have in three years?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Last year Jessica paid $1000 for rent, $200 for food, and $100 for car insurance each month. This year her rent goes up by 30%, food costs increase by 50%, and the cost of her car insurance triples because she was at fault in an accident. How much more does Jessica pay for her expenses over the whole year compared to last year?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Randy just turned 12 and started playing the piano. His friend Sheila told him about the 10,000-hour rule which says, after 10,000 hours of practice, you become an expert or master in your field. If Randy wants to become a piano expert before he is 20, how many hours a day will he need to practice if he practices every day, Monday – Friday, and takes two weeks off for vacation each year?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Mike and Ted planted tomatoes. In the morning, Mike planted 50 tomato seeds while Ted planted twice as much as Mike. In the afternoon, Mike planted 60 tomato seeds while Ted planted 20 fewer tomato seeds than Mike. How many tomato seeds did they plant altogether?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "In 6 months Bella and Bob will be celebrating their 4th anniversary. How many months ago did they celebrate their 2nd anniversary?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "A church has 120 members. 40% are adults. The rest are children. How many children more children are there than adults?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Missy had a giant piggy bank in her bedroom. Every day she would search the house for change to put in her bank. After 4 years, the bank was opened and it contained $450 in change. If the second, third, and fourth-year she doubled the amount of money she put in the bank from the amount she had put in the previous year, how much money, in dollars, did she put in the bank the first year?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "By the time Anne is two times as old as Emile, Emile will be six times as old as Maude. If Maude will be 8 years old, how old will Anne be?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Ravi has some coins. He has 2 more quarters than nickels and 4 more dimes than quarters. If he has 6 nickels, how much money does he have?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Lisa is looking to attempt a World Record. She has decided to try and match Joey Chestnut's record of eating 75 full hotdogs, buns included, in 10 minutes. Halfway through the time Lisa has eaten 20 hotdogs. How many hotdogs will she have to eat per minute to at least tie Joey Chestnut's record?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "A car uses 20 gallons of gas to travel 400 miles. Mr. Montero's car has 8 gallons in it. How many more gallons of gas does he need to travel 600 miles, back and forth?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Mira jogs every morning. She jogs 5 miles per hour. If she jogs for 2 hours every morning, how many miles can she jog for five days?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Bekah had to read 408 pages for history class. She read 113 pages over the weekend and has 5 days left to finish her reading. How many pages will she need to read each day for 5 days to complete her assignment?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Andy and Bob went to the canteen to buy snacks. They spent the same amount. Andy bought a can of soda at $1 and two hamburgers at $2 each. Bob ordered two sandwiches for $3 and a can of fruit drink. How much did Bob's fruit drink cost?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "A library cabinet houses five ancient scrolls. The first scroll is 4080 years old. If each scroll is older than the last by half as many years as the last scroll’s age, how old is the fifth scroll?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "A washing machine uses 20 gallons of water for a heavy wash, 10 gallons of water for a regular wash, and 2 gallons of water for a light wash per load of laundry. If bleach is used, there is an extra light wash cycle added to rinse the laundry thoroughly. There are two heavy washes, three regular washes, and one light wash to do. Two of the loads need to be bleached. How many gallons of water will be needed?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "There are 32 tables in a hall. Half the tables have 2 chairs each, 5 have 3 chairs each and the rest have 4 chairs each. How many chairs in total are in the hall?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "Ian won $100 in the lottery. He decided to use the money to pay off debts. He paid $20 to Colin. He then paid twice as much to Helen, as he had paid to Colin. Then finally, he paid half as much to Benedict, as he had paid to Helen. How much money, in dollars, does he have left after paying off debts?",
+  "category": "hard_reasoning"
+ },
+ {
+  "text": "A company has 200 employees. 60% of the employees drive to work. Of the employees who don't drive to work, half take public transportation. How many more employees drive to work than take public transportation?",
   "category": "hard_reasoning"
  }
 ]

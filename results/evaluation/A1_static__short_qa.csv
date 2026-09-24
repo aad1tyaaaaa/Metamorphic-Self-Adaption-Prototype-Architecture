@@ -1,0 +1,111 @@
+method,dataset,sample_id,loss,perplexity,latency,depth,layer_reduction,configuration,attention_mode,ffn_mode,confidence,rollback,executed_depth,relative_flops,active_parameters,sequence_length,proposed_configuration,fallback_applied,stability_status,volatility,stability_score,answer_loss,correct,generated,question
+A1_static,short_qa,0,3.8153111934661865,45.390879530452004,0.07880469999508932,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,4.884260654449463,False," The capital of France is the capital of France.
+",What is the capital of France?
+A1_static,short_qa,1,3.775663375854492,43.62643944510153,0.06605429999763146,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.4821882247924805,False," The capital of Japan is the capital of Japan.
+",What is the capital of Japan?
+A1_static,short_qa,2,3.9276249408721924,50.78621405434998,0.0673796999908518,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.2399492263793945,False," The capital of Italy is the capital of Italy.
+",What is the capital of Italy?
+A1_static,short_qa,3,3.809549331665039,45.130095577594425,0.07059199998911936,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.135553359985352,False," The capital of Egypt is the capital of the Kingdom of God.
+",What is the capital of Egypt?
+A1_static,short_qa,4,3.916550397872925,50.226882828500756,0.07059250000747852,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.207631587982178,False," The capital of Canada is the capital of Canada.
+",What is the capital of Canada?
+A1_static,short_qa,5,3.813720703125,45.318743156290736,0.06829739999375306,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,4.738103866577148,False," The capital of Spain is the capital of Spain.
+",What is the capital of Spain?
+A1_static,short_qa,6,3.712308168411255,40.948212903690035,0.10188149999885354,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,4.23508358001709,False," The capital of Russia is the Russian Federation.
+",What is the capital of Russia?
+A1_static,short_qa,7,3.7477824687957764,42.4268946441874,0.06575150000571739,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.019678592681885,False," The capital of Germany is the capital of the German people.
+",What is the capital of Germany?
+A1_static,short_qa,8,3.802137613296509,44.79684054103901,0.0701753000030294,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.373035430908203,False," The capital of China is the capital of China.
+",What is the capital of China?
+A1_static,short_qa,9,3.4475743770599365,31.424076828250694,0.06690439999511,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,1.8096026182174683,False," The capital of Kenya is the capital of the United States.
+",What is the capital of Kenya?
+A1_static,short_qa,10,2.8705739974975586,17.64714471016618,0.07232369999110233,12,0.0,deep,full,full,,False,12,1.0,85054464,16,deep,False,,,,3.720625877380371,False," The largest planet in the solar system is the Sun.
+",What is the largest planet in the solar system?
+A1_static,short_qa,11,3.4268033504486084,30.77809853306078,0.07139029999962077,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,5.525097370147705,False," The closest planet is the Sun.
+",What is the closest planet to the Sun?
+A1_static,short_qa,12,3.357172727584839,28.70791094841054,0.06705370001145639,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,2.9955220222473145,False," The Red Planet is the planet that is known as the Red Planet.
+",Which planet is known as the Red Planet?
+A1_static,short_qa,13,4.066920757293701,58.3769288180235,0.0685696000000462,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,4.196834564208984,True," The chemical symbol for oxygen is the symbol for oxygen.
+",What is the chemical symbol for oxygen?
+A1_static,short_qa,14,4.347254753112793,77.26605710269888,0.0641446000081487,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,9.003032684326172,False," The symbol for gold is the ""golden circle"" (the ""golden circle""). The symbol for gold is the",What is the chemical symbol for gold?
+A1_static,short_qa,15,4.258303642272949,70.68996621655629,0.06743720000667963,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,6.425464153289795,False, Iron is a chemical symbol for iron. It is a chemical symbol for iron. It is a chemical symbol for iron.,What is the chemical symbol for iron?
+A1_static,short_qa,16,4.450681686401367,85.68533462530321,0.06595389998983592,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,5.559035301208496,False, The air is a mixture of nitrogen and oxygen. The nitrogen is the air that is being absorbed by plants. The oxygen,What gas do plants absorb from the air?
+A1_static,short_qa,17,3.8027069568634033,44.82235259589126,0.06942090000666212,12,0.0,deep,full,full,,False,12,1.0,85054464,16,deep,False,,,,6.575007438659668,False," The freezing point of water is about 1.5 degrees Celsius.
+",What is the freezing point of water in Celsius?
+A1_static,short_qa,18,3.596980094909668,36.48787796609788,0.07027440000092611,12,0.0,deep,full,full,,False,12,1.0,85054464,16,deep,False,,,,6.801308631896973,False," The boiling point of water is about 1.5 degrees Celsius.
+",What is the boiling point of water in Celsius?
+A1_static,short_qa,19,3.3012402057647705,27.146285031483114,0.07036589999916032,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,4.787146091461182,False,"
+",How many days are in a week?
+A1_static,short_qa,20,3.4135336875915527,30.372381360532675,0.06940310000209138,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.014179706573486,False," The average is about 1 year.
+",How many months are in a year?
+A1_static,short_qa,21,3.228451728820801,25.240547490508007,0.07056959999317769,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.2357177734375,False,"
+",How many hours are in a day?
+A1_static,short_qa,22,3.95865797996521,52.38697438386756,0.06343850000121165,12,0.0,deep,full,full,,False,12,1.0,85054464,12,deep,False,,,,6.037533760070801,False," The number of continents is not known.
+",How many continents are there?
+A1_static,short_qa,23,3.6979317665100098,40.36373633948864,0.06878440000582486,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.625575065612793,False," The spider has about 1.5 legs.
+",How many legs does a spider have?
+A1_static,short_qa,24,4.009079456329346,55.096128819389115,0.06581569999980275,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,4.7510480880737305,False," It's a triangle.
+",How many sides does a triangle have?
+A1_static,short_qa,25,3.984055757522583,53.73452709267635,0.07299970000167377,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,5.111665725708008,False," The hexagon is a unit of length 1.5.
+",How many sides does a hexagon have?
+A1_static,short_qa,26,4.056255340576172,57.75762299338689,0.07816089999687392,12,0.0,deep,full,full,,False,12,1.0,85054464,18,deep,False,,,,5.603005409240723,False," The number of players on a soccer team is determined by the number of players on the field.
+",How many players are on a soccer team on the field?
+A1_static,short_qa,27,3.9844789505004883,53.7572719796118,0.06310520000988618,12,0.0,deep,full,full,,False,12,1.0,85054464,12,deep,False,,,,5.013151168823242,False, 2 plus 2 is a number that is used to represent the number of times a given number is equal to or greater than,What is 2 plus 2?
+A1_static,short_qa,28,4.518373966217041,91.68639153360077,0.06436249999387655,12,0.0,deep,full,full,,False,12,1.0,85054464,12,deep,False,,,,8.026026725769043,False," 5 times 6 is the number of times you can use the word ""5 times"" in your sentence.
+",What is 5 times 6?
+A1_static,short_qa,29,4.191492557525635,66.12140735093166,0.06672669999534264,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,7.074307441711426,False," 100 divided by 4 is the number of times you have to divide by 4.
+",What is 100 divided by 4?
+A1_static,short_qa,30,3.739806652069092,42.08985139253587,0.07968930000788532,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,7.075189590454102,False, The square root of 81 is the square of the square of the square of the square of the square of the square of,What is the square root of 81?
+A1_static,short_qa,31,5.38632869720459,218.40009900813308,0.06168240000260994,12,0.0,deep,full,full,,False,12,1.0,85054464,11,deep,False,,,,10.650398254394531,False," 7 is the square root of 7.
+",What is 7 squared?
+A1_static,short_qa,32,4.017505645751953,55.562340673527856,0.06754919998638798,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.78031063079834,False," The play was written by the French playwright, Jean-Jacques Rousseau.
+",Who wrote the play Romeo and Juliet?
+A1_static,short_qa,33,3.5019757747650146,33.18094531175603,0.06836269999621436,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,1.865394115447998,True," Einstein.
+",Who developed the theory of relativity?
+A1_static,short_qa,34,2.9909424781799316,19.904433148060416,0.07385960000101477,12,0.0,deep,full,full,,False,12,1.0,85054464,17,deep,False,,,,8.760619163513184,False," The first person to walk on the Moon was the first person to walk on the Moon.
+",Who was the first person to walk on the Moon?
+A1_static,short_qa,35,4.029021263122559,56.20587355663399,0.06944540000404231,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,6.7418107986450195,False," The Mona Lisa was painted by the artist, and the Mona Lisa was painted by the artist.
+",Who painted the Mona Lisa?
+A1_static,short_qa,36,3.816342830657959,45.437730612447005,0.06739379999635275,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,7.607057571411133,False," The largest ocean on Earth is about 1.5 million square kilometers (1.5 million square miles).
+",What is the largest ocean on Earth?
+A1_static,short_qa,37,3.8228507041931152,45.734397906566016,0.0722088999900734,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.560550689697266,True," The longest river in Africa is the Nile. The Nile is the longest river in Africa.
+",What is the longest river in Africa?
+A1_static,short_qa,38,3.0583536624908447,21.292473692232804,0.07042249999358319,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,4.579861164093018,False," The tallest mountain in the world is the Himalayas.
+",What is the tallest mountain in the world?
+A1_static,short_qa,39,3.4146180152893066,30.405332836759218,0.07124180000391789,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,7.256793975830078,False," The largest desert in the world is the Sahara Desert. The Sahara Desert is the largest desert in the world.
+",What is the largest desert in the world?
+A1_static,short_qa,40,4.23588752746582,69.12300007839347,0.06784740000148304,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,4.033200263977051,False," The language spoken in Brazil is Brazilian.
+",What language is primarily spoken in Brazil?
+A1_static,short_qa,41,4.306650638580322,74.1915779178095,0.07158740000159014,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,3.979773759841919,False," The language of Austria is spoken in the following languages:
+",What language is primarily spoken in Austria?
+A1_static,short_qa,42,3.9229342937469482,50.54855167632623,0.06359160000283737,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,3.8320600986480713,True, The Japanese yen is the currency of the Japanese people. It is used to buy goods and services in Japan. The Japanese,What currency is used in Japan?
+A1_static,short_qa,43,3.8720145225524902,48.03906444647741,0.06784210000478197,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,4.733711242675781,True, The pound sterling is used in the United Kingdom as a currency. The pound sterling is used in the United Kingdom as a,What currency is used in the United Kingdom?
+A1_static,short_qa,44,3.529487371444702,34.10647917745413,0.06642329999885987,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,3.5526986122131348,False, The currency of India is the currency of India. The currency of India is the currency of India. The currency of India,What is the currency of India?
+A1_static,short_qa,45,3.297776460647583,27.052419875589052,0.07037440000567585,12,0.0,deep,full,full,,False,12,1.0,85054464,16,deep,False,,,,3.7831573486328125,False," In the United States.
+",In which country is the Eiffel Tower?
+A1_static,short_qa,46,3.8694560527801514,47.916315044474366,0.07259049999993294,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,4.0920090675354,True," The Great Wall of China.
+",In which country is the Great Wall?
+A1_static,short_qa,47,3.458737850189209,31.776844055695168,0.0728600999864284,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,3.3678627014160156,False," In the United States.
+",In which country is the Taj Mahal?
+A1_static,short_qa,48,3.8089685440063477,45.103892185087446,0.06896550000237767,12,0.0,deep,full,full,,False,12,1.0,85054464,16,deep,False,,,,4.277001857757568,True," The sky is blue.
+",What colour is the sky on a clear day?
+A1_static,short_qa,49,3.935123920440674,51.16849038567208,0.07793640000454616,12,0.0,deep,full,full,,False,12,1.0,85054464,17,deep,False,,,,6.151067733764648,False," I'm not sure. I think it's a combination of the two.
+",What colour do you get by mixing red and white?
+A1_static,short_qa,50,4.004251480102539,54.830767114711506,0.06845770000654738,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.391092300415039,False," The opposite of hot is the opposite of hot.
+",What is the opposite of hot?
+A1_static,short_qa,51,4.339428901672363,76.66374429768992,0.06860309999319725,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,5.587540626525879,False," The opposite of ancient is the opposite of ancient.
+",What is the opposite of ancient?
+A1_static,short_qa,52,3.1230080127716064,22.714602798993674,0.07228740000573453,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,2.499600648880005,False," The first month of the year is the first month of the year.
+",What is the first month of the year?
+A1_static,short_qa,53,3.1968913078308105,24.456384530636157,0.08105590000923257,12,0.0,deep,full,full,,False,12,1.0,85054464,15,deep,False,,,,3.4692652225494385,False," The last month of the year is the time of year for the first time in the history of the United States.
+",What is the last month of the year?
+A1_static,short_qa,54,5.056184768676758,156.99041753501047,0.0681003000063356,12,0.0,deep,full,full,,False,12,1.0,85054464,12,deep,False,,,,4.674829006195068,False," Winter is coming.
+",What season comes after winter?
+A1_static,short_qa,55,5.143603801727295,171.33210401083795,0.07391839999763761,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,5.855125427246094,False, The kidneys are the main source of blood for the body. The kidneys are the main source of blood for the body.,What organ pumps blood around the body?
+A1_static,short_qa,56,4.293377876281738,73.21335694750536,0.07010280000395142,12,0.0,deep,full,full,,False,12,1.0,85054464,14,deep,False,,,,3.636991024017334,False," The organ used for breathing is the heart.
+",What organ is used for breathing?
+A1_static,short_qa,57,4.73278284072876,113.6112849530611,0.06783630000427365,12,0.0,deep,full,full,,False,12,1.0,85054464,13,deep,False,,,,7.810631275177002,False," The hardest natural substance is the water.
+",What is the hardest natural substance?
+A1_static,short_qa,58,4.373003959655762,79.28143257352883,0.06252680000034161,12,0.0,deep,full,full,,False,12,1.0,85054464,11,deep,False,,,,3.484372615814209,True," Bees produce pollen, which is a chemical that is used to make honey. Bees produce pollen by pollinating the flowers of",What do bees produce?
+A1_static,short_qa,59,4.773146629333496,118.29087449468783,0.06928209999750834,12,0.0,deep,full,full,,False,12,1.0,85054464,16,deep,False,,,,4.868103981018066,False," The young cat is called the ""Young Cat"" because it is the oldest cat in the world.
+",What is the young of a cat called?

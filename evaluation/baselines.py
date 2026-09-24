@@ -122,6 +122,113 @@ class DenseReference(nn.Module):
         return sum(p.numel() for p in self.parameters())
 
 
+PRETRAINED_DENSE_ID = "HuggingFaceTB/SmolLM-135M"
+
+
+class PretrainedDenseBaseline:
+    """Baseline D with real weights: SmolLM-135M (Llama architecture).
+
+    RMSNorm + RoPE + SwiGLU, no adaptivity, a similar parameter budget to GPT-2
+    small. Its tokenizer differs from GPT-2's, so per-token loss/perplexity are
+    not directly comparable; exact-match accuracy and latency are.
+    """
+
+    def __init__(self, model_id=PRETRAINED_DENSE_ID):
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        self.model_id = model_id
+        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
+        # The checkpoint defaults to bfloat16; GPT-2 runs in float32, so match it.
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_id, dtype=torch.float32).eval()
+
+        config = self.model.config
+        self.layers = config.num_hidden_layers
+        self.config = {
+            "model": model_id,
+            "architecture": config.model_type,
+            "parameters": sum(p.numel() for p in self.model.parameters()),
+            "layers": config.num_hidden_layers,
+            "hidden_size": config.hidden_size,
+            "heads": config.num_attention_heads,
+            "kv_heads": getattr(config, "num_key_value_heads", None),
+            "ffn_hidden": config.intermediate_size,
+            "norm": "RMSNorm",
+            "position": "RoPE",
+            "activation": f"SwiGLU ({config.hidden_act})",
+            "dtype": str(self.model.dtype).replace("torch.", ""),
+            "trained": True,
+        }
+
+    def _loss(self, input_ids, labels):
+        import time
+
+        started = time.perf_counter()
+        with torch.no_grad():
+            logits = self.model(input_ids=input_ids, use_cache=False).logits
+        latency = time.perf_counter() - started
+
+        loss = F.cross_entropy(
+            logits[:, :-1, :].reshape(-1, logits.size(-1)),
+            labels[:, 1:].reshape(-1),
+            ignore_index=-100,
+        ).item()
+        return loss, latency
+
+    def run(self, record, generate=False, max_new_tokens=24):
+        """One record in the same schema the GPT-2 harness emits."""
+        import math
+
+        from data.load_data import exact_match
+
+        question = record["question"]
+        answer = record.get("answer")
+
+        if answer is None:
+            ids = self.tokenizer(question, return_tensors="pt")["input_ids"]
+            loss, latency = self._loss(ids, ids)
+            entry = {}
+        else:
+            prompt = f"Question: {question}\nAnswer:"
+            prompt_ids = self.tokenizer(prompt, return_tensors="pt")["input_ids"]
+            ids = self.tokenizer(f"{prompt} {answer}", return_tensors="pt")["input_ids"]
+            labels = ids.clone()
+            labels[:, : prompt_ids.shape[1]] = -100
+
+            loss, latency = self._loss(ids, ids)
+            entry = {"answer_loss": self._loss(ids, labels)[0]}
+
+            if generate:
+                with torch.no_grad():
+                    output = self.model.generate(
+                        prompt_ids, max_new_tokens=max_new_tokens, do_sample=False,
+                        pad_token_id=self.tokenizer.eos_token_id,
+                    )
+                text = self.tokenizer.decode(output[0, prompt_ids.shape[1]:])
+                text = text.split("\n")[0]
+                entry["generated"] = text
+                entry["correct"] = exact_match(text, answer)
+
+        return {
+            "question": question,
+            "configuration": "dense",
+            "loss": loss,
+            "perplexity": math.exp(min(loss, 20)),
+            "latency_seconds": latency,
+            "depth": self.layers,
+            "executed_depth": self.layers,
+            "attention_mode": "full",
+            "ffn_mode": "full",
+            "layer_reduction": 0.0,
+            "relative_flops": float("nan"),
+            "sequence_length": ids.shape[1],
+            "confidence": float("nan"),
+            "fallback_applied": False,
+            "rolled_back": False,
+            **entry,
+        }
+
+
 def demo():
     model = DenseReference(vocab_size=1000, dim=128, depth=2, heads=4, hidden=256).eval()
     ids = torch.randint(0, 1000, (1, 16))
