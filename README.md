@@ -1,3 +1,18 @@
+<p align="center">
+  <img src="assets/bg-repo.png" alt="TAC-124M — Task-Adaptive Configuration" width="100%">
+</p>
+
+<h1 align="center">TAC-124M — <i>Task-Adaptive Configuration</i></h1>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/PyTorch-2.14-EE4C2C?logo=pytorch&logoColor=white" alt="PyTorch">
+  <img src="https://img.shields.io/badge/%F0%9F%A4%97%20Transformers-5.17-FFD21E" alt="Transformers">
+  <img src="https://img.shields.io/badge/Backbone-GPT--2%20124M-412991" alt="Backbone: GPT-2 124M">
+  <img src="https://img.shields.io/badge/Status-Research%20Prototype-blue" alt="Status: Research Prototype">
+</p>
+
 # Metamorphic Self-Adaptation (MSA) — GPT-2 Prototype
 
 A research prototype that runs GPT-2 with a **per-input architecture**, chosen by a
