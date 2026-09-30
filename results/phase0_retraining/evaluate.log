@@ -1,0 +1,29 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading GPT-2...
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights:  41%|####      | 60/148 [00:00<00:00, 435.63it/s]Loading weights:  70%|#######   | 104/148 [00:00<00:00, 356.26it/s]Loading weights:  95%|#########4| 140/148 [00:00<00:00, 295.77it/s]Loading weights: 100%|##########| 148/148 [00:00<00:00, 324.46it/s]
+GPT-2 loaded successfully.
+
+Phase 0 retrained evaluation: short_qa (60 samples), adapters for ['medium', 'shallow']
+
+=== BASELINES (Phase 12) ===
+  static               loss=3.8890 acc=0.133 depth=12.00 reduction=  0.0% flops=1.000 latency= 67.23ms
+  depth_adaptive       loss=5.9736 acc=0.017 depth=7.73 reduction= 35.6% flops=0.644 latency= 46.05ms
+  routing              loss=6.3663 acc=0.000 depth=12.00 reduction=  0.0% flops=0.668 latency=117.23ms
+  msa                  loss=5.7089 acc=0.000 depth=7.73 reduction= 35.6% flops=0.322 latency= 19.25ms
+Loading weights:   0%|          | 0/272 [00:00<?, ?it/s]Loading weights:  18%|#7        | 48/272 [00:00<00:00, 463.75it/s]Loading weights:  35%|###5      | 96/272 [00:00<00:00, 445.06it/s]Loading weights:  67%|######6   | 182/272 [00:00<00:00, 626.67it/s]Loading weights: 100%|##########| 272/272 [00:00<00:00, 671.85it/s]
+  dense_reference      loss=1.9846 acc=0.750 depth=30.00 reduction=  0.0% flops=nan latency= 65.80ms
+Saved: results/baselines_retrained.csv
+Saved: results/inference_log_retrained.csv
+
+=== ABLATIONS (Phase 15) ===
+  A1_static            loss=3.8890 acc=0.133 depth=12.00 reduction=  0.0% flops=1.000 latency= 79.36ms
+  A2_analyzer          loss=8.0672 acc=0.017 depth=4.00 reduction= 66.7% flops=0.333 latency= 36.61ms
+  A3_predictor         loss=5.9736 acc=0.017 depth=7.73 reduction= 35.6% flops=0.644 latency= 47.38ms
+  A4_depth             loss=5.9736 acc=0.017 depth=7.73 reduction= 35.6% flops=0.644 latency= 23.74ms
+  A5_depth_attention   loss=5.6980 acc=0.000 depth=7.73 reduction= 35.6% flops=0.536 latency= 48.13ms
+  A6_depth_ffn         loss=6.0599 acc=0.000 depth=7.73 reduction= 35.6% flops=0.430 latency= 60.89ms
+  A7_no_monitor        loss=5.7089 acc=0.000 depth=7.73 reduction= 35.6% flops=0.322 latency= 33.25ms
+  A8_full              loss=5.7089 acc=0.000 depth=7.73 reduction= 35.6% flops=0.322 latency= 48.15ms
+Saved: results/ablations_retrained.csv
+
+PHASE 0 RETRAINED EVALUATION COMPLETE

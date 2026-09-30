@@ -73,13 +73,17 @@ def run_methods(system, methods, dataset_name, dataset, **kwargs):
     return rows, per_sample
 
 
-def suite_baselines(system, dataset_name, dataset, generate=False):
+def suite_baselines(system, dataset_name, dataset, generate=False, adapters=None,
+                    output_name="baselines", log_name="inference_log", **kwargs):
+    """`adapters` (Phase 0): {configuration_name: ConfigAdapter} substituted into
+    every GPT-2 variant's controller; DENSE is unaffected (not a GPT-2 variant).
+    Extra keyword arguments reach `evaluation.runner.evaluate` (e.g. `output_dir`)."""
     print("\n=== BASELINES (Phase 12) ===")
     rows, per_sample = run_methods(system, BASELINES + [DENSE], dataset_name, dataset,
-                                   generate=generate)
+                                   generate=generate, adapters=adapters, **kwargs)
 
     frame = pd.DataFrame(rows)
-    save(frame, "baselines")
+    save(frame, output_name)
 
     # Per-inference decision log (Phase 3 requirement), GPT-2 variants only.
     log = pd.concat([
@@ -87,17 +91,19 @@ def suite_baselines(system, dataset_name, dataset, generate=False):
         for m, f in per_sample.items() if m != DENSE
     ], ignore_index=True)
     log["latency_seconds"] = log["latency"]
-    save(log, "inference_log")
+    save(log, log_name)
 
     return frame
 
 
-def suite_ablations(system, dataset_name, dataset, generate=False):
+def suite_ablations(system, dataset_name, dataset, generate=False, adapters=None,
+                    output_name="ablations", **kwargs):
     print("\n=== ABLATIONS (Phase 15) ===")
-    rows, _ = run_methods(system, ABLATIONS, dataset_name, dataset, generate=generate)
+    rows, _ = run_methods(system, ABLATIONS, dataset_name, dataset, generate=generate,
+                          adapters=adapters, **kwargs)
 
     frame = pd.DataFrame(rows)
-    save(frame, "ablations")
+    save(frame, output_name)
     return frame
 
 

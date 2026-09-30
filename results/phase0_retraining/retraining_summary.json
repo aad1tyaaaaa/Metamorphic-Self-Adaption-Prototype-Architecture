@@ -1,0 +1,36 @@
+{
+  "shallow": {
+    "config": "shallow",
+    "depth": 4,
+    "attention_mode": "reduced",
+    "ffn_mode": "partial",
+    "epochs": 3,
+    "lr": 0.0003,
+    "seed": 42,
+    "trainable_parameters": 41472,
+    "train_prompts": 720,
+    "val_prompts": 79,
+    "pre_train_loss_sample": 8.414443641901016,
+    "pre_val_loss": 8.408827920503255,
+    "post_train_loss_sample": 4.86864084303379,
+    "post_val_loss": 4.808356580854971,
+    "wall_clock_seconds": 141.75318899995182
+  },
+  "medium": {
+    "config": "medium",
+    "depth": 8,
+    "attention_mode": "reduced",
+    "ffn_mode": "partial",
+    "epochs": 3,
+    "lr": 0.0003,
+    "seed": 42,
+    "trainable_parameters": 81408,
+    "train_prompts": 720,
+    "val_prompts": 79,
+    "pre_train_loss_sample": 9.658424109220505,
+    "pre_val_loss": 9.63358143915104,
+    "post_train_loss_sample": 3.97766203135252,
+    "post_val_loss": 4.176391177539584,
+    "wall_clock_seconds": 274.64887620008085
+  }
+}

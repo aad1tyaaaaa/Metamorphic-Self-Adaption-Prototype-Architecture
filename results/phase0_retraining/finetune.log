@@ -1,0 +1,107 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Phase 0 retraining: 720 train / 79 val prompts from data/calibration_prompts.json (disjoint from the 60-prompt short_qa eval set)
+Loading GPT-2...
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights:  34%|###4      | 51/148 [00:00<00:00, 466.86it/s]Loading weights:  66%|######6   | 98/148 [00:00<00:00, 365.29it/s]Loading weights:  92%|#########1| 136/148 [00:00<00:00, 206.59it/s]Loading weights: 100%|##########| 148/148 [00:00<00:00, 260.36it/s]
+GPT-2 loaded successfully.
+
+=== retraining 'shallow' (4 layers, reduced attention, partial ffn) ===
+  [shallow] pre-training: train~=8.4144 val=8.4088
+  [shallow] epoch 1 step 50/2160 train_loss=7.6199
+  [shallow] epoch 1 step 100/2160 train_loss=6.7055
+  [shallow] epoch 1 step 150/2160 train_loss=6.4685
+  [shallow] epoch 1 step 200/2160 train_loss=6.5538
+  [shallow] epoch 1 step 250/2160 train_loss=6.1934
+  [shallow] epoch 1 step 300/2160 train_loss=6.1370
+  [shallow] epoch 1 step 350/2160 train_loss=5.9399
+  [shallow] epoch 1 step 400/2160 train_loss=5.7312
+  [shallow] epoch 1 step 450/2160 train_loss=5.8265
+  [shallow] epoch 1 step 500/2160 train_loss=5.5520
+  [shallow] epoch 1 step 550/2160 train_loss=5.9037
+  [shallow] epoch 1 step 600/2160 train_loss=5.6731
+  [shallow] epoch 1 step 650/2160 train_loss=5.3759
+  [shallow] epoch 1 step 700/2160 train_loss=5.6411
+  [shallow] epoch 1 complete: val_loss=5.5314 (79.8s elapsed)
+  [shallow] epoch 2 step 750/2160 train_loss=5.2478
+  [shallow] epoch 2 step 800/2160 train_loss=5.4292
+  [shallow] epoch 2 step 850/2160 train_loss=5.2990
+  [shallow] epoch 2 step 900/2160 train_loss=5.4176
+  [shallow] epoch 2 step 950/2160 train_loss=5.3514
+  [shallow] epoch 2 step 1000/2160 train_loss=5.1188
+  [shallow] epoch 2 step 1050/2160 train_loss=5.4311
+  [shallow] epoch 2 step 1100/2160 train_loss=5.1529
+  [shallow] epoch 2 step 1150/2160 train_loss=4.8895
+  [shallow] epoch 2 step 1200/2160 train_loss=4.9159
+  [shallow] epoch 2 step 1250/2160 train_loss=4.9482
+  [shallow] epoch 2 step 1300/2160 train_loss=4.8295
+  [shallow] epoch 2 step 1350/2160 train_loss=4.9734
+  [shallow] epoch 2 step 1400/2160 train_loss=4.7769
+  [shallow] epoch 2 complete: val_loss=5.0566 (109.2s elapsed)
+  [shallow] epoch 3 step 1450/2160 train_loss=4.7453
+  [shallow] epoch 3 step 1500/2160 train_loss=4.6773
+  [shallow] epoch 3 step 1550/2160 train_loss=4.8576
+  [shallow] epoch 3 step 1600/2160 train_loss=4.6992
+  [shallow] epoch 3 step 1650/2160 train_loss=4.7331
+  [shallow] epoch 3 step 1700/2160 train_loss=4.9072
+  [shallow] epoch 3 step 1750/2160 train_loss=5.0253
+  [shallow] epoch 3 step 1800/2160 train_loss=4.7385
+  [shallow] epoch 3 step 1850/2160 train_loss=4.6622
+  [shallow] epoch 3 step 1900/2160 train_loss=4.8639
+  [shallow] epoch 3 step 1950/2160 train_loss=4.5065
+  [shallow] epoch 3 step 2000/2160 train_loss=4.7807
+  [shallow] epoch 3 step 2050/2160 train_loss=4.3089
+  [shallow] epoch 3 step 2100/2160 train_loss=4.5731
+  [shallow] epoch 3 step 2150/2160 train_loss=4.9409
+  [shallow] epoch 3 complete: val_loss=4.8084 (138.6s elapsed)
+  [shallow] pre val=8.4088 -> post val=4.8084 (41,472 trainable params, 141.8s)
+
+=== retraining 'medium' (8 layers, reduced attention, partial ffn) ===
+  [medium] pre-training: train~=9.6584 val=9.6336
+  [medium] epoch 1 step 50/2160 train_loss=7.9652
+  [medium] epoch 1 step 100/2160 train_loss=6.3014
+  [medium] epoch 1 step 150/2160 train_loss=6.0282
+  [medium] epoch 1 step 200/2160 train_loss=6.1430
+  [medium] epoch 1 step 250/2160 train_loss=5.5425
+  [medium] epoch 1 step 300/2160 train_loss=5.6316
+  [medium] epoch 1 step 350/2160 train_loss=5.4291
+  [medium] epoch 1 step 400/2160 train_loss=5.1667
+  [medium] epoch 1 step 450/2160 train_loss=5.2022
+  [medium] epoch 1 step 500/2160 train_loss=4.8523
+  [medium] epoch 1 step 550/2160 train_loss=5.3067
+  [medium] epoch 1 step 600/2160 train_loss=5.0783
+  [medium] epoch 1 step 650/2160 train_loss=4.7207
+  [medium] epoch 1 step 700/2160 train_loss=5.0166
+  [medium] epoch 1 complete: val_loss=4.9079 (105.9s elapsed)
+  [medium] epoch 2 step 750/2160 train_loss=4.5721
+  [medium] epoch 2 step 800/2160 train_loss=4.7286
+  [medium] epoch 2 step 850/2160 train_loss=4.5550
+  [medium] epoch 2 step 900/2160 train_loss=4.7135
+  [medium] epoch 2 step 950/2160 train_loss=4.7063
+  [medium] epoch 2 step 1000/2160 train_loss=4.3913
+  [medium] epoch 2 step 1050/2160 train_loss=4.6909
+  [medium] epoch 2 step 1100/2160 train_loss=4.5443
+  [medium] epoch 2 step 1150/2160 train_loss=4.1374
+  [medium] epoch 2 step 1200/2160 train_loss=4.1900
+  [medium] epoch 2 step 1250/2160 train_loss=4.2420
+  [medium] epoch 2 step 1300/2160 train_loss=4.2446
+  [medium] epoch 2 step 1350/2160 train_loss=4.1495
+  [medium] epoch 2 step 1400/2160 train_loss=3.9431
+  [medium] epoch 2 complete: val_loss=4.4371 (165.6s elapsed)
+  [medium] epoch 3 step 1450/2160 train_loss=3.9854
+  [medium] epoch 3 step 1500/2160 train_loss=3.8824
+  [medium] epoch 3 step 1550/2160 train_loss=4.1300
+  [medium] epoch 3 step 1600/2160 train_loss=3.9406
+  [medium] epoch 3 step 1650/2160 train_loss=3.9512
+  [medium] epoch 3 step 1700/2160 train_loss=4.0993
+  [medium] epoch 3 step 1750/2160 train_loss=4.3102
+  [medium] epoch 3 step 1800/2160 train_loss=3.7770
+  [medium] epoch 3 step 1850/2160 train_loss=3.8166
+  [medium] epoch 3 step 1900/2160 train_loss=4.1045
+  [medium] epoch 3 step 1950/2160 train_loss=3.6732
+  [medium] epoch 3 step 2000/2160 train_loss=3.9683
+  [medium] epoch 3 step 2050/2160 train_loss=3.3745
+  [medium] epoch 3 step 2100/2160 train_loss=3.6676
+  [medium] epoch 3 step 2150/2160 train_loss=4.1785
+  [medium] epoch 3 complete: val_loss=4.1764 (269.5s elapsed)
+  [medium] pre val=9.6336 -> post val=4.1764 (81,408 trainable params, 274.6s)
+
+Saved adapters, training curves and summary to results/phase0_retraining/

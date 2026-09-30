@@ -93,7 +93,7 @@ def run_dense(dataset, generate=False, max_new_tokens=24):
 
 
 def evaluate(system, method, dataset_name, dataset, generate=False, max_new_tokens=24,
-             save=True, **kwargs):
+             save=True, output_dir=OUTPUT_DIR, **kwargs):
     """Run one method on one dataset; return (aggregate metrics, per-sample frame)."""
     if method == DENSE:
         metrics, records = run_dense(dataset, generate, max_new_tokens)
@@ -105,8 +105,8 @@ def evaluate(system, method, dataset_name, dataset, generate=False, max_new_toke
     frame = standardize(records, method, dataset_name)
 
     if save:
-        os.makedirs(OUTPUT_DIR, exist_ok=True)
-        frame.to_csv(f"{OUTPUT_DIR}/{method}__{dataset_name}.csv", index=False)
+        os.makedirs(output_dir, exist_ok=True)
+        frame.to_csv(f"{output_dir}/{method}__{dataset_name}.csv", index=False)
 
     return metrics, frame
 

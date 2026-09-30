@@ -98,7 +98,9 @@ def to_records(dataset):
 
 
 def run_variant(system, name, dataset, generate=False, max_new_tokens=24,
-                monitor_kwargs=None):
+                monitor_kwargs=None, adapters=None):
+    """`adapters`, when given, is a {configuration_name: ConfigAdapter} map
+    (Phase 0 retraining) applied on top of this variant's mechanism flags."""
     spec = VARIANTS[name]
     records = to_records(dataset)
 
@@ -108,6 +110,7 @@ def run_variant(system, name, dataset, generate=False, max_new_tokens=24,
         routing=make_routing_gate(seed=system.seed) if spec.get("routing") else None,
         attention=spec.get("attention", False),
         ffn=spec.get("ffn", False),
+        adapters=adapters,
     )
 
     monitor = None

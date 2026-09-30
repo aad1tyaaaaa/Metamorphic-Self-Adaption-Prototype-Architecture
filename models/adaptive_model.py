@@ -36,8 +36,13 @@ class AdaptiveGPT2(nn.Module):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _attention(attn, hidden_states, head_fraction):
-        """Self-attention over the first `head_fraction` of the heads."""
+    def _attention(attn, hidden_states, head_fraction, attn_bias=None, proj_bias=None):
+        """Self-attention over the first `head_fraction` of the heads.
+
+        `attn_bias`/`proj_bias`, when given, override the frozen backbone biases
+        (Phase 0 retraining: a per-configuration adapter fine-tunes only biases
+        and LayerNorm affine parameters, never the pretrained weight matrices).
+        """
         batch, seq, _ = hidden_states.shape
         head_dim = attn.head_dim
         embed_dim = attn.embed_dim
@@ -51,7 +56,8 @@ class AdaptiveGPT2(nn.Module):
             for offset in (0, embed_dim, 2 * embed_dim)
         ])
 
-        qkv = hidden_states @ attn.c_attn.weight[:, columns] + attn.c_attn.bias[columns]
+        bias = attn.c_attn.bias if attn_bias is None else attn_bias
+        qkv = hidden_states @ attn.c_attn.weight[:, columns] + bias[columns]
         query, key, value = qkv.split(active, dim=-1)
 
         shape = (batch, seq, heads, head_dim)
@@ -65,19 +71,22 @@ class AdaptiveGPT2(nn.Module):
 
         context = context.transpose(1, 2).reshape(batch, seq, active)
 
-        return context @ attn.c_proj.weight[:active, :] + attn.c_proj.bias
+        out_bias = attn.c_proj.bias if proj_bias is None else proj_bias
+        return context @ attn.c_proj.weight[:active, :] + out_bias
 
     @staticmethod
-    def _mlp(mlp, hidden_states, ffn_fraction):
+    def _mlp(mlp, hidden_states, ffn_fraction, fc_bias=None, proj_bias=None):
         """Feed-forward over the first `ffn_fraction` of the intermediate channels."""
         inner = mlp.c_fc.weight.shape[1]
         active = max(1, round(inner * ffn_fraction))
 
+        fc_bias = mlp.c_fc.bias if fc_bias is None else fc_bias
         hidden = mlp.act(
-            hidden_states @ mlp.c_fc.weight[:, :active] + mlp.c_fc.bias[:active]
+            hidden_states @ mlp.c_fc.weight[:, :active] + fc_bias[:active]
         )
 
-        return hidden @ mlp.c_proj.weight[:active, :] + mlp.c_proj.bias
+        out_bias = mlp.c_proj.bias if proj_bias is None else proj_bias
+        return hidden @ mlp.c_proj.weight[:active, :] + out_bias
 
     @staticmethod
     def _routed_mlp(mlp, hidden_states, routing):
@@ -118,7 +127,11 @@ class AdaptiveGPT2(nn.Module):
     # ------------------------------------------------------------------
 
     def forward(self, input_ids, depth=12, attention_mode="full", ffn_mode="full",
-                routing=None):
+                routing=None, adapter=None):
+        """`adapter`, when given, is a `models.adapters.ConfigAdapter` supplying
+        per-block bias and LayerNorm parameters fine-tuned for this configuration
+        (Phase 0). It only ever applies on the non-stock path, so the deep/static
+        configuration's pretrained weights are never touched."""
         total_layers = len(self.transformer.h)
 
         if depth < 1 or depth > total_layers:
@@ -151,19 +164,49 @@ class AdaptiveGPT2(nn.Module):
                     hidden_states = hidden_states[0]
                 continue
 
+            params = adapter.block_params(index) if adapter is not None else None
+
+            if params is None:
+                ln1_out = block.ln_1(hidden_states)
+            else:
+                ln1_out = F.layer_norm(
+                    hidden_states, (hidden_states.shape[-1],), params["ln1_w"], params["ln1_b"]
+                )
+
             hidden_states = hidden_states + self._attention(
-                block.attn, block.ln_1(hidden_states), head_fraction
+                block.attn, ln1_out, head_fraction,
+                attn_bias=None if params is None else params["attn_bias"],
+                proj_bias=None if params is None else params["attn_proj_bias"],
             )
 
-            normed = block.ln_2(hidden_states)
+            if params is None:
+                normed = block.ln_2(hidden_states)
+            else:
+                normed = F.layer_norm(
+                    hidden_states, (hidden_states.shape[-1],), params["ln2_w"], params["ln2_b"]
+                )
 
             if routing is None:
-                hidden_states = hidden_states + self._mlp(block.mlp, normed, ffn_fraction)
+                hidden_states = hidden_states + self._mlp(
+                    block.mlp, normed, ffn_fraction,
+                    fc_bias=None if params is None else params["fc_bias"],
+                    proj_bias=None if params is None else params["mlp_proj_bias"],
+                )
             else:
                 hidden_states = hidden_states + self._routed_mlp(block.mlp, normed, routing)
 
         self.last_executed_blocks = executed
-        return self.lm_head(self.transformer.ln_f(hidden_states))
+
+        # The adapter's final LayerNorm only applies on the path it was trained
+        # on; a stock (full attention + full FFN) request must stay byte-identical
+        # to the unadapted model even if an adapter object was passed in.
+        if adapter is None or stock:
+            return self.lm_head(self.transformer.ln_f(hidden_states))
+
+        final = F.layer_norm(
+            hidden_states, (hidden_states.shape[-1],), adapter.ln_f_w, adapter.ln_f_b
+        )
+        return self.lm_head(final)
 
 
 def make_routing_gate(top_k=2, chunks=FFN_CHUNKS, hidden_size=768, seed=42):

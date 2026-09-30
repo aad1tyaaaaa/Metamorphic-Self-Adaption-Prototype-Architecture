@@ -23,15 +23,19 @@ from configs.configurations import (
 
 class DynamicArchitectureController:
     def __init__(self, adaptive_model, tokenizer, mechanism="depth", routing=None,
-                 attention=None, ffn=None):
+                 attention=None, ffn=None, adapters=None):
         """`mechanism` is shorthand: "depth" disables both extra mechanisms,
-        "full" enables both. `attention`/`ffn` override it individually."""
+        "full" enables both. `attention`/`ffn` override it individually.
+
+        `adapters`, when given, is a {configuration_name: ConfigAdapter} map
+        (Phase 0 retraining); configurations absent from it run unadapted."""
         self.model = adaptive_model
         self.tokenizer = tokenizer
         self.mechanism = mechanism
         self.routing = routing
         self.attention = (mechanism == "full") if attention is None else attention
         self.ffn = (mechanism == "full") if ffn is None else ffn
+        self.adapters = adapters or {}
 
     def knobs(self, configuration):
         return resolve_config(configuration, self.attention, self.ffn)
@@ -61,6 +65,7 @@ class DynamicArchitectureController:
                 attention_mode=knobs["attention_mode"],
                 ffn_mode=knobs["ffn_mode"],
                 routing=self.routing,
+                adapter=self.adapters.get(configuration),
             )
         latency = time.perf_counter() - start
 
@@ -148,6 +153,7 @@ class DynamicArchitectureController:
                     attention_mode=knobs["attention_mode"],
                     ffn_mode=knobs["ffn_mode"],
                     routing=self.routing,
+                    adapter=self.adapters.get(configuration),
                 )
                 next_id = logits[:, -1, :].argmax(dim=-1, keepdim=True)
                 input_ids = torch.cat([input_ids, next_id], dim=1)
